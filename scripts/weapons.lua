@@ -133,11 +133,13 @@ function Env_Weapon_1:GetTargetArea(point)
     return ret
 end
 
-function Env_Weapon_1:GetSkillEffect(p1, p2, tipImageCall, skillEffect)
+function Env_Weapon_1:GetSkillEffect(p1, p2)
+    return tool:IsTipImage() and self:GetSkillEffect_TipImage() or self:GetSkillEffect_Inner(p1, p2)
+end
+
+-- 不能直接在 GetSkillEffect() 上追加参数，因为其他 MOD 引进的 modApiExt 也可能在上面追加参数导致冲突
+function Env_Weapon_1:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect)
     tipImageCall = tipImageCall or false
-    if tool:IsTipImage() and not tipImageCall then
-        return self:GetSkillEffect_TipImage()
-    end
     local iFire = ((tipImageCall and self.Overload) or Pawn:IsFire()) and EFFECT_CREATE or EFFECT_NONE
     local iAcid = Pawn:IsAcid() and EFFECT_CREATE or EFFECT_NONE
     local bHide = tipImageCall and self.Overload
@@ -274,11 +276,11 @@ function Env_Weapon_1:GetSkillEffect_TipImage()
 
     if s == "A" then
         if self.TI_A == 0 then
-            ret = self:GetSkillEffect(Point(2, 2), Point(4, 2), true)
+            ret = self:GetSkillEffect_Inner(Point(2, 2), Point(4, 2), true)
         elseif self.TI_A == 1 then
-            ret = self:GetSkillEffect(Point(2, 2), Point(2, 1), true)
+            ret = self:GetSkillEffect_Inner(Point(2, 2), Point(2, 1), true)
         else
-            ret = self:GetSkillEffect(Point(2, 2), Point(3, 3), true)
+            ret = self:GetSkillEffect_Inner(Point(2, 2), Point(3, 3), true)
         end
         self.TI_A = (self.TI_A + 1) % 3
     elseif s == "B" or s == "AB" then
@@ -321,28 +323,28 @@ function Env_Weapon_1:GetSkillEffect_TipImage()
 
         if s == "B" then
             if self.TI_B == 0 then
-                ret = self:GetSkillEffect(Point(2, 2), Point(1, 1), true, effect)
+                ret = self:GetSkillEffect_Inner(Point(2, 2), Point(1, 1), true, effect)
             else
-                ret = self:GetSkillEffect(Point(2, 2), Point(3, 3), true, effect)
+                ret = self:GetSkillEffect_Inner(Point(2, 2), Point(3, 3), true, effect)
                 ret:AddDelay(0.5)
             end
             self.TI_B = (self.TI_B + 1) % 2
         else
             if self.TI_AB == 0 then
-                ret = self:GetSkillEffect(Point(2, 2), Point(4, 2), true, effect)
+                ret = self:GetSkillEffect_Inner(Point(2, 2), Point(4, 2), true, effect)
             elseif self.TI_AB == 1 then
-                ret = self:GetSkillEffect(Point(2, 2), Point(2, 1), true, effect)
+                ret = self:GetSkillEffect_Inner(Point(2, 2), Point(2, 1), true, effect)
             else
-                ret = self:GetSkillEffect(Point(2, 2), Point(3, 3), true, effect)
+                ret = self:GetSkillEffect_Inner(Point(2, 2), Point(3, 3), true, effect)
                 ret:AddDelay(0.5)
             end
             self.TI_AB = (self.TI_AB + 1) % 3
         end
     else
         if self.TI_Z == 0 then
-            ret = self:GetSkillEffect(Point(2, 2), Point(1, 1), true)
+            ret = self:GetSkillEffect_Inner(Point(2, 2), Point(1, 1), true)
         else
-            ret = self:GetSkillEffect(Point(2, 2), Point(3, 3), true)
+            ret = self:GetSkillEffect_Inner(Point(2, 2), Point(3, 3), true)
         end
         self.TI_Z = (self.TI_Z + 1) % 2
     end
