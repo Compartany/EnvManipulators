@@ -550,7 +550,7 @@ function Env_Weapon_2:GetSkillEffect(p1, p2)
     damage.sImageMark = "combat/icons/env_lock.png"
     ret:AddArtillery(damage, "effects/env_shot_U.png")
 
-    if envName ~= "Env_Null" then
+    if envName ~= "Env_Null" and not tool:IsTipImage() then -- TipImage 会引起 Script 执行
         local env = mission.LiveEnvironment
         ENV_GLOBAL.Env_Target = p2
         -- 若没有环境被动，只有环境炮也得加载环境，检测到 envName 为 Env_Passive 即可
@@ -640,7 +640,7 @@ Env_Weapon_3_A = Env_Weapon_3:new{
 }
 
 Env_Weapon_3_B = Env_Weapon_3:new{
-    UpgradeDescription = Weapon_Texts.Env_Weapon_3_A_UpgradeDescription,
+    UpgradeDescription = Weapon_Texts.Env_Weapon_3_B_UpgradeDescription,
     Range = 5,
     TipImage = {
         Unit = Point(2, 4),
@@ -651,7 +651,6 @@ Env_Weapon_3_B = Env_Weapon_3:new{
 }
 
 Env_Weapon_3_AB = Env_Weapon_3:new{
-    UpgradeDescription = Weapon_Texts.Env_Weapon_3_A_UpgradeDescription,
     Range = 7,
     TipImage = {
         Unit = Point(2, 4),
