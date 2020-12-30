@@ -39,9 +39,11 @@ function Tool:HasWeapon(pawn, weapon)
         elseif GameData and GameData.current and GameData.current.mechs then
             -- 任何情况下都可使用，但有延时性
             local wpNo = self:GetWeaponNo(weapon)
-            local mechNo = math.ceil(wpNo / 2)
-            local mech = GameData.current.mechs[mechNo]
-            return mech == pawn:GetType() -- 自定义中有同名机甲时，判断会出错
+            if wpNo then
+                local mechNo = math.ceil(wpNo / 2)
+                local mech = GameData.current.mechs[mechNo]
+                return mech == pawn:GetType() -- 自定义中有同名机甲时，判断会出错
+            end
         end
     end
     return false
