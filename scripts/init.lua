@@ -5,12 +5,13 @@ ENV_GLOBAL = {}
 local mod = {
     id = "EnvManipulators",
     name = "EnvManipulators",
-    version = "1.0.2.20201230",
+    version = "1.0.3.20201230",
     requirements = {},
     modApiVersion = "2.5.4",
     icon = "img/icon.png",
     autor = "Compartany"
 }
+print(mod.version) -- for package
 
 -- 该 MOD 的装备不加到商店中，没有配合用不出来，且会极大程度增加 MOD 编写难度
 function mod:init()
