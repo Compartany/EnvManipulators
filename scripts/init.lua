@@ -9,7 +9,7 @@ local mod = {
     requirements = {},
     modApiVersion = "2.5.4",
     icon = "img/icon.png",
-    autor = "Compartany"
+    author = "Compartany"
 }
 print(mod.version) -- for package
 
