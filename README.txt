@@ -1,13 +1,14 @@
 MOD: EnvManipulators
 Author: Compartany
-Version: See [script/init.lua]
+Version: See [version.txt]
 Base: Into the Breach v1.2.24.20200528, Mod Loader v2.5.4
+Code: https://github.com/Compartany/EnvManipulators
 Link:
-    [EN] https://subsetgames.com/forum/viewtopic.php?t=36543
+    [EN] https://subsetgames.com/forum/viewtopic.php?f=25&t=36543
     [CN] https://www.bilibili.com/read/cv9047965
 Download:
-    [Google Drive] https://drive.google.com/drive/folders/12pqAXQWOKSEAVImqi1bkv-hl-3Zld9jh?usp=sharing
-    [weiyun] https://share.weiyun.com/7laJWpe3
+    [github] https://github.com/Compartany/EnvManipulators/raw/master/EnvManipulators.zip
+    [weiyun] https://share.weiyun.com/7laJWpe3 (alternate)
 
 These Mechs have the ability to manipulate Environments, and use them to fight the enemy.
 
@@ -19,7 +20,7 @@ Notes:
 5. I'm not a native English speaker, and all translations were done with the help of DeepL Translate, so the English text in MOD must be very terrible. If you are interested in helping to optimize the translation, please open the [scripts/localization/english] directory to make changes and send them to 2994359861@qq.com.
 
 Use:
-1. Extract mod loader to game directory
+1. Extract mod loader to game directory (https://subsetgames.com/forum/viewtopic.php?f=26&p=117100)
 2. Extract mod to [mods] directory
 3. Run game
 4. Enable MOD in [Configure Mods]
