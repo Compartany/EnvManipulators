@@ -1,0 +1,26 @@
+MOD：环境操纵者
+作者：Compartany
+版本：见【script/init.lua】
+基于：Into the Breach v1.2.24.20200528，Mod Loader v2.5.4
+链接：
+    [CN] https://www.bilibili.com/read/cv9047965
+    [EN] https://subsetgames.com/forum/viewtopic.php?t=36543
+下载：
+    [weiyun] https://share.weiyun.com/7laJWpe3
+    [Google Drive] https://drive.google.com/drive/folders/12pqAXQWOKSEAVImqi1bkv-hl-3Zld9jh?usp=sharing
+
+这些机甲拥有操纵环境的能力，它们利用环境与敌人战斗。
+
+说明：
+1. 该战队的发挥与敌人类型息息相关，游戏难度很大程度上取决于挑战岛屿的顺序。如果你觉得战队强度不足（事实上设计强度偏高），请尝试将掘地虫、爆炸灵虫、灵虫霸主等不好处理的敌人留到游戏后期。
+2. 请不要在自定义战队中添加多个移位机甲，否则将无法正确执行它们的技能。
+3. 设计时已经考虑到其他 MOD 提供的环境，但不承诺一起使用时不会出现 BUG，至少大概率会存在游戏平衡问题。
+4. 游戏语言为非简体中文时，MOD 会显示为英文。
+
+使用：
+1. 解压 MOD 加载器至游戏目录
+2. 将 MOD 解压至【mods】目录下
+3. 运行游戏
+4. 在【Configure Mods】中启用 MOD
+5. 在【Edit Squads】中启用环境操纵者
+6. 如果无法生效，请重启游戏
