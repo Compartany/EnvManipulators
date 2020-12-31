@@ -15,10 +15,10 @@ return {
     
     Env_Weapon_3_Name = "传导脉冲",
     Env_Weapon_3_Description = "发射能在物体间传导的推移脉冲。",
-    Env_Weapon_3_Upgrade1 = "+2 射程",
-    Env_Weapon_3_Upgrade2 = "+3 射程",
-    Env_Weapon_3_A_UpgradeDescription = "射程加 2。",
-    Env_Weapon_3_B_UpgradeDescription = "射程加 3。",
+    Env_Weapon_3_Upgrade1 = "+1 射程",
+    Env_Weapon_3_Upgrade2 = "+2 射程",
+    Env_Weapon_3_A_UpgradeDescription = "射程加 1。",
+    Env_Weapon_3_B_UpgradeDescription = "射程加 2。",
     
     Env_Weapon_4_Name = "环境加载器",
     Env_Weapon_4_Description = "在无环境的任务中加载人造环境（重要：见任务内环境说明），或增强已有环境。尽可能优先激活锁定灵虫的环境。",

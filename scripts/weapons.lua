@@ -610,13 +610,13 @@ end
 ------------------
 -- Env_Weapon_3 --
 ------------------
--- 两项升级，一项 +2 范围（1 核心），一项 +3 范围（3 核心）。其实升级 1 很大程度上已经够用，但多花 2 核心将升级 1 换成升级 2 也确实有一定提升。一方面是限制后期强度，另一方面也是为了让玩家多一个抉择。
+-- 两项升级，一项 +1 范围（1 核心），一项 +2 范围（3 核心）。其实升级 1 很大程度上已经够用，但多花 2 核心将升级 1 换成升级 2 也确实有一定提升。一方面是限制后期强度，另一方面也是为了让玩家多一个抉择。
 Env_Weapon_3 = Skill:new{
     Name = Weapon_Texts.Env_Weapon_3_Name,
     Description = Weapon_Texts.Env_Weapon_3_Description,
     Class = "Science",
     Icon = "weapons/env_weapon_3.png",
-    Range = 2,
+    Range = 3,
     Damage = 0,
     PowerCost = 1,
     Upgrades = 2,
@@ -625,8 +625,9 @@ Env_Weapon_3 = Skill:new{
     ImpactSound = "/impact/generic/tractor_beam",
     TipImage = {
         Unit = Point(2, 3),
-        Enemy = Point(2, 2),
-        Target = Point(2, 1)
+        Enemy = Point(2, 1),
+        Building = Point(2, 2),
+        Target = Point(2, 0)
     }
 }
 
@@ -653,7 +654,7 @@ Env_Weapon_3_B = Env_Weapon_3:new{
 }
 
 Env_Weapon_3_AB = Env_Weapon_3:new{
-    Range = 7,
+    Range = 6,
     TipImage = {
         Unit = Point(2, 4),
         Enemy = Point(2, 1),

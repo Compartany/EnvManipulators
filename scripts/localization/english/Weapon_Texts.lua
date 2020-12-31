@@ -15,10 +15,10 @@ return {
 
     Env_Weapon_3_Name = "Conductive Pulse",
     Env_Weapon_3_Description = "Emit a pushing pulse that can be conducted between objects.",
-    Env_Weapon_3_Upgrade1 = "+2 Range",
-    Env_Weapon_3_Upgrade2 = "+3 Range",
-    Env_Weapon_3_A_UpgradeDescription = "Increase range by 2.",
-    Env_Weapon_3_B_UpgradeDescription = "Increase range by 3.",
+    Env_Weapon_3_Upgrade1 = "+1 Range",
+    Env_Weapon_3_Upgrade2 = "+2 Range",
+    Env_Weapon_3_A_UpgradeDescription = "Increase range by 1.",
+    Env_Weapon_3_B_UpgradeDescription = "Increase range by 2.",
 
     Env_Weapon_4_Name = "EnvLoader",
     Env_Weapon_4_Description = "Load Artificial Environment (important: see Env desc within mission) on non-Environment missions, or enhance existing Environment. Prioritize Environment activation on psion tiles whenever possible.",

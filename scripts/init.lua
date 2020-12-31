@@ -5,7 +5,7 @@ ENV_GLOBAL = {}
 local mod = {
     id = "EnvManipulators",
     name = "EnvManipulators",
-    version = "1.0.7.20201231",
+    version = "1.1.0.20201231",
     requirements = {},
     modApiVersion = "2.5.4",
     icon = "img/icon.png",
@@ -26,14 +26,14 @@ function mod:init()
     require(self.scriptPath .. "lib/FURL")(self, {{
         Type = "color",
         Name = "EnvManipulatorsColors",
-        PlateHighlight = {76, 161, 255}, -- lights
-        PlateLight = {196, 182, 86}, -- main highlight
-        PlateMid = {96, 86, 32}, -- main light
-        PlateDark = {30, 29, 10}, -- main mid
-        PlateOutline = {0, 0, 0}, -- main dark
-        PlateShadow = {28, 28, 28}, -- metal dark
-        BodyColor = {67, 72, 68}, -- metal mid
-        BodyHighlight = {159, 170, 153} -- metal light
+        PlateHighlight = {76, 161, 255}, -- 高光    rgb(76, 161, 255)
+        PlateLight = {196, 182, 86}, -- 主色        rgb(196, 182, 86)
+        PlateMid = {96, 86, 32}, -- 主色阴影        rgb(96, 86, 32)
+        PlateDark = {30, 29, 10}, -- 主色暗部       rgb(30, 29, 10)
+        PlateOutline = {0, 0, 0}, -- 线条           rgb(0, 0, 0)
+        PlateShadow = {28, 28, 28}, -- 副色暗部     rgb(28, 28, 28)
+        BodyColor = {67, 72, 68}, -- 副色阴影       rgb(67, 72, 68)
+        BodyHighlight = {159, 170, 153} -- 副色     rgb(159, 170, 153)
     }, {
         Type = "mech",
         Name = "mech_env_prime",
