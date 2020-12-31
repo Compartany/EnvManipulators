@@ -9,6 +9,9 @@ Link:
 Download:
     [github] https://github.com/Compartany/EnvManipulators/raw/master/EnvManipulators.zip
     [weiyun] https://share.weiyun.com/7laJWpe3 (alternate)
+Demo Videos:
+    [weapons] https://www.bilibili.com/video/BV1cK41137DF?p=1
+    [perfect final island with default weapons] https://www.bilibili.com/video/BV1cK41137DF?p=2
 
 These Mechs have the ability to manipulate Environments, and use them to fight the enemy.
 

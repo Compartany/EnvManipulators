@@ -9,6 +9,9 @@ MOD：环境操纵者
 下载：
     [github] https://github.com/Compartany/EnvManipulators/raw/master/EnvManipulators.zip
     [weiyun] https://share.weiyun.com/7laJWpe3 （备用）
+演示视频：
+    [装备] https://www.bilibili.com/video/BV1cK41137DF?p=1
+    [初始装备终岛完美] https://www.bilibili.com/video/BV1cK41137DF?p=2
 
 这些机甲拥有操纵环境的能力，它们利用环境与敌人战斗。
 
