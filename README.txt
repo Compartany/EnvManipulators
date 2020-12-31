@@ -20,8 +20,8 @@ Notes:
 5. I'm not a native English speaker, and all translations were done with the help of DeepL Translate, so the English text in MOD must be very terrible. If you are interested in helping to optimize the translation, please open the [scripts/localization/english] directory to make changes and send them to 2994359861@qq.com.
 
 Use:
-1. Extract mod loader to game directory (https://subsetgames.com/forum/viewtopic.php?f=26&p=117100)
-2. Extract mod to [mods] directory
+1. Extract Mod Loader to game directory (https://subsetgames.com/forum/viewtopic.php?f=26&p=117100)
+2. Extract MOD to [mods] directory
 3. Run game
 4. Enable MOD in [Configure Mods]
 5. Enable EnvManipulators in [Edit Squads]
