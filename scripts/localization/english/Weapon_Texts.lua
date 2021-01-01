@@ -13,7 +13,7 @@ return {
     Env_Weapon_2_A_UpgradeDescription = "If target is pushed successfully, push side tiles of target's final position, otherwise push the obstruction.",
     Env_Weapon_2_B_UpgradeDescription = "Push inward tile of target.",
 
-    Env_Weapon_3_Name = "Conductive Pulse",
+    Env_Weapon_3_Name = "Conducted Pulse",
     Env_Weapon_3_Description = "Emit a pushing pulse that can be conducted between objects.",
     Env_Weapon_3_Upgrade1 = "+1 Range",
     Env_Weapon_3_Upgrade2 = "+2 Range",
