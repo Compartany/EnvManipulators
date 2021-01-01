@@ -215,6 +215,7 @@ function Env_Weapon_1:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect)
         end
 
         -- 优先处理向左位移，再处理向右位移，而不是按物体顺序来判定
+        local pushDelay = false
         for i, obj in ipairs(objs) do
             local dir = GetDirection(obj - p1)
             local dir2 = GetDirection(p2 - obj)
@@ -227,6 +228,15 @@ function Env_Weapon_1:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect)
                 damage.sAnimation = "explopunch1_" .. dir2
                 damage.sSound = "/weapons/titan_fist"
                 ret:AddMelee(p1, damage)
+
+                -- 判断是否应该添加延时以避免无法同时位移两个地面敌人至水中
+                -- 非常奇怪的是，像破损的山、一血建筑、一血单位等都不会在这种情况出现问题，只有掉进水的动画太长才导致这一问题
+                local pawn = Board:GetPawn(obj)
+                if Board:IsTerrain(p2, TERRAIN_WATER) and not pawn:IsGuarding() then
+                    if (not pawn:IsFlying() or pawn:IsFrozen()) and not _G[pawn:GetType()].Massive then
+                        pushDelay = true
+                    end
+                end
                 break
             end
         end
@@ -235,6 +245,9 @@ function Env_Weapon_1:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect)
             local dir2 = GetDirection(p2 - obj)
             local dirRight = (dir + 1) % 4
             if dir2 == dirRight then
+                if pushDelay and not Board:GetPawn(obj):IsGuarding() then
+                    ret:AddDelay(0.52) -- 0.5 就够，给多一点保险一些
+                end
                 damage = SpaceDamage(obj, 0, dir2)
                 damage.iFire = iFire
                 damage.iAcid = iAcid
@@ -362,26 +375,35 @@ end
 -- 反缠绕 --
 ------------
 function BoardPawn:IsEnvIgnoreWeb()
-    -- 机甲测试中不可能用到这个方法，就不检测了
-    return not self:IsIgnoreWeb() and pawnMap:Get(self:GetId(), "IgnoreWeb")
+    if IsTestMechScenario() then
+        return IsEnvWeapon1_B_TMS(self)
+    else
+        return not self:IsIgnoreWeb() and pawnMap:Get(self:GetId(), "IgnoreWeb")
+    end
 end
 local _SkillEffect_AddGrapple = SkillEffect.AddGrapple
 function SkillEffect:AddGrapple(source, target, ...)
     local ret = _SkillEffect_AddGrapple(self, source, target, ...)
     local pawn = Board:GetPawn(target)
+
     if pawn and pawn:IsEnvIgnoreWeb() then
-        ENV_GLOBAL.EnvIgnoreWeb_Pawn = pawn
-        self:AddScript([[ENV_GLOBAL.EnvIgnoreWeb_Pawn:SetSpace(Point(-1, -1))]])
-        self:AddDelay(0.01) -- 必须要有延时才行
-        self:AddScript([[ENV_GLOBAL.EnvIgnoreWeb_Pawn:SetSpace(]] .. target:GetString() .. [[)]])
-        self:AddDelay(0.25)
-        local damage = SpaceDamage(target, 1)
-        if not pawn:IsFire() then
-            damage.iFire = EFFECT_CREATE
+        if pawn:GetHealth() > 0 and not pawn:IsFrozen() and
+            (pawn:IsFlying() or Board:GetTerrain(target) ~= TERRAIN_WATER) then
+            ENV_GLOBAL.EnvIgnoreWeb_Pawn = pawn
+            self:AddScript([[ENV_GLOBAL.EnvIgnoreWeb_Pawn:SetSpace(Point(-1, -1))]])
+            self:AddDelay(0.01) -- 必须要有延时才行
+            self:AddScript([[ENV_GLOBAL.EnvIgnoreWeb_Pawn:SetSpace(]] .. target:GetString() .. [[)]])
+            self:AddDelay(0.25)
+            local damage = SpaceDamage(target, 1)
+            if not pawn:IsFire() then
+                damage.iFire = EFFECT_CREATE
+            end
+            damage.sAnimation = "EnvExploRepulse"
+            damage.sSound = "/impact/generic/explosion"
+            self:AddDamage(damage)
+        else
+            self:AddScript([[Game:AddTip("EnvOverloadDisabled", ]] .. target:GetString() .. [[)]])
         end
-        damage.sAnimation = "EnvExploRepulse"
-        damage.sSound = "/impact/generic/explosion"
-        self:AddDamage(damage)
     end
     return ret
 end
@@ -882,6 +904,8 @@ local Weapons = {}
 function Weapons:Load()
     Global_Texts.Env_AirSupport_Title = EnvMod_Texts.env_airsupport_title
     Global_Texts.Env_AirSupport_Text = EnvMod_Texts.env_airsupport_text
+    Global_Texts.EnvOverloadDisabled_Title = Weapon_Texts.Env_Weapon_1_Name
+    Global_Texts.EnvOverloadDisabled_Text = EnvMod_Texts.env_overload_disabled
     Global_Texts.EnvPassiveDisabled_Title = Weapon_Texts.Env_Weapon_4_Name
     Global_Texts.EnvPassiveDisabled_Text = EnvMod_Texts.env_passive_disabled
 

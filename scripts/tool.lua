@@ -137,6 +137,7 @@ function Tool:Env_Passive_Init(mission)
         mission.Environment = "Env_Passive"
         mission.LiveEnvironment = _G[mission.Environment]:new()
         mission.LiveEnvironment:Start()
+        mission.MasteredEnv = true
     end
 end
 

@@ -223,7 +223,7 @@ function Environment:Load()
         if Game:GetTurnCount() > 0 then -- 首回合 Locations 必然为空，跳过
             -- 没有 Enhanced 也空袭吧，否则太难打了
             local env = mission.LiveEnvironment
-            if not mission.MasteredEnv and (not env.Locations or #env.Locations == 0) then
+            if IsPassiveSkill("Env_Weapon_4") and not mission.MasteredEnv and (not env.Locations or #env.Locations == 0) then
                 local point = nil
                 local points = {}
                 local enemies = extract_table(Board:GetPawns(TEAM_ENEMY))

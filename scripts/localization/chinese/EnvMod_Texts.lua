@@ -7,6 +7,7 @@ EnvMod_Texts = {
     env_passive_name = "人造环境",
     env_passive_description = "终止标记方格内的单位行动并造成 %d 点结算伤害。所有单位都能察觉到危险并避开人造环境。",
     env_passive_basic_description = "终止标记方格内的单位行动并造成 3 点基础伤害。所有单位都能察觉到危险并避开人造环境。",
+    env_overload_disabled = "过载失败",
     env_passive_disabled = "环境加载器无法工作。",
     env_airsupport_title = "空中支援",
     env_airsupport_text = "无法操纵当前环境，请求阿凯夫空中支援。",
