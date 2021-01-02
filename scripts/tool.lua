@@ -133,10 +133,13 @@ end
 
 -- 初始化关卡环境被动
 function Tool:Env_Passive_Init(mission)
-    if mission.Environment == "Env_Null" or not mission.Environment then
+    local envName = mission.Environment
+    if envName == "Env_Null" or not envName then
         mission.Environment = "Env_Passive"
         mission.LiveEnvironment = _G[mission.Environment]:new()
         mission.LiveEnvironment:Start()
+        mission.MasteredEnv = true
+    elseif envName == "Env_Tides" or envName == "Env_Cataclysm" then
         mission.MasteredEnv = true
     end
 end

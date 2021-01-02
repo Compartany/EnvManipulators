@@ -2,7 +2,7 @@ local mod = mod_loader.mods[modApi.currentMod]
 local tool = mod.tool
 
 -- 选择额外区域
-function Env_Attack:SelectAdditionalSpace()
+function Environment:SelectAdditionalSpace()
     local ret = tool:GetEnvQuarters(self.Locations)
     ret.quarters = true
     return ret
@@ -53,9 +53,25 @@ function Env_Airstrike:SelectAdditionalSpace()
     end
     return ret
 end
+-- 巨浪额外区域
+function Env_Tides:SelectAdditionalSpace()
+    local repeated = {}
+    for x = 0, 7 do
+        repeated[#repeated + 1] = Point(x, self.Index)
+    end
+    return tool:GetEnvQuarters(repeated)
+end
+-- 灾变额外区域
+function Env_Cataclysm:SelectAdditionalSpace()
+    local repeated = {}
+    for y = 0, 7 do
+        repeated[#repeated + 1] = Point(7 - self.Index, y)
+    end
+    return tool:GetEnvQuarters(repeated)
+end
 
 -- 防止火山环境死循环
-local Env_Volcano_SelectSpaces = Env_Volcano.SelectSpaces
+local _Env_Volcano_SelectSpaces = Env_Volcano.SelectSpaces
 function Env_Volcano:SelectSpaces()
     -- 补充缺失的局部变量
     local ENV_ROCKS = 1
@@ -105,20 +121,119 @@ function Env_Volcano:SelectSpaces()
     end
     return ret
 end
-
--- 火山关卡如果 Point(1, 1) 变成岩浆会很奇怪，稍微处理一下
--- Point(0, 0), Point(0, 1), Point(1, 0) 都被做了特殊处理，只要 Point(1, 1) 没变都进不去，不用额外处理
-local Env_Volcano_GetAttackEffect = Env_Volcano.GetAttackEffect
+-- 优化一下岩浆环境
+local _Env_Volcano_GetAttackEffect = Env_Volcano.GetAttackEffect
 function Env_Volcano:GetAttackEffect(location, effect, ...)
     effect = effect or SkillEffect()
-    if self.Mode == 2 and location == Point(1, 1) then -- ENV_LAVA == 2
+    if self.Mode == 2 then -- ENV_LAVA == 2
         local damage = SpaceDamage(location, 0)
-		effect:AddSound("/props/lava_tile") -- 声音还是给一下吧
-		effect:AddDamage(damage)
+        effect:AddSound("/props/lava_tile") -- 声音还是给一下吧
+        if location ~= Point(1, 1) then
+            -- 火山关卡如果 Point(1, 1) 变成岩浆会很奇怪，稍微处理一下
+            -- Point(0, 0), Point(0, 1), Point(1, 0) 都被做了特殊处理，只要 Point(1, 1) 没变都进不去，不用额外处理
+            damage.iTerrain = TERRAIN_LAVA
+            if Board:GetTerrain(location) == TERRAIN_MOUNTAIN or Board:IsBuilding(location) then
+                damage.iDamage = DAMAGE_DEATH
+            end
+        end
+        effect:AddDamage(damage)
     else
-        effect = Env_Volcano_GetAttackEffect(self, location, effect, ...)
+        effect = _Env_Volcano_GetAttackEffect(self, location, effect, ...)
     end
     return effect
+end
+
+-- 支持巨浪环境
+local _Env_Tides_Start = Env_Tides.Start
+function Env_Tides:Start(...)
+    self.Locations = {}
+    return _Env_Tides_Start(self, ...)
+end
+local _Env_Tides_MarkBoard = Env_Tides.MarkBoard
+function Env_Tides:MarkBoard(...)
+    if self.Planned then
+        for i, location in ipairs(self.Locations) do
+            Board:MarkSpaceImage(location, self.CombatIcon, GL_Color(255, 226, 88, 0.75))
+            Board:MarkSpaceDesc(location, "high_tide")
+        end
+        return _Env_Tides_MarkBoard(self, ...)
+    end
+end
+local _Env_Tides_ApplyEffect = Env_Tides.ApplyEffect
+function Env_Tides:ApplyEffect(...)
+    local ret = _Env_Tides_ApplyEffect(self, ...)
+    local effect = SkillEffect()
+    for i, location in ipairs(self.Locations) do
+        local floodAnim = SpaceDamage(location)
+        effect:AddSound("/props/tide_flood_last")
+        floodAnim.iTerrain = TERRAIN_WATER
+        if Board:GetTerrain(location) == TERRAIN_MOUNTAIN or Board:IsBuilding(location) then
+            floodAnim.iDamage = DAMAGE_DEATH
+        end
+        effect:AddDamage(floodAnim)
+        effect:AddBounce(floodAnim.loc, -6)
+    end
+    effect:AddDelay(0.2)
+    effect.iOwner = ENV_EFFECT
+    Board:AddEffect(effect)
+    self.Locations = {}
+    self.Planned = false
+    return ret
+end
+local _Env_Tides_Plan = Env_Tides.Plan
+function Env_Tides:Plan(...)
+    local ret = _Env_Tides_Plan(self, ...)
+    local additionalArea = tool:GetEnvPassiveUpgradeAreaValue()
+    local spaces = self:SelectAdditionalSpace()
+    local env_planned = tool:GetUniformDistributionPoints(additionalArea, spaces)
+    if #env_planned > 0 then
+        tool:Env_Passive_Generate(env_planned)
+    end
+    return ret
+end
+
+-- 支持灾变环境
+local _Env_Cataclysm_Start = Env_Cataclysm.Start
+function Env_Cataclysm:Start(...)
+    self.Locations = {}
+    return _Env_Cataclysm_Start(self, ...)
+end
+local _Env_Cataclysm_MarkBoard = Env_Cataclysm.MarkBoard
+function Env_Cataclysm:MarkBoard(...)
+    for i, location in ipairs(self.Locations) do
+        Board:MarkSpaceImage(location, self.CombatIcon, GL_Color(255, 226, 88, 0.75))
+        Board:MarkSpaceDesc(location, "seismic")
+    end
+    return _Env_Cataclysm_MarkBoard(self, ...)
+end
+local _Env_Cataclysm_ApplyEffect = Env_Cataclysm.ApplyEffect
+function Env_Cataclysm:ApplyEffect(...)
+    local ret = _Env_Cataclysm_ApplyEffect(self, ...)
+    local effect = SkillEffect()
+    for i, location in ipairs(self.Locations) do
+        local damage = SpaceDamage(location)
+        damage.iTerrain = TERRAIN_HOLE
+        damage.fDelay = 0.2
+        if Board:IsBuilding(location) then
+            damage.iDamage = DAMAGE_DEATH
+        end
+        effect:AddDamage(damage)
+    end
+    effect.iOwner = ENV_EFFECT
+    Board:AddEffect(effect)
+    self.Locations = {}
+    return ret
+end
+local _Env_Cataclysm_Plan = Env_Cataclysm.Plan
+function Env_Cataclysm:Plan(...)
+    local ret = _Env_Cataclysm_Plan(self, ...)
+    local additionalArea = tool:GetEnvPassiveUpgradeAreaValue()
+    local spaces = self:SelectAdditionalSpace()
+    local env_planned = tool:GetUniformDistributionPoints(additionalArea, spaces)
+    if #env_planned > 0 then
+        tool:Env_Passive_Generate(env_planned)
+    end
+    return ret
 end
 
 -- 覆盖环境计划，后续额外新增锁定方格
