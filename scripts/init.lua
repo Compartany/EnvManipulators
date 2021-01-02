@@ -5,7 +5,7 @@ ENV_GLOBAL = {}
 local mod = {
     id = "EnvManipulators",
     name = "EnvManipulators",
-    version = "1.2.0.20210102",
+    version = "1.3.0.20210103",
     requirements = {},
     modApiVersion = "2.5.4",
     icon = "img/icon.png",
@@ -122,8 +122,8 @@ function mod:init()
     self.animations = require(self.scriptPath .. "animations")
     self.mechs = require(self.scriptPath .. "mechs")
     self.weapons = require(self.scriptPath .. "weapons")
-    self.environment = require(self.scriptPath .. "environment")
     self.env_passive = require(self.scriptPath .. "env_passive")
+    self.environment = require(self.scriptPath .. "environment")
     self.shop = require(self.scriptPath .. "lib/shop")
 
     modApi:appendAsset("img/combat/icons/env_lock.png", self.resourcePath .. "img/env_lock.png")
@@ -155,9 +155,9 @@ function mod:init()
 end
 
 function mod:load(options, version)
-    self.environment:Load()
-    self.env_passive:Load()
     self.weapons:Load()
+    self.env_passive:Load()
+    self.environment:Load()
     self.shop:load(options)
     modApi:addSquad({EnvMod_Texts.squad_name, "EnvMechPrime", "EnvMechRanged", "EnvMechScience"},
         EnvMod_Texts.squad_name, EnvMod_Texts.squad_description, self.resourcePath .. "img/icon.png")

@@ -108,44 +108,9 @@ function Tool:IsRepeatedTile(space, repeated)
     return false
 end
 
--- 获取对 ENV_GLOBAL.Env_Target 发起空中支援打击的代码
-function Tool:GetAirSupportScript()
-    local envDamage = self:GetEnvPassiveDamage() + 1
-    return [[
-        local effect = SkillEffect()
-        local location = ENV_GLOBAL.Env_Target
-        effect:AddVoice("Mission_Airstrike_Incoming", -1)
-        effect:AddDelay(0.4)
-        effect:AddSound("/props/airstrike")
-        if not GetCurrentMission().Env_AirSupport_Tip_Display then
-            Game:AddTip("Env_AirSupport", location)
-            GetCurrentMission().Env_AirSupport_Tip_Display = true
-        end
-        effect:AddAirstrike(location, "units/mission/bomber_1.png")
-        local damage = SpaceDamage(location, ]] .. envDamage .. [[)
-        damage.sAnimation = "ExploArt2"
-        damage.sSound = "/props/airstrike_explosion"
-        effect:AddDamage(damage)
-        effect:AddBounce(location, 6)
-        Board:AddEffect(effect)
-    ]]
-end
-
--- 初始化关卡环境被动
-function Tool:Env_Passive_Init(mission)
-    local envName = mission.Environment
-    if envName == "Env_Null" or not envName then
-        mission.Environment = "Env_Passive"
-        mission.LiveEnvironment = _G[mission.Environment]:new()
-        mission.LiveEnvironment:Start()
-        mission.MasteredEnv = true
-    elseif envName == "Env_Tides" or envName == "Env_Cataclysm" then
-        mission.MasteredEnv = true
-    end
-end
-
--- 找出装备环境被动的机甲，添加特效
-function Tool:Env_Passive_Generate(planned)
+-- 找出装备环境被动的机甲，添加环境锁定特效
+function Tool:EnvPassiveGenerate(planned, overlay)
+    overlay = overlay or false
     local pawns = extract_table(Board:GetPawns(TEAM_MECH))
     local bounceAmount = 10
     for i, id in ipairs(pawns) do
@@ -169,8 +134,11 @@ function Tool:Env_Passive_Generate(planned)
                     effect:AddArtillery(point, damage, "effects/env_shot_U.png", delay)
                 end
                 ENV_GLOBAL.Env_Passive_Planned = planned
-                effect:AddScript([[
-                    local env = GetCurrentMission().LiveEnvironment
+                local strEnv = "local env = GetCurrentMission().LiveEnvironment"
+                if overlay then
+                    strEnv = strEnv .. ".OverlayEnv"
+                end
+                effect:AddScript(strEnv .. [[
                     for i, epp in ipairs(ENV_GLOBAL.Env_Passive_Planned) do
                         env.Locations[#env.Locations + 1] = epp
                     end

@@ -576,17 +576,11 @@ function Env_Weapon_2:GetSkillEffect(p1, p2)
 
     if envName ~= "Env_Null" and not tool:IsTipImage() then -- TipImage 会引起 Script 执行
         local env = mission.LiveEnvironment
-        ENV_GLOBAL.Env_Target = p2
-        -- 若没有环境被动，只有环境炮也得加载环境，检测到 envName 为 Env_Passive 即可
-        if mission.MasteredEnv or (env.Locations and #env.Locations > 0) or envName == "Env_Passive" then
-            ret:AddScript([[
-                local env = GetCurrentMission().LiveEnvironment
-                env.Locations[#env.Locations + 1] = ENV_GLOBAL.Env_Target
-            ]])
-        elseif not tool:IsTipImage() then
-            -- 部分环境不配合，就立即提供一次空中支援来填补空缺
-            ret:AddScript(tool:GetAirSupportScript())
+        local strEnv = "local env = GetCurrentMission().LiveEnvironment"
+        if not mission.MasteredEnv and (not env.Locations or #env.Locations == 0 or mission.SpecialEnv) then
+            strEnv = strEnv .. ".OverlayEnv"
         end
+        ret:AddScript(strEnv .. "; env.Locations[#env.Locations + 1] = " .. p2:GetString())
     end
 
     local dirLeft = (direction + 3) % 4
@@ -902,8 +896,6 @@ end
 
 local Weapons = {}
 function Weapons:Load()
-    Global_Texts.Env_AirSupport_Title = EnvMod_Texts.env_airsupport_title
-    Global_Texts.Env_AirSupport_Text = EnvMod_Texts.env_airsupport_text
     Global_Texts.EnvOverloadDisabled_Title = Weapon_Texts.Env_Weapon_1_Name
     Global_Texts.EnvOverloadDisabled_Text = EnvMod_Texts.env_overload_disabled
     Global_Texts.EnvPassiveDisabled_Title = Weapon_Texts.Env_Weapon_4_Name

@@ -59,7 +59,9 @@ function Env_Tides:SelectAdditionalSpace()
     for x = 0, 7 do
         repeated[#repeated + 1] = Point(x, self.Index)
     end
-    return tool:GetEnvQuarters(repeated)
+    local quarters = tool:GetEnvQuarters(repeated)
+    quarters.quarters = true
+    return quarters
 end
 -- 灾变额外区域
 function Env_Cataclysm:SelectAdditionalSpace()
@@ -67,7 +69,9 @@ function Env_Cataclysm:SelectAdditionalSpace()
     for y = 0, 7 do
         repeated[#repeated + 1] = Point(7 - self.Index, y)
     end
-    return tool:GetEnvQuarters(repeated)
+    local quarters = tool:GetEnvQuarters(repeated)
+    quarters.quarters = true
+    return quarters
 end
 
 -- 防止火山环境死循环
@@ -180,17 +184,6 @@ function Env_Tides:ApplyEffect(...)
     self.Planned = false
     return ret
 end
-local _Env_Tides_Plan = Env_Tides.Plan
-function Env_Tides:Plan(...)
-    local ret = _Env_Tides_Plan(self, ...)
-    local additionalArea = tool:GetEnvPassiveUpgradeAreaValue()
-    local spaces = self:SelectAdditionalSpace()
-    local env_planned = tool:GetUniformDistributionPoints(additionalArea, spaces)
-    if #env_planned > 0 then
-        tool:Env_Passive_Generate(env_planned)
-    end
-    return ret
-end
 
 -- 支持灾变环境
 local _Env_Cataclysm_Start = Env_Cataclysm.Start
@@ -224,92 +217,190 @@ function Env_Cataclysm:ApplyEffect(...)
     self.Locations = {}
     return ret
 end
-local _Env_Cataclysm_Plan = Env_Cataclysm.Plan
-function Env_Cataclysm:Plan(...)
-    local ret = _Env_Cataclysm_Plan(self, ...)
-    local additionalArea = tool:GetEnvPassiveUpgradeAreaValue()
-    local spaces = self:SelectAdditionalSpace()
-    local env_planned = tool:GetUniformDistributionPoints(additionalArea, spaces)
-    if #env_planned > 0 then
-        tool:Env_Passive_Generate(env_planned)
+
+-- 覆盖环境的 ApplyEffect 不一定有用，因为 IsEffect() 可能返回 false
+local _Mission_ApplyEnvironmentEffect = Mission.ApplyEnvironmentEffect
+function Mission:ApplyEnvironmentEffect(...)
+    local env = self.LiveEnvironment
+    if env and env.OverlayEnv then
+        env.OverlayEnv:ApplyEffect()
     end
-    return ret
+    return _Mission_ApplyEnvironmentEffect(self, ...)
 end
 
--- 覆盖环境计划，后续额外新增锁定方格
--- 多次执行，返回 true 表示需继续执行，返回 false 表示执行完毕
-local _Env_Attack_Plan = Env_Attack.Plan
-function Env_Attack:Plan(...)
-    local ret = _Env_Attack_Plan(self, ...)
-    local mission = GetCurrentMission()
-    if not ret and (IsPassiveSkill("Env_Weapon_4_B") or IsPassiveSkill("Env_Weapon_4_AB")) then -- 原规划完成后再加
-        if mission.MasteredEnv or (self.Locations and #self.Locations > 0) then
-            local additionalArea = tool:GetEnvPassiveUpgradeAreaValue()
-            local spaces = self:SelectAdditionalSpace()
-            local env_planned = {}
-            if spaces.quarters then
-                env_planned = tool:GetUniformDistributionPoints(additionalArea, spaces, env_planned)
-            else
-                for i = 1, additionalArea do
-                    if #spaces == 0 then
-                        break
+-- 初始化关卡环境被动
+local function EnvPassiveInit(mission)
+    local envName = mission.Environment
+    if envName == "Env_Null" or not envName then
+        mission.Environment = "Env_Passive"
+        mission.LiveEnvironment = Env_Passive:new()
+        mission.LiveEnvironment:Start()
+        mission.MasteredEnv = true
+        mission.NoOverlayEnv = true
+    elseif envName == "Env_Tides" or envName == "Env_Cataclysm" then -- 纯手动处理
+        mission.MasteredEnv = true
+        mission.ManualEnv = true
+    elseif envName == "tosx_env_warps" then -- 有 Locations 但无法正常工作的神奇环境，由其他 MOD 引进，稍微兼容一下
+        mission.SpecialEnv = true
+    end
+end
+
+-- 修改三无环境
+local function AdjustEnv(mission)
+    if IsPassiveSkill("Env_Weapon_4") or tool:GetWeapon("Env_Weapon_2") then
+        local env = mission.LiveEnvironment
+        if env then
+            env.OverlayEnv = Env_Passive:new{
+                IsOverlay = true
+            }
+            env.OverlayEnv:Start()
+            if env.OverlayEnv_Locations then -- 虽然看 SaveData 可知 env.OverlayEnv.Locations 有数据，但不知道为什么读不出来
+                env.OverlayEnv.Locations = env.OverlayEnv_Locations
+            end
+
+            local _MarkBoard = env.MarkBoard
+            function env:MarkBoard(...)
+                local ret = _MarkBoard(self, ...)
+                self.OverlayEnv:MarkBoard()
+                if IsPassiveSkill("Env_Weapon_4_A") and
+                    (self.Locations and #self.Locations > 0 and not GetCurrentMission().SpecialEnv) then
+                    if not self:IsEffect() and not Board:IsBusy() then
+                        self.CurrentAttack = nil
                     end
-                    env_planned[#env_planned + 1] = random_removal(spaces)
+                    local icon = "combat/tile_icon/tile_airstrike.png"
+                    local colors = {GL_Color(50, 200, 50, 0.75), GL_Color(20, 200, 20, 0.75)}
+                    for i, location in ipairs(self.Locations) do
+                        if Board:GetPawnTeam(location) == TEAM_PLAYER then
+                            local focused = self.CurrentAttack == location or
+                                                (self.Instant and self.CurrentAttack ~= nil)
+                            Board:MarkSpaceImage(location, icon, focused and colors[2] or colors[1])
+                            Board:MarkSpaceDesc(location, "passive0", false)
+                        end
+                    end
                 end
-            end
-            if #env_planned > 0 then
-                tool:Env_Passive_Generate(env_planned)
-            end
-            -- 部分环境在后面会停止（如地震活动），如果之前检测到有活动就标记一下，不要发动空袭
-            if not mission.MasteredEnv then
-                mission.MasteredEnv = true
-            end
-        end
-    end
-    return ret
-end
-
--- 覆盖环境激活，优先击杀灵虫
--- 多次执行，返回 true 表示需继续执行，返回 false 表示执行完毕
-local _Env_Attack_ApplyEffect = Env_Attack.ApplyEffect
-function Env_Attack:ApplyEffect(...)
-    if IsPassiveSkill("Env_Weapon_4") then
-        local psions = {}
-        for i, location in ipairs(self.Locations) do
-            local pawn = Board:GetPawn(location)
-            if tool:IsPsion(pawn) then
-                psions[#psions + 1] = i
-            end
-        end
-        if #psions > 0 then
-            local ordered = self.Ordered
-            local points = {}
-            for i = 1, #psions do
-                psions[i] = table.remove(self.Locations, psions[i])
-            end
-            if ordered then
-                points = self.Locations
-                self.Locations = {}
-            else
-                while #self.Locations > 0 do
-                    points[#points + 1] = random_removal(self.Locations)
-                end
-            end
-            for i, psion in ipairs(psions) do
-                self.Locations[#self.Locations + 1] = psion
-            end
-            for i, point in ipairs(points) do
-                self.Locations[#self.Locations + 1] = point
+                return ret
             end
 
-            -- 经过调整后，灵虫所在的方格总是在最开始执行
-            self.Ordered = true
-            local ret = _Env_Attack_ApplyEffect(self, ...)
-            self.Ordered = ordered
-            return ret
+            -- 覆盖环境计划，后续额外新增锁定方格
+            -- 多次执行，返回 true 表示需继续执行，返回 false 表示执行完毕
+            local _Plan = env.Plan
+            function env:Plan(...)
+                local ret = _Plan(self, ...)
+                if not ret then -- 原规划完成后再加
+                    if mission.MasteredEnv or (self.Locations and #self.Locations > 0 and not mission.SpecialEnv) then
+                        if IsPassiveSkill("Env_Weapon_4_B") or IsPassiveSkill("Env_Weapon_4_AB") then
+                            local additionalArea = tool:GetEnvPassiveUpgradeAreaValue()
+                            local spaces = self:SelectAdditionalSpace()
+                            local env_planned = {}
+                            if spaces.quarters then
+                                env_planned = tool:GetUniformDistributionPoints(additionalArea, spaces, env_planned)
+                            else
+                                for i = 1, additionalArea do
+                                    if #spaces == 0 then
+                                        break
+                                    end
+                                    env_planned[#env_planned + 1] = random_removal(spaces)
+                                end
+                            end
+                            if #env_planned > 0 then
+                                tool:EnvPassiveGenerate(env_planned)
+                            end
+                        end
+                        -- 部分环境在后面会停止（如地震活动），如果之前检测到有活动就标记一下，不要发动空袭
+                        if not mission.MasteredEnv then
+                            mission.MasteredEnv = true
+                        end
+                    else
+                        self.OverlayEnv:Plan()
+                    end
+                end
+                return ret
+            end
+
+            -- 覆盖环境激活，优先击杀灵虫，并处理友军免疫
+            -- 多次执行，返回 true 表示需继续执行，返回 false 表示执行完毕
+            local _ApplyEffect = env.ApplyEffect
+            function env:ApplyEffect(...)
+                if IsPassiveSkill("Env_Weapon_4") and
+                    (self.Locations and #self.Locations > 0 and not mission.SpecialEnv) then
+                    local allyImmue = IsPassiveSkill("Env_Weapon_4_A")
+                    local psions = {} -- 原版游戏中不可能出现多只水母，但鬼知道其他 MOD 会不会改
+                    for i, location in ipairs(self.Locations) do
+                        local pawn = Board:GetPawn(location)
+                        if tool:IsPsion(pawn) then
+                            psions[#psions + 1] = i
+                        end
+                    end
+                    local ordered = self.Ordered
+                    local points = {}
+                    for i = #psions, 1, -1 do
+                        psions[i] = table.remove(self.Locations, psions[i])
+                    end
+                    if ordered then
+                        for i, location in ipairs(self.Locations) do
+                            if not allyImmue or Board:GetPawnTeam(location) ~= TEAM_PLAYER then -- 友军免疫
+                                points[#points + 1] = location
+                            end
+                        end
+                        self.Locations = {}
+                    else
+                        while #self.Locations > 0 do
+                            local p = random_removal(self.Locations)
+                            if not allyImmue or Board:GetPawnTeam(p) ~= TEAM_PLAYER then -- 友军免疫
+                                points[#points + 1] = p
+                            end
+                        end
+                    end
+                    for i, psion in ipairs(psions) do
+                        self.Locations[#self.Locations + 1] = psion
+                    end
+                    for i, point in ipairs(points) do
+                        self.Locations[#self.Locations + 1] = point
+                    end
+
+                    -- 经过调整后，灵虫所在的方格总是在最开始执行
+                    if #self.Locations > 0 then
+                        self.Ordered = true
+                        local ret = _ApplyEffect(self, ...)
+                        self.Ordered = ordered
+                        return ret
+                    else
+                        -- 可能会因为 Locations 为空运行出错
+                        local success, ret = pcall(_ApplyEffect, self, ...)
+                        if success then
+                            return ret
+                        else
+                            return false
+                        end
+                    end
+                end
+                return _ApplyEffect(self, ...)
+            end
+
+            -- 序列化之前要将对象上的方法移除，否则存到 SaveData 上时会坑爹
+            function env:OnSerializationStart(temp)
+                temp.MarkBoard = self.MarkBoard
+                temp.Plan = self.Plan
+                temp.ApplyEffect = self.ApplyEffect
+                self.MarkBoard = nil
+                self.Plan = nil
+                self.ApplyEffect = nil
+                -- 手动存一下 OverlayEnv.Locations
+                self.OverlayEnv_Locations = self.OverlayEnv.Locations
+            end
+            function env:OnSerializationEnd(temp)
+                self.MarkBoard = temp.MarkBoard
+                self.Plan = temp.Plan
+                self.ApplyEffect = temp.ApplyEffect
+            end
+        else
+            mission.Environment = "Env_Passive"
+            mission.LiveEnvironment = Env_Passive:new()
+            mission.LiveEnvironment:Start()
+            mission.MasteredEnv = true
+            mission.NoOverlayEnv = true
         end
     end
-    return _Env_Attack_ApplyEffect(self, ...)
 end
 
 local Environment = {}
@@ -320,49 +411,26 @@ function Environment:Load()
         -- 添加人造环境，不需要添加到继续游戏的 Hook 中，设置了 Environment 后会自动加载
         if not mission.Env_Init then
             if IsPassiveSkill("Env_Weapon_4") or tool:GetWeapon("Env_Weapon_2") then
-                tool:Env_Passive_Init(mission)
+                EnvPassiveInit(mission)
+                if not mission.NoOverlayEnv then
+                    AdjustEnv(mission)
+                end
             end
             mission.Env_Init = true
         end
+    end)
+    modApi:addPostLoadGameHook(function() -- 继续游戏
+        modApi:runLater(function(mission)
+            if mission.Env_Init and not mission.NoOverlayEnv then
+                AdjustEnv(mission)
+            end
+        end)
     end)
     modApi:addTestMechEnteredHook(function(mission)
         -- 机甲测试无需检查，直接给环境
         if not mission.Env_Init then
-            tool:Env_Passive_Init(mission)
+            EnvPassiveInit(mission)
             mission.Env_Init = true
-        end
-    end)
-    modApi:addPreEnvironmentHook(function(mission)
-        -- 存在环境却无 Locations，说明无法操纵，请求空援
-        -- 这种环境一般都重写了 Plan()，故只能用 Hook 来做
-        if Game:GetTurnCount() > 0 then -- 首回合 Locations 必然为空，跳过
-            -- 没有 Enhanced 也空袭吧，否则太难打了
-            local env = mission.LiveEnvironment
-            if IsPassiveSkill("Env_Weapon_4") and not mission.MasteredEnv and (not env.Locations or #env.Locations == 0) then
-                local point = nil
-                local points = {}
-                local enemies = extract_table(Board:GetPawns(TEAM_ENEMY))
-                for i, id in ipairs(enemies) do
-                    local pawn = Board:GetPawn(id)
-                    local space = pawn:GetSpace()
-                    if Board:IsValid(space) then -- 例外如大岩蛇钻到地底
-                        if tool:IsPsion(pawn) then
-                            point = space
-                            break
-                        end
-                        points[#points + 1] = space
-                    end
-                end
-                if not point and #points > 0 then
-                    point = random_element(points)
-                end
-                if point then
-                    ENV_GLOBAL.Env_Target = point
-                    local e = SkillEffect()
-                    e:AddScript(tool:GetAirSupportScript())
-                    Board:AddEffect(e)
-                end
-            end
         end
     end)
 end

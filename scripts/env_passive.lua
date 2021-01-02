@@ -8,8 +8,9 @@ Env_Passive = Env_Attack:new{
     Text = EnvMod_Texts.env_passive_basic_description,
     StratText = EnvMod_Texts.env_passive_name, -- 警告名称
     CombatIcon = "combat/tile_icon/tile_airstrike.png",
-    CombatName = EnvMod_Texts.env_passive_name -- 关卡内显示的名称
-    
+    CombatName = EnvMod_Texts.env_passive_name, -- 关卡内显示的名称
+    BaseArea = Env_Weapon_4.BaseArea, -- 基础锁定数
+    IsOverlay = false -- 是否为叠加环境
 }
 
 -- 环境规划
@@ -19,7 +20,7 @@ function Env_Passive:Plan()
         self.Locations = {}
         self.Planned = self:SelectSpaces()
         if #self.Planned > 0 then
-            tool:Env_Passive_Generate(self.Planned)
+            tool:EnvPassiveGenerate(self.Planned, self.IsOverlay)
         end
     end
     return false
@@ -56,11 +57,8 @@ function Env_Passive:MarkSpace(space, active)
             end
         end
     end
-    Board:MarkSpaceImage(space, self.CombatIcon, colors[1])
+    Board:MarkSpaceImage(space, self.CombatIcon, active and colors[2] or colors[1])
     Board:MarkSpaceDesc(space, tooltip, deadly)
-    if active then
-        Board:MarkSpaceImage(space, self.CombatIcon, colors[2])
-    end
 end
 
 -- 激活环境
@@ -95,35 +93,21 @@ end
 
 -- 选择目标方格
 function Env_Passive:SelectSpaces()
-    local ret = {}
     local quarters = tool:GetEnvQuarters() -- 先在每个象限取一格
-    for i, v in ipairs(quarters) do
-        ret[#ret + 1] = random_removal(v)
-    end
-
-    local baseArea = Env_Weapon_4.BaseArea
+    local area = self.BaseArea
     if IsPassiveSkill("Env_Weapon_4_B") or IsPassiveSkill("Env_Weapon_4_AB") then
-        local plusArea = baseArea + tool:GetEnvPassiveUpgradeAreaValue() -- 虽然 baseArea 目前是 4，但还是假装不知道吧
-        tool:GetUniformDistributionPoints(plusArea - 4, quarters, ret)
-    else
-        for i = 1, 4 - baseArea do
-            if #ret < 1 then
-                break
-            end
-            random_removal(ret)
-        end
+        area = area + tool:GetEnvPassiveUpgradeAreaValue() -- 虽然 BaseArea 目前是 4，但还是假装不知道吧
     end
-    return ret
+    return tool:GetUniformDistributionPoints(area, quarters)
 end
 
 function Env_Passive:Load()
     Global_Texts.Action_Terminated = EnvMod_Texts.action_terminated
-    TILE_TOOLTIPS.passive0 = {EnvMod_Texts.env_passive_name, Weapon_Texts.Env_Weapon_4_A_UpgradeDescription}
+    TILE_TOOLTIPS.passive0 = {Weapon_Texts.Env_Weapon_4_Name .. " - " .. Weapon_Texts.Env_Weapon_4_Upgrade1,
+                              Weapon_Texts.Env_Weapon_4_A_UpgradeDescription}
     for damage = 1, 6 do -- 为了方便日后修改，还是将伤害从 1 到 6 全弄出 tooltip 来
-        TILE_TOOLTIPS["passive" .. damage] = {
-            EnvMod_Texts.env_passive_name,
-            string.format(EnvMod_Texts.env_passive_description, damage)
-        }
+        TILE_TOOLTIPS["passive" .. damage] = {EnvMod_Texts.env_passive_name,
+                                              string.format(EnvMod_Texts.env_passive_description, damage)}
     end
 end
 

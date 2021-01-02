@@ -24,6 +24,6 @@ return {
     Env_Weapon_4_Description = "Load Artificial Environment (important: see Env desc within mission) on non-Environment missions, or enhance existing Environment. Prioritize Environment activation on psion tiles whenever possible.",
     Env_Weapon_4_Upgrade1 = "Ally Immune",
     Env_Weapon_4_Upgrade2 = "Area & Damage",
-    Env_Weapon_4_A_UpgradeDescription = "Friendly units will not take damage from Artificial Environment.",
+    Env_Weapon_4_A_UpgradeDescription = "Try to prevent Environment activation on friendly unit tiles.",
     Env_Weapon_4_B_UpgradeDescription = "Depending on island progress, all Environments lock on 0/1/2/2 more tiles, and Artificial Environment deals 0/1/2/2 more damage."
 }
