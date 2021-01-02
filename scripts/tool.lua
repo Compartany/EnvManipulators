@@ -225,6 +225,29 @@ function Tool:GetEnvQuarters(repeated)
     return quarters
 end
 
+-- 均匀地从四个象限中取 n 个点
+function Tool:GetUniformDistributionPoints(n, quarters, ret)
+    ret = ret or {}
+    local qa = {}
+    local qb = {}
+    local qc = nil
+    local nCnt = 0
+    while nCnt < n and (#quarters[1] > 0 or #quarters[2] > 0 or #quarters[3] > 0 or #quarters[4] > 0) do
+        if #qa == 0 then
+            qa = {{1, 3}, {2, 4}} -- 优先从对角线两侧的象限中选择
+        end
+        if #qb == 0 then
+            qb = random_removal(qa)
+        end
+        qc = random_removal(qb)
+        if #quarters[qc] > 0 then
+            ret[#ret + 1] = random_removal(quarters[qc])
+            nCnt = nCnt + 1
+        end
+    end
+    return ret
+end
+
 -- 获取环境被动升级区域数值
 function Tool:GetEnvPassiveUpgradeAreaValue()
     local values = {0, 1, 2, 2}

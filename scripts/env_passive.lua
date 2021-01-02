@@ -103,23 +103,8 @@ function Env_Passive:SelectSpaces()
 
     local baseArea = Env_Weapon_4.BaseArea
     if IsPassiveSkill("Env_Weapon_4_B") or IsPassiveSkill("Env_Weapon_4_AB") then
-        local qa = {}
-        local qb = {}
-        local qc = nil
-        local plusArea = baseArea + tool:GetEnvPassiveUpgradeAreaValue()
-        for i = 1, plusArea - 4 do -- 不用验证 plusArea >= 4
-            -- 总是从对角线两侧的象限中选择
-            if #qa == 0 then
-                qa = {{1, 3}, {2, 4}}
-            end
-            if #qb == 0 then
-                qb = random_removal(qa)
-            end
-            qc = random_removal(qb)
-            if #quarters[qc] > 0 then
-                ret[#ret + 1] = random_removal(quarters[qc])
-            end
-        end
+        local plusArea = baseArea + tool:GetEnvPassiveUpgradeAreaValue() -- 虽然 baseArea 目前是 4，但还是假装不知道吧
+        tool:GetUniformDistributionPoints(plusArea - 4, quarters, ret)
     else
         for i = 1, 4 - baseArea do
             if #ret < 1 then

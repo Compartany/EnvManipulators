@@ -54,6 +54,7 @@ function Env_Airstrike:SelectAdditionalSpace()
     return ret
 end
 
+-- 防止火山环境死循环
 local Env_Volcano_SelectSpaces = Env_Volcano.SelectSpaces
 function Env_Volcano:SelectSpaces()
     -- 补充缺失的局部变量
@@ -97,12 +98,27 @@ function Env_Volcano:SelectSpaces()
             while choice == Point(1, 1) and #v > 0 do -- 原来这个地方 v 中只有 Point(1, 1) 会死循环
                 choice = random_removal(v)
             end
-            if choice ~= Point(1, 1) then -- Point(1, 1) 就别加了，影响关卡自洽感；当然环境被动会补上，但这是外部因素
+            if choice ~= Point(1, 1) then -- Point(1, 1) 就别加了，影响关卡自洽感
                 ret[#ret + 1] = choice
             end
         end
     end
     return ret
+end
+
+-- 火山关卡如果 Point(1, 1) 变成岩浆会很奇怪，稍微处理一下
+-- Point(0, 0), Point(0, 1), Point(1, 0) 都被做了特殊处理，只要 Point(1, 1) 没变都进不去，不用额外处理
+local Env_Volcano_GetAttackEffect = Env_Volcano.GetAttackEffect
+function Env_Volcano:GetAttackEffect(location, effect, ...)
+    effect = effect or SkillEffect()
+    if self.Mode == 2 and location == Point(1, 1) then -- ENV_LAVA == 2
+        local damage = SpaceDamage(location, 0)
+		effect:AddSound("/props/lava_tile") -- 声音还是给一下吧
+		effect:AddDamage(damage)
+    else
+        effect = Env_Volcano_GetAttackEffect(self, location, effect, ...)
+    end
+    return effect
 end
 
 -- 覆盖环境计划，后续额外新增锁定方格
@@ -117,23 +133,7 @@ function Env_Attack:Plan(...)
             local spaces = self:SelectAdditionalSpace()
             local env_planned = {}
             if spaces.quarters then
-                local quarters = spaces
-                local qa = {}
-                local qb = {}
-                local qc = nil
-                for i = 1, additionalArea do
-                    -- 总是从对角线两侧的象限中选择
-                    if #qa == 0 then
-                        qa = {{1, 3}, {2, 4}}
-                    end
-                    if #qb == 0 then
-                        qb = random_removal(qa)
-                    end
-                    qc = random_removal(qb)
-                    if #quarters[qc] > 0 then
-                        env_planned[#env_planned + 1] = random_removal(quarters[qc])
-                    end
-                end
+                env_planned = tool:GetUniformDistributionPoints(additionalArea, spaces, env_planned)
             else
                 for i = 1, additionalArea do
                     if #spaces == 0 then
