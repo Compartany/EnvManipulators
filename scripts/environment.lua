@@ -407,15 +407,30 @@ local function AdjustEnv(mission)
             local _ApplyEffect = env.ApplyEffect
             function env:ApplyEffect(...)
                 if IsPassiveSkill("Env_Weapon_4") then
+                    local turn = Game:GetTurnCount()
+                    if not env.EnvLockPawns then
+                        env.EnvLockPawns = {}
+                    end
+                    if not env.EnvLockPawns[turn] then -- 不要备份 SkillEffect，否则又会出现存 SaveData 的问题
+                        local qpawns = {}
+                        local trueLocations = self:GetTrueLocations()
+                        for i, location in ipairs(trueLocations) do
+                            local pawn = Board:GetPawn(location)
+                            if pawn and pawn:GetQueued() then
+                                qpawns[#qpawns + 1] = location
+                            end
+                        end
+                        env.EnvLockPawns[turn] = qpawns
+                    end
                     local terminateEffect = SkillEffect()
-                    local trueLocations = self:GetTrueLocations()
-                    if #trueLocations > 0 then
+                    local qpawns = env.EnvLockPawns[turn]
+                    if #qpawns > 0 then
                         terminateEffect:AddDelay(0.8) -- 加点延时，否则可能在环境击杀敌人前就执行
-                        for i, location in ipairs(trueLocations) do -- 沉默敌人
+                        for i, location in ipairs(qpawns) do -- 必须取第一次的数据，否则将取到残缺数据
                             terminateEffect:AddScript([[ -- 取消行动
                                 local location = ]] .. location:GetString() .. [[
                                 local pawn = Board:GetPawn(location)
-                                if pawn and pawn:GetQueued() then -- 单位被击杀也不会进得来
+                                if pawn and pawn:GetQueued() then
                                     pawn:ClearQueued()
                                     Board:Ping(location, GL_Color(196, 182, 86, 0))
                                     Board:AddAlert(location, Global_Texts["Action_Terminated"])
