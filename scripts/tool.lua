@@ -111,6 +111,9 @@ end
 -- 找出装备环境被动的机甲，添加环境锁定特效
 function Tool:EnvPassiveGenerate(planned, overlay)
     overlay = overlay or false
+    local mission = GetCurrentMission()
+    mission.EnvPassive_Planned = planned -- 赶紧把状态存进 mission 里，防止保存游戏时没保存上
+    mission.EnvPassive_Planned_Overlay = overlay
     local pawns = extract_table(Board:GetPawns(TEAM_MECH))
     local bounceAmount = 10
     for i, id in ipairs(pawns) do
@@ -133,16 +136,17 @@ function Tool:EnvPassiveGenerate(planned, overlay)
                     damage.sSound = "/impact/generic/explosion"
                     effect:AddArtillery(point, damage, "effects/env_shot_U.png", delay)
                 end
-                ENV_GLOBAL.Env_Passive_Planned = planned
-                local strEnv = "local env = GetCurrentMission().LiveEnvironment"
+                local str = "local mission = GetCurrentMission(); local env = mission.LiveEnvironment"
                 if overlay then
-                    strEnv = strEnv .. ".OverlayEnv"
+                    str = str .. ".OverlayEnv"
                 end
-                effect:AddScript(strEnv .. [[
-                    for i, epp in ipairs(ENV_GLOBAL.Env_Passive_Planned) do
+                effect:AddScript(str .. [[
+                    for i, epp in ipairs(mission.EnvPassive_Planned) do
                         env.Locations[#env.Locations + 1] = epp
                     end
                     Game:TriggerSound("/props/square_lightup")
+                    mission.EnvPassive_Planned = nil
+                    mission.EnvPassive_Planned_Overlay = nil
                 ]])
                 Board:AddEffect(effect)
                 break -- 多个环境被动会被游戏禁止，不用考虑这种问题

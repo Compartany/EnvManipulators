@@ -21,7 +21,7 @@ return {
     Env_Weapon_3_B_UpgradeDescription = "射程加 2。",
     
     Env_Weapon_4_Name = "环境加载器",
-    Env_Weapon_4_Description = "在无环境的任务中加载人造环境（重要：见任务内环境说明），或增强已有环境。尽可能优先激活锁定灵虫的环境。",
+    Env_Weapon_4_Description = "加载人造环境或增强已有环境。尽可能优先激活锁定灵虫的环境，并尝试终止激活方格内单位的行动。",
     Env_Weapon_4_Upgrade1 = "友军免疫",
     Env_Weapon_4_Upgrade2 = "区域和伤害",
     Env_Weapon_4_A_UpgradeDescription = "尝试阻止锁定友方单位的环境被激活。",

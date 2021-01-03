@@ -1,6 +1,31 @@
 local mod = mod_loader.mods[modApi.currentMod]
 local tool = mod.tool
 
+-- 获取真正意义上的 Locations
+function Environment:GetTrueLocations()
+    return self.Locations and self.Locations or {}
+end
+function Env_Tides:GetTrueLocations()
+    local locations = {}
+    for x = 0, 7 do
+        locations[#locations + 1] = Point(x, self.Index)
+    end
+    for i, location in ipairs(self.Locations) do
+        locations[#locations + 1] = location
+    end
+    return locations
+end
+function Env_Cataclysm:GetTrueLocations()
+    local locations = {}
+    for y = 0, 7 do
+        locations[#locations + 1] = Point(7 - self.Index, y)
+    end
+    for i, location in ipairs(self.Locations) do
+        locations[#locations + 1] = location
+    end
+    return locations
+end
+
 -- 选择额外区域
 function Environment:SelectAdditionalSpace()
     local ret = tool:GetEnvQuarters(self.Locations)
@@ -163,9 +188,44 @@ function Env_Tides:MarkBoard(...)
         return _Env_Tides_MarkBoard(self, ...)
     end
 end
-local _Env_Tides_ApplyEffect = Env_Tides.ApplyEffect
+local _Env_Tides_ApplyEffect = Env_Tides.ApplyEffect -- 真原版
+-- 原版修改
+function Env_Tides:_ApplyEffect()
+    local allyImmue = IsPassiveSkill("Env_Weapon_4_A")
+    local effect = SkillEffect()
+    local building = {}
+    for y = 0, self.Index do
+        if y == self.Index then
+            effect:AddSound("/props/tide_flood_last")
+        else
+            effect:AddSound("/props/tide_flood")
+        end
+        for x = 0, 7 do
+            if Board:IsBuilding(Point(x, y)) then
+                building[x] = y
+            elseif building[x] ~= nil and building[x] < y then
+                -- do nothing
+            elseif not allyImmue or Board:GetPawnTeam(Point(x, y)) ~= TEAM_PLAYER then -- 友军免疫
+                local floodAnim = SpaceDamage(Point(x, y))
+                if y == self.Index then
+                    floodAnim.iTerrain = TERRAIN_WATER
+                    if Board:GetTerrain(Point(x, y)) == TERRAIN_MOUNTAIN then
+                        floodAnim.iDamage = DAMAGE_DEATH
+                    end
+                end
+                effect:AddDamage(floodAnim)
+                effect:AddBounce(floodAnim.loc, -6)
+            end
+        end
+        effect:AddDelay(0.2)
+    end
+    effect.iOwner = ENV_EFFECT
+    Board:AddEffect(effect)
+    self.Planned = false
+    return false
+end
 function Env_Tides:ApplyEffect(...)
-    local ret = _Env_Tides_ApplyEffect(self, ...)
+    local ret = self:_ApplyEffect(...)
     local effect = SkillEffect()
     for i, location in ipairs(self.Locations) do
         local floodAnim = SpaceDamage(location)
@@ -199,9 +259,32 @@ function Env_Cataclysm:MarkBoard(...)
     end
     return _Env_Cataclysm_MarkBoard(self, ...)
 end
-local _Env_Cataclysm_ApplyEffect = Env_Cataclysm.ApplyEffect
+local _Env_Cataclysm_ApplyEffect = Env_Cataclysm.ApplyEffect -- 真原版
+-- 原版修改
+function Env_Cataclysm:_ApplyEffect()
+    local allyImmue = IsPassiveSkill("Env_Weapon_4_A")
+    local effect = SkillEffect()
+    local damage = SpaceDamage()
+    damage.iTerrain = TERRAIN_HOLE
+    damage.fDelay = 0.2
+    effect:AddBoardShake(1.5)
+    effect:AddSound("/props/ground_break_line")
+    local x = 7 - self.Index
+    for y = 0, 7 do
+        if not allyImmue or Board:GetPawnTeam(Point(x, y)) ~= TEAM_PLAYER then
+            damage.loc = Point(x, y)
+            if not Board:IsBuilding(damage.loc) then
+                effect:AddDamage(damage)
+            end
+        end
+        Board:BlockSpawn(Point(x - 1, y), BLOCKED_PERM) -- can't have units spawn on the next set of doomed tiles
+    end
+    effect.iOwner = ENV_EFFECT
+    Board:AddEffect(effect)
+    return false
+end
 function Env_Cataclysm:ApplyEffect(...)
-    local ret = _Env_Cataclysm_ApplyEffect(self, ...)
+    local ret = self:_ApplyEffect(...)
     local effect = SkillEffect()
     for i, location in ipairs(self.Locations) do
         local damage = SpaceDamage(location)
@@ -231,7 +314,7 @@ end
 -- 初始化关卡环境被动
 local function EnvPassiveInit(mission)
     local envName = mission.Environment
-    if envName == "Env_Null" or not envName then
+    if envName == "Env_Null" or not envName or not mission.LiveEnvironment then
         mission.Environment = "Env_Passive"
         mission.LiveEnvironment = Env_Passive:new()
         mission.LiveEnvironment:Start()
@@ -239,13 +322,13 @@ local function EnvPassiveInit(mission)
         mission.NoOverlayEnv = true
     elseif envName == "Env_Tides" or envName == "Env_Cataclysm" then -- 纯手动处理
         mission.MasteredEnv = true
-        mission.ManualEnv = true
-    elseif envName == "tosx_env_warps" then -- 有 Locations 但无法正常工作的神奇环境，由其他 MOD 引进，稍微兼容一下
+    elseif envName == "tosx_env_warps" or envName == "Env_lmn_Sequoia" then -- 有 Locations 但无法正常工作的神奇环境，由其他 MOD 引进，稍微兼容一下
         mission.SpecialEnv = true
     end
+    mission.LiveEnvironment._env_init = true
 end
 
--- 修改三无环境
+-- 动态地修改环境
 local function AdjustEnv(mission)
     if IsPassiveSkill("Env_Weapon_4") or tool:GetWeapon("Env_Weapon_2") then
         local env = mission.LiveEnvironment
@@ -261,15 +344,17 @@ local function AdjustEnv(mission)
             local _MarkBoard = env.MarkBoard
             function env:MarkBoard(...)
                 local ret = _MarkBoard(self, ...)
+                local mission = GetCurrentMission()
+                local trueLocations = self:GetTrueLocations()
                 self.OverlayEnv:MarkBoard()
                 if IsPassiveSkill("Env_Weapon_4_A") and
-                    (self.Locations and #self.Locations > 0 and not GetCurrentMission().SpecialEnv) then
+                    (mission.MasteredEnv or (trueLocations and #trueLocations > 0 and not mission.SpecialEnv)) then
                     if not self:IsEffect() and not Board:IsBusy() then
                         self.CurrentAttack = nil
                     end
                     local icon = "combat/tile_icon/tile_airstrike.png"
                     local colors = {GL_Color(50, 200, 50, 0.75), GL_Color(20, 200, 20, 0.75)}
-                    for i, location in ipairs(self.Locations) do
+                    for i, location in ipairs(trueLocations) do
                         if Board:GetPawnTeam(location) == TEAM_PLAYER then
                             local focused = self.CurrentAttack == location or
                                                 (self.Instant and self.CurrentAttack ~= nil)
@@ -321,58 +406,88 @@ local function AdjustEnv(mission)
             -- 多次执行，返回 true 表示需继续执行，返回 false 表示执行完毕
             local _ApplyEffect = env.ApplyEffect
             function env:ApplyEffect(...)
-                if IsPassiveSkill("Env_Weapon_4") and
-                    (self.Locations and #self.Locations > 0 and not mission.SpecialEnv) then
-                    local allyImmue = IsPassiveSkill("Env_Weapon_4_A")
-                    local psions = {} -- 原版游戏中不可能出现多只水母，但鬼知道其他 MOD 会不会改
-                    for i, location in ipairs(self.Locations) do
-                        local pawn = Board:GetPawn(location)
-                        if tool:IsPsion(pawn) then
-                            psions[#psions + 1] = i
+                if IsPassiveSkill("Env_Weapon_4") then
+                    local terminateEffect = SkillEffect()
+                    local trueLocations = self:GetTrueLocations()
+                    if #trueLocations > 0 then
+                        terminateEffect:AddDelay(0.8) -- 加点延时，否则可能在环境击杀敌人前就执行
+                        for i, location in ipairs(trueLocations) do -- 沉默敌人
+                            terminateEffect:AddScript([[ -- 取消行动
+                                local location = ]] .. location:GetString() .. [[
+                                local pawn = Board:GetPawn(location)
+                                if pawn and pawn:GetQueued() then -- 单位被击杀也不会进得来
+                                    pawn:ClearQueued()
+                                    Board:Ping(location, GL_Color(196, 182, 86, 0))
+                                    Board:AddAlert(location, Global_Texts["Action_Terminated"])
+                                end
+                            ]])
                         end
-                    end
-                    local ordered = self.Ordered
-                    local points = {}
-                    for i = #psions, 1, -1 do
-                        psions[i] = table.remove(self.Locations, psions[i])
-                    end
-                    if ordered then
-                        for i, location in ipairs(self.Locations) do
-                            if not allyImmue or Board:GetPawnTeam(location) ~= TEAM_PLAYER then -- 友军免疫
-                                points[#points + 1] = location
-                            end
-                        end
-                        self.Locations = {}
-                    else
-                        while #self.Locations > 0 do
-                            local p = random_removal(self.Locations)
-                            if not allyImmue or Board:GetPawnTeam(p) ~= TEAM_PLAYER then -- 友军免疫
-                                points[#points + 1] = p
-                            end
-                        end
-                    end
-                    for i, psion in ipairs(psions) do
-                        self.Locations[#self.Locations + 1] = psion
-                    end
-                    for i, point in ipairs(points) do
-                        self.Locations[#self.Locations + 1] = point
                     end
 
-                    -- 经过调整后，灵虫所在的方格总是在最开始执行
-                    if #self.Locations > 0 then
-                        self.Ordered = true
-                        local ret = _ApplyEffect(self, ...)
-                        self.Ordered = ordered
-                        return ret
-                    else
-                        -- 可能会因为 Locations 为空运行出错
-                        local success, ret = pcall(_ApplyEffect, self, ...)
-                        if success then
+                    if mission.MasteredEnv or (self.Locations and #self.Locations > 0 and not mission.SpecialEnv) then
+                        local allyImmue = IsPassiveSkill("Env_Weapon_4_A")
+                        local psions = {} -- 原版游戏中不可能出现多只水母，但鬼知道其他 MOD 会不会改
+                        for i, location in ipairs(self.Locations) do
+                            local pawn = Board:GetPawn(location)
+                            if tool:IsPsion(pawn) then
+                                psions[#psions + 1] = i
+                            end
+                        end
+                        local ordered = self.Ordered
+                        local points = {}
+                        for i = #psions, 1, -1 do
+                            psions[i] = table.remove(self.Locations, psions[i])
+                        end
+                        if ordered then
+                            for i, location in ipairs(self.Locations) do
+                                if not allyImmue or Board:GetPawnTeam(location) ~= TEAM_PLAYER then -- 友军免疫
+                                    points[#points + 1] = location
+                                end
+                            end
+                            self.Locations = {}
+                        else
+                            while #self.Locations > 0 do
+                                local p = random_removal(self.Locations)
+                                if not allyImmue or Board:GetPawnTeam(p) ~= TEAM_PLAYER then -- 友军免疫
+                                    points[#points + 1] = p
+                                end
+                            end
+                        end
+                        for i, psion in ipairs(psions) do
+                            self.Locations[#self.Locations + 1] = psion
+                        end
+                        for i, point in ipairs(points) do
+                            self.Locations[#self.Locations + 1] = point
+                        end
+
+                        -- 经过调整后，灵虫所在的方格总是在最开始执行
+                        if #self.Locations > 0 then
+                            self.Ordered = true
+                            local ret = _ApplyEffect(self, ...)
+                            self.Ordered = ordered
+                            if not ret then
+                                Board:AddEffect(terminateEffect)
+                            end
                             return ret
                         else
-                            return false
+                            -- 可能会因为 Locations 为空运行出错
+                            local success, ret = pcall(_ApplyEffect, self, ...)
+                            if not success or not ret then
+                                Board:AddEffect(terminateEffect)
+                            end
+                            if success then
+                                return ret
+                            else
+                                return false
+                            end
                         end
                     end
+                    -- 只要在环境被动范围内，就添加行动终止
+                    local ret = _ApplyEffect(self, ...)
+                    if not ret then
+                        Board:AddEffect(terminateEffect)
+                    end
+                    return ret
                 end
                 return _ApplyEffect(self, ...)
             end
@@ -417,12 +532,20 @@ function Environment:Load()
                 end
             end
             mission.Env_Init = true
+        elseif not mission.LiveEnvironment or not mission.LiveEnvironment._env_init then -- 部分 MOD 环境可能会自删
+            mission.LiveEnvironment = nil
+            AdjustEnv(mission)
+            mission.LiveEnvironment._env_init = true
         end
     end)
     modApi:addPostLoadGameHook(function() -- 继续游戏
         modApi:runLater(function(mission)
             if mission.Env_Init and not mission.NoOverlayEnv then
                 AdjustEnv(mission)
+            end
+            if mission.EnvPassive_Planned then
+                -- 如果有没有执行完的 plan，继续执行
+                tool:EnvPassiveGenerate(mission.EnvPassive_Planned, mission.EnvPassive_Planned_Overlay)
             end
         end)
     end)

@@ -74,15 +74,17 @@ function Env_Passive:ApplyEffect()
                 local damage = SpaceDamage(location, envDamage)
                 damage.sAnimation = "Env_Passive_Animation" .. random_int(2)
                 effect:AddDamage(damage)
-                effect:AddScript([[ -- 取消行动
-                    local location = ]] .. location:GetString() .. [[
-                    local pawn = Board:GetPawn(location)
-                    if pawn and pawn:GetQueued() then -- 单位被击杀也不会进得来
-                        pawn:ClearQueued()
-                        Board:Ping(location, GL_Color(196, 182, 86, 0))
-                        Board:AddAlert(location, Global_Texts["Action_Terminated"])
-                    end
-                ]])
+                if IsPassiveSkill("Env_Weapon_4") then
+                    effect:AddScript([[ -- 取消行动
+                        local location = ]] .. location:GetString() .. [[
+                        local pawn = Board:GetPawn(location)
+                        if pawn and pawn:GetQueued() then -- 单位被击杀也不会进得来
+                            pawn:ClearQueued()
+                            Board:Ping(location, GL_Color(196, 182, 86, 0))
+                            Board:AddAlert(location, Global_Texts["Action_Terminated"])
+                        end
+                    ]])
+                end
             end
         end
         Board:AddEffect(effect)

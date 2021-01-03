@@ -873,6 +873,9 @@ function Env_Weapon_4:GetSkillEffect(p1, p2)
         end
         ret:AddScript([[Board:SetCustomTile(]] .. location:GetString() .. [[, "ground_0.png")]])
     end
+    if self.TipDmg < 5 then -- Alert 就不加了，TipImage 太小加了也看不见
+        ret:AddScript([[Board:Ping(Point(1, 1), GL_Color(196, 182, 86, 0))]])
+    end
     ret:AddDelay(1.2)
     return ret
 end
