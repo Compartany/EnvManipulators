@@ -119,7 +119,7 @@ function Env_Weapon_1:GetTargetArea(point)
                                 -- 行动前再次更新必要的移动力信息
                                 mission[kMml] = Pawn:GetMoveSpeed()
                             end
-                            valid = mission[kMml] > 0
+                            valid = mission[kMml] > 0 or Pawn:IsEnvJumpMove()
                         end
 
                         if valid then
@@ -636,7 +636,7 @@ Env_Weapon_3 = Skill:new{
     Damage = 0,
     PowerCost = 1,
     Upgrades = 2,
-    UpgradeCost = {1, 3},
+    UpgradeCost = {1, 2},
     LaunchSound = "/weapons/enhanced_tractor",
     ImpactSound = "/impact/generic/tractor_beam",
     TipImage = {
