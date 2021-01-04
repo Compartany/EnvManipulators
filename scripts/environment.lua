@@ -405,19 +405,23 @@ local function AdjustEnv(mission)
             local function GetTerminateEffect()
                 local effect = SkillEffect()
                 local turn = Game:GetTurnCount()
+                local allyImmue = IsPassiveSkill("Env_Weapon_4_A")
                 local qpawns = env.EnvLockPawns and env.EnvLockPawns[turn] or {}
                 if #qpawns > 0 then
-                    effect:AddDelay(0.8) -- 加点延时，否则可能在环境击杀敌人前就执行
+                    effect:AddDelay(0.6) -- 加点延时，否则可能在环境击杀敌人前就执行
                     for i, location in ipairs(qpawns) do -- 必须取第一次的数据，否则将取到残缺数据
-                        effect:AddScript([[ -- 取消行动
-                            local location = ]] .. location:GetString() .. [[
-                            local pawn = Board:GetPawn(location)
-                            if pawn and pawn:GetQueued() then
-                                pawn:ClearQueued()
-                                Board:Ping(location, GL_Color(196, 182, 86, 0))
-                                Board:AddAlert(location, Global_Texts["Action_Terminated"])
-                            end
-                        ]])
+                        -- 理论上 TEAM_PLAYER 没有 Queued，但其他 MOD 未必不会引进，多做个判断
+                        if not allyImmue or Board:GetPawnTeam(location) ~= TEAM_PLAYER then
+                            effect:AddScript([[ -- 取消行动
+                                local location = ]] .. location:GetString() .. [[
+                                local pawn = Board:GetPawn(location)
+                                if pawn and pawn:IsQueued() then
+                                    pawn:ClearQueued()
+                                    Board:Ping(location, GL_Color(196, 182, 86, 0))
+                                    Board:AddAlert(location, Global_Texts["Action_Terminated"])
+                                end
+                            ]])
+                        end
                     end
                 end
                 return effect
@@ -437,7 +441,7 @@ local function AdjustEnv(mission)
                         local trueLocations = self:GetTrueLocations()
                         for i, location in ipairs(trueLocations) do
                             local pawn = Board:GetPawn(location)
-                            if pawn and pawn:GetQueued() then
+                            if pawn and pawn:IsQueued() then
                                 qpawns[#qpawns + 1] = location
                             end
                         end

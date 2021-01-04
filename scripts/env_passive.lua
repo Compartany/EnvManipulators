@@ -78,7 +78,7 @@ function Env_Passive:ApplyEffect()
                     effect:AddScript([[ -- 取消行动
                         local location = ]] .. location:GetString() .. [[
                         local pawn = Board:GetPawn(location)
-                        if pawn and pawn:GetQueued() then -- 单位被击杀也不会进得来
+                        if pawn and pawn:IsQueued() then -- 单位被击杀也不会进得来
                             pawn:ClearQueued()
                             Board:Ping(location, GL_Color(196, 182, 86, 0))
                             Board:AddAlert(location, Global_Texts["Action_Terminated"])
