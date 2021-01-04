@@ -544,28 +544,30 @@ function Environment:Load()
     -- 没有对应真正意义上的“关卡开始”钩子，只能用 NextTurnHook 来顶替
     modApi:addNextTurnHook(function(mission)
         -- 添加人造环境，不需要添加到继续游戏的 Hook 中，设置了 Environment 后会自动加载
-        if not mission.Env_Init then
-            if IsPassiveSkill("Env_Weapon_4") or tool:GetWeapon("Env_Weapon_2") then
+        if IsPassiveSkill("Env_Weapon_4") or tool:GetWeapon("Env_Weapon_2") then
+            if not mission.Env_Init then
                 EnvPassiveInit(mission)
                 if not mission.NoOverlayEnv then
                     AdjustEnv(mission)
                 end
+                mission.Env_Init = true
+            elseif not mission.LiveEnvironment or not mission.LiveEnvironment._env_init then -- 部分 MOD 环境可能会自删
+                mission.LiveEnvironment = nil
+                AdjustEnv(mission)
+                mission.LiveEnvironment._env_init = true
             end
-            mission.Env_Init = true
-        elseif not mission.LiveEnvironment or not mission.LiveEnvironment._env_init then -- 部分 MOD 环境可能会自删
-            mission.LiveEnvironment = nil
-            AdjustEnv(mission)
-            mission.LiveEnvironment._env_init = true
         end
     end)
     modApi:addPostLoadGameHook(function() -- 继续游戏
         modApi:runLater(function(mission)
-            if mission.Env_Init and not mission.NoOverlayEnv then
-                AdjustEnv(mission)
-            end
-            if mission.EnvPassive_Planned then
-                -- 如果有没有执行完的 plan，继续执行
-                tool:EnvPassiveGenerate(mission.EnvPassive_Planned, mission.EnvPassive_Planned_Overlay)
+            if IsPassiveSkill("Env_Weapon_4") or tool:GetWeapon("Env_Weapon_2") then
+                if mission.Env_Init and not mission.NoOverlayEnv then
+                    AdjustEnv(mission)
+                end
+                if mission.EnvPassive_Planned then
+                    -- 如果有没有执行完的 plan，继续执行
+                    tool:EnvPassiveGenerate(mission.EnvPassive_Planned, mission.EnvPassive_Planned_Overlay)
+                end
             end
         end)
     end)
