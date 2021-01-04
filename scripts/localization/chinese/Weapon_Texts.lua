@@ -4,7 +4,7 @@ return {
     Env_Weapon_1_Upgrade1 = "推拉",
     Env_Weapon_1_Upgrade2 = "过载",
     Env_Weapon_1_A_UpgradeDescription = "向外或向内推移物体。向内推移需要机甲有沿当前路径移动到目标方格并在该处执行行动的能力。",
-    Env_Weapon_1_B_UpgradeDescription = "获得跳跃移动和免疫缠绕能力，发动能力或移动力耗尽时受到 1 点火焰伤害。",
+    Env_Weapon_1_B_UpgradeDescription = "获得无限距离跳跃移动和免疫缠绕能力，发动能力或移动力耗尽时受到 1 点火焰伤害。",
     
     Env_Weapon_2_Name = "环境发射器",
     Env_Weapon_2_Description = "推移目标及两侧方格，然后在目标方格加载环境。",
@@ -16,9 +16,9 @@ return {
     Env_Weapon_3_Name = "传导脉冲",
     Env_Weapon_3_Description = "发射能在物体间传导的推移脉冲。",
     Env_Weapon_3_Upgrade1 = "+1 射程",
-    Env_Weapon_3_Upgrade2 = "+2 射程",
+    Env_Weapon_3_Upgrade2 = "+1 射程",
     Env_Weapon_3_A_UpgradeDescription = "射程加 1。",
-    Env_Weapon_3_B_UpgradeDescription = "射程加 2。",
+    Env_Weapon_3_B_UpgradeDescription = "射程加 1。",
     
     Env_Weapon_4_Name = "环境加载器",
     Env_Weapon_4_Description = "加载人造环境或增强已有环境。尽可能优先激活锁定灵虫的环境，并尝试终止激活方格内单位的行动。",

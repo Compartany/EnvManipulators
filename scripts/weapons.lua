@@ -119,7 +119,7 @@ function Env_Weapon_1:GetTargetArea(point)
                                 -- 行动前再次更新必要的移动力信息
                                 mission[kMml] = Pawn:GetMoveSpeed()
                             end
-                            valid = mission[kMml] ~= 0
+                            valid = mission[kMml] > 0
                         end
 
                         if valid then
@@ -402,7 +402,7 @@ function SkillEffect:AddGrapple(source, target, ...)
             damage.sSound = "/impact/generic/explosion"
             self:AddDamage(damage)
         else
-            self:AddScript([[Game:AddTip("EnvOverloadDisabled", ]] .. target:GetString() .. [[)]])
+            self:AddScript([[Board:AddAlert(]] .. target:GetString() .. [[, Global_Texts.EnvOverloadDisabled)]])
         end
     end
     return ret
@@ -421,8 +421,8 @@ end
 
 local _Move_GetTargetArea = Move.GetTargetArea
 function Move:GetTargetArea(point)
-    if Pawn:IsEnvJumpMove() then
-        return Board:GetReachable(point, Pawn:GetMoveSpeed(), PATH_FLYER)
+    if Pawn:IsEnvJumpMove() and (Pawn:IsFlying() or Board:GetTerrain(point) ~= TERRAIN_WATER) then
+        return Board:GetReachable(point, 14, PATH_FLYER)
     end
     return _Move_GetTargetArea(self, point)
 end
@@ -432,7 +432,7 @@ function Move:GetSkillEffect(p1, p2)
         local dist = p1:Manhattan(p2)
         GetCurrentMission()["MechMovementLeft_" .. Pawn:GetId()] = Pawn:GetMoveSpeed() - dist
 
-        if Pawn:IsEnvJumpMove() then
+        if Pawn:IsEnvJumpMove() and (Pawn:IsFlying() or Board:GetTerrain(p1) ~= TERRAIN_WATER) then
             local needJump = true
             local groundReachable = Board:GetReachable(p1, Pawn:GetMoveSpeed(), Pawn:GetPathProf())
             for i, point in ipairs(extract_table(groundReachable)) do
@@ -660,7 +660,7 @@ Env_Weapon_3_A = Env_Weapon_3:new{
 
 Env_Weapon_3_B = Env_Weapon_3:new{
     UpgradeDescription = Weapon_Texts.Env_Weapon_3_B_UpgradeDescription,
-    Range = 5,
+    Range = 4,
     TipImage = {
         Unit = Point(2, 4),
         Enemy = Point(2, 1),
@@ -670,7 +670,7 @@ Env_Weapon_3_B = Env_Weapon_3:new{
 }
 
 Env_Weapon_3_AB = Env_Weapon_3:new{
-    Range = 6,
+    Range = 5,
     TipImage = {
         Unit = Point(2, 4),
         Enemy = Point(2, 1),
@@ -899,8 +899,7 @@ end
 
 local Weapons = {}
 function Weapons:Load()
-    Global_Texts.EnvOverloadDisabled_Title = Weapon_Texts.Env_Weapon_1_Name
-    Global_Texts.EnvOverloadDisabled_Text = EnvMod_Texts.env_overload_disabled
+    Global_Texts.EnvOverloadDisabled = EnvMod_Texts.env_overload_disabled
     Global_Texts.EnvPassiveDisabled_Title = Weapon_Texts.Env_Weapon_4_Name
     Global_Texts.EnvPassiveDisabled_Text = EnvMod_Texts.env_passive_disabled
 

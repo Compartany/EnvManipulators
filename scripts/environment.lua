@@ -402,6 +402,27 @@ local function AdjustEnv(mission)
                 return ret
             end
 
+            local function GetTerminateEffect()
+                local effect = SkillEffect()
+                local turn = Game:GetTurnCount()
+                local qpawns = env.EnvLockPawns and env.EnvLockPawns[turn] or {}
+                if #qpawns > 0 then
+                    effect:AddDelay(0.8) -- 加点延时，否则可能在环境击杀敌人前就执行
+                    for i, location in ipairs(qpawns) do -- 必须取第一次的数据，否则将取到残缺数据
+                        effect:AddScript([[ -- 取消行动
+                            local location = ]] .. location:GetString() .. [[
+                            local pawn = Board:GetPawn(location)
+                            if pawn and pawn:GetQueued() then
+                                pawn:ClearQueued()
+                                Board:Ping(location, GL_Color(196, 182, 86, 0))
+                                Board:AddAlert(location, Global_Texts["Action_Terminated"])
+                            end
+                        ]])
+                    end
+                end
+                return effect
+            end
+
             -- 覆盖环境激活，优先击杀灵虫，并处理友军免疫
             -- 多次执行，返回 true 表示需继续执行，返回 false 表示执行完毕
             local _ApplyEffect = env.ApplyEffect
@@ -421,22 +442,6 @@ local function AdjustEnv(mission)
                             end
                         end
                         env.EnvLockPawns[turn] = qpawns
-                    end
-                    local terminateEffect = SkillEffect()
-                    local qpawns = env.EnvLockPawns[turn]
-                    if #qpawns > 0 then
-                        terminateEffect:AddDelay(0.8) -- 加点延时，否则可能在环境击杀敌人前就执行
-                        for i, location in ipairs(qpawns) do -- 必须取第一次的数据，否则将取到残缺数据
-                            terminateEffect:AddScript([[ -- 取消行动
-                                local location = ]] .. location:GetString() .. [[
-                                local pawn = Board:GetPawn(location)
-                                if pawn and pawn:GetQueued() then
-                                    pawn:ClearQueued()
-                                    Board:Ping(location, GL_Color(196, 182, 86, 0))
-                                    Board:AddAlert(location, Global_Texts["Action_Terminated"])
-                                end
-                            ]])
-                        end
                     end
 
                     if mission.MasteredEnv or (self.Locations and #self.Locations > 0 and not mission.SpecialEnv) then
@@ -481,14 +486,14 @@ local function AdjustEnv(mission)
                             local ret = _ApplyEffect(self, ...)
                             self.Ordered = ordered
                             if not ret then
-                                Board:AddEffect(terminateEffect)
+                                Board:AddEffect(GetTerminateEffect())
                             end
                             return ret
                         else
                             -- 可能会因为 Locations 为空运行出错
                             local success, ret = pcall(_ApplyEffect, self, ...)
                             if not success or not ret then
-                                Board:AddEffect(terminateEffect)
+                                Board:AddEffect(GetTerminateEffect())
                             end
                             if success then
                                 return ret
@@ -500,7 +505,7 @@ local function AdjustEnv(mission)
                     -- 只要在环境被动范围内，就添加行动终止
                     local ret = _ApplyEffect(self, ...)
                     if not ret then
-                        Board:AddEffect(terminateEffect)
+                        Board:AddEffect(GetTerminateEffect())
                     end
                     return ret
                 end
