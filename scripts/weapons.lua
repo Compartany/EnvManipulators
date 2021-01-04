@@ -626,7 +626,6 @@ end
 ------------------
 -- Env_Weapon_3 --
 ------------------
--- 两项升级，一项 +1 范围（1 核心），一项 +2 范围（3 核心）。其实升级 1 很大程度上已经够用，但多花 2 核心将升级 1 换成升级 2 也确实有一定提升。一方面是限制后期强度，另一方面也是为了让玩家多一个抉择。
 Env_Weapon_3 = Skill:new{
     Name = Weapon_Texts.Env_Weapon_3_Name,
     Description = Weapon_Texts.Env_Weapon_3_Description,
