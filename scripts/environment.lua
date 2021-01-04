@@ -408,7 +408,7 @@ local function AdjustEnv(mission)
                 local allyImmue = IsPassiveSkill("Env_Weapon_4_A")
                 local qpawns = env.EnvLockPawns and env.EnvLockPawns[turn] or {}
                 if #qpawns > 0 then
-                    effect:AddDelay(0.6) -- 加点延时，否则可能在环境击杀敌人前就执行
+                    effect:AddDelay(0.8) -- 加点延时，否则可能在环境击杀敌人前就执行
                     for i, location in ipairs(qpawns) do -- 必须取第一次的数据，否则将取到残缺数据
                         -- 理论上 TEAM_PLAYER 没有 Queued，但其他 MOD 未必不会引进，多做个判断
                         if not allyImmue or Board:GetPawnTeam(location) ~= TEAM_PLAYER then

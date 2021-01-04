@@ -229,12 +229,18 @@ function Env_Weapon_1:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect)
                 damage.sSound = "/weapons/titan_fist"
                 ret:AddMelee(p1, damage)
 
-                -- 判断是否应该添加延时以避免无法同时位移两个地面敌人至水中
-                -- 非常奇怪的是，像破损的山、一血建筑、一血单位等都不会在这种情况出现问题，只有掉进水的动画太长才导致这一问题
+                -- 判断是否应该添加延时以避免无法同时位移两个地面敌人至水中或深坑中
+                -- 非常奇怪的是，像破损的山、一血建筑、一血单位等都不会在这种情况出现问题，只有掉入水中或深坑中动画太长才会导致这一问题
                 local pawn = Board:GetPawn(obj)
-                if Board:IsTerrain(p2, TERRAIN_WATER) and not pawn:IsGuarding() then
-                    if (not pawn:IsFlying() or pawn:IsFrozen()) and not _G[pawn:GetType()].Massive then
-                        pushDelay = true
+                if not pawn:IsGuarding() then
+                    if Board:IsTerrain(p2, TERRAIN_WATER) then
+                        if (not pawn:IsFlying() or pawn:IsFrozen()) and not _G[pawn:GetType()].Massive then
+                            pushDelay = true
+                        end
+                    elseif Board:IsTerrain(p2, TERRAIN_HOLE) then
+                        if not pawn:IsFlying() or pawn:IsFrozen() then
+                            pushDelay = true
+                        end
                     end
                 end
                 break
