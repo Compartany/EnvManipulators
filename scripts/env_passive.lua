@@ -49,9 +49,10 @@ function Env_Passive:MarkSpace(space, active)
             elseif pawn:IsArmor() then -- 装甲会被酸液腐蚀
                 line = line - 1
             end
-            if pawn:IsFire() then -- 火焰免疫不会进入燃烧状态，不用判定
-                line = line + 1
-            end
+            -- 不要帮忙判定火焰了
+            -- if pawn:IsFire() then -- 火焰免疫不会进入燃烧状态，不用判定
+            --     line = line + 1
+            -- end
             if pawn:GetHealth() > line then
                 deadly = false
             end
@@ -103,6 +104,25 @@ function Env_Passive:SelectSpaces()
     return tool:GetUniformDistributionPoints(area, quarters)
 end
 
+-- 阻止爆卵虫将卵产在环境被动锁定的方格内，蜘蛛之上没有这么低不用做特殊处理
+-- 这是游戏后期难度偏低的主要原因之一！
+local _BlobberAtk1_GetTargetScore = BlobberAtk1.GetTargetScore
+function BlobberAtk1:GetTargetScore(p1, p2, ...)
+    return tool:IsEnvPassiveGenerated(p2) and -10 or _BlobberAtk1_GetTargetScore(self, p1, p2, ...)
+end
+
+-- 各种关卡生成敌人也要避开环境锁定的方格，以提高难度
+local _Mission_FlyingSpawns = Mission.FlyingSpawns
+function Mission:FlyingSpawns(origin, count, pawn, projectile_info, exclude, ...)
+    exclude = exclude or {}
+    if self.EnvPassiveGenerated and #self.EnvPassiveGenerated > 0 then
+        for i, location in ipairs(self.EnvPassiveGenerated) do
+            exclude[#exclude + 1] = location
+        end
+    end
+    return _Mission_FlyingSpawns(self, origin, count, pawn, projectile_info, exclude, ...)
+end
+
 function Env_Passive:Load()
     Global_Texts.Action_Terminated = EnvMod_Texts.action_terminated
     TILE_TOOLTIPS.passive0 = {Weapon_Texts.Env_Weapon_4_Name .. " - " .. Weapon_Texts.Env_Weapon_4_Upgrade1,
@@ -111,6 +131,14 @@ function Env_Passive:Load()
         TILE_TOOLTIPS["passive" .. damage] = {EnvMod_Texts.env_passive_name,
                                               string.format(EnvMod_Texts.env_passive_description, damage)}
     end
+
+    modApi:addNextTurnHook(function(mission)
+        if IsPassiveSkill("Env_Weapon_4") or tool:GetWeapon("Env_Weapon_2") then
+            if Game:GetTeamTurn() == TEAM_ENEMY then -- 敌人回合开始时清信息
+                mission.EnvPassiveGenerated = {}
+            end
+        end
+    end)
 end
 
 return Env_Passive

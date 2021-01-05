@@ -17,12 +17,11 @@ Env_Weapon_1 = Skill:new{
     Description = Weapon_Texts.Env_Weapon_1_Description,
     Class = "Prime",
     Icon = "weapons/env_weapon_1.png",
-    Range = 8,
     Damage = 0,
     Push = false,
     Pull = false,
     Overload = false,
-    PowerCost = 2,
+    PowerCost = 0,
     Upgrades = 2,
     UpgradeCost = {1, 3},
     TipImage = {
@@ -36,7 +35,6 @@ Env_Weapon_1 = Skill:new{
 
 Env_Weapon_1_A = Env_Weapon_1:new{
     UpgradeDescription = Weapon_Texts.Env_Weapon_1_A_UpgradeDescription,
-    Push = true,
     Pull = true,
     TipImage = {
         Unit = Point(2, 2),
@@ -60,7 +58,6 @@ Env_Weapon_1_B = Env_Weapon_1:new{
 }
 
 Env_Weapon_1_AB = Env_Weapon_1:new{
-    Push = true,
     Pull = true,
     Overload = true,
     TipImage = {
@@ -178,7 +175,7 @@ function Env_Weapon_1:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect)
         end
         ret:AddDelay(0.3)
         ret:AddMove(Board:GetSimplePath(p2, p1), FULL_DELAY)
-        damage = SpaceDamage(obj, 0, dir2)
+        damage = SpaceDamage(obj, self.Damage, dir2)
         damage.iFire = iFire
         damage.iAcid = iAcid
         damage.bHide = bHide
@@ -199,7 +196,7 @@ function Env_Weapon_1:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect)
                 local dir = GetDirection(obj - p1)
                 local dir2 = GetDirection(p2 - obj)
                 if dir2 == dir then
-                    damage = SpaceDamage(obj, 0, dir2)
+                    damage = SpaceDamage(obj, self.Damage, dir2)
                     damage.iFire = iFire
                     damage.iAcid = iAcid
                     damage.bHide = bHide
@@ -221,7 +218,7 @@ function Env_Weapon_1:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect)
             local dir2 = GetDirection(p2 - obj)
             local dirLeft = (dir + 3) % 4
             if dir2 == dirLeft then
-                damage = SpaceDamage(obj, 0, dir2)
+                damage = SpaceDamage(obj, self.Damage, dir2)
                 damage.iFire = iFire
                 damage.iAcid = iAcid
                 damage.bHide = bHide
@@ -254,7 +251,7 @@ function Env_Weapon_1:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect)
                 if pushDelay and not Board:GetPawn(obj):IsGuarding() then
                     ret:AddDelay(0.52) -- 0.5 就够，给多一点保险一些
                 end
-                damage = SpaceDamage(obj, 0, dir2)
+                damage = SpaceDamage(obj, self.Damage, dir2)
                 damage.iFire = iFire
                 damage.iAcid = iAcid
                 damage.bHide = bHide
@@ -272,17 +269,17 @@ end
 function Env_Weapon_1:GetSkillEffect_TipImage()
     local ret = nil
     local s = "Z"
-    if self.Push and not self.Overload then
+    if self.Pull and not self.Overload then
         s = "A"
         if not self.TI_A then
             self.TI_A = 0
         end
-    elseif not self.Push and self.Overload then
+    elseif not self.Pull and self.Overload then
         s = "B"
         if not self.TI_B then
             self.TI_B = 0
         end
-    elseif self.Push and self.Overload then
+    elseif self.Pull and self.Overload then
         s = "AB"
         if not self.TI_AB then
             self.TI_AB = 0
@@ -295,13 +292,11 @@ function Env_Weapon_1:GetSkillEffect_TipImage()
 
     if s == "A" then
         if self.TI_A == 0 then
-            ret = self:GetSkillEffect_Inner(Point(2, 2), Point(4, 2), true)
-        elseif self.TI_A == 1 then
             ret = self:GetSkillEffect_Inner(Point(2, 2), Point(2, 1), true)
         else
             ret = self:GetSkillEffect_Inner(Point(2, 2), Point(3, 3), true)
         end
-        self.TI_A = (self.TI_A + 1) % 3
+        self.TI_A = (self.TI_A + 1) % 2
     elseif s == "B" or s == "AB" then
         local effect = SkillEffect()
         local p1 = Point(2, 4)
@@ -350,14 +345,12 @@ function Env_Weapon_1:GetSkillEffect_TipImage()
             self.TI_B = (self.TI_B + 1) % 2
         else
             if self.TI_AB == 0 then
-                ret = self:GetSkillEffect_Inner(Point(2, 2), Point(4, 2), true, effect)
-            elseif self.TI_AB == 1 then
                 ret = self:GetSkillEffect_Inner(Point(2, 2), Point(2, 1), true, effect)
             else
                 ret = self:GetSkillEffect_Inner(Point(2, 2), Point(3, 3), true, effect)
                 ret:AddDelay(0.5)
             end
-            self.TI_AB = (self.TI_AB + 1) % 3
+            self.TI_AB = (self.TI_AB + 1) % 2
         end
     else
         if self.TI_Z == 0 then
@@ -505,7 +498,7 @@ Env_Weapon_2 = LineArtillery:new{
     PowerCost = 1,
     Damage = 0,
     Upgrades = 2,
-    UpgradeCost = {1, 2},
+    UpgradeCost = {1, 1},
     LaunchSound = "/weapons/gravwell",
     ImpactSound = "/impact/generic/explosion",
     TipImage = {
@@ -524,6 +517,7 @@ Env_Weapon_2_A = Env_Weapon_2:new{
         Enemy = Point(2, 1),
         Enemy2 = Point(1, 0),
         Friendly = Point(3, 1),
+        Mountain = Point(0, 0),
         Target = Point(2, 1)
     }
 }
@@ -549,6 +543,7 @@ Env_Weapon_2_AB = Env_Weapon_2:new{
         Enemy2 = Point(2, 2),
         Enemy3 = Point(1, 0),
         Friendly = Point(3, 1),
+        Mountain = Point(0, 0),
         Target = Point(2, 1)
     }
 }
@@ -589,11 +584,12 @@ function Env_Weapon_2:GetSkillEffect(p1, p2)
         ret:AddScript(strEnv .. "; env.Locations[#env.Locations + 1] = " .. p2:GetString())
     end
 
+    local dirBack = (direction + 2) % 4
     local dirLeft = (direction + 3) % 4
     local dirRight = (direction + 1) % 4
     local pushDirs = {dirLeft, dirRight}
-    if self.InwardPush then
-        pushDirs[#pushDirs + 1] = (direction + 2) % 4
+    if self.InwardPush and tool:IsMovable(p2) then
+        pushDirs[#pushDirs + 1] = dirBack
     end
     for i, dir in ipairs(pushDirs) do
         damage = SpaceDamage(p2 + DIR_VECTORS[dir], 0, dir)
@@ -641,7 +637,7 @@ Env_Weapon_3 = Skill:new{
     Damage = 0,
     PowerCost = 1,
     Upgrades = 2,
-    UpgradeCost = {1, 2},
+    UpgradeCost = {1, 3},
     LaunchSound = "/weapons/enhanced_tractor",
     ImpactSound = "/impact/generic/tractor_beam",
     TipImage = {
@@ -742,6 +738,8 @@ function Env_Weapon_3:GetSkillEffect(p1, p2)
                 damage.sSound = "/impact/generic/explosion"
                 ret:AddDamage(damage)
                 ret:AddBounce(dests[i], -2)
+            else
+                ret:AddDamage(SpaceDamage(dests[i], self.Damage)) -- 一定要加，否则 XP 会被平分
             end
         end
     end
@@ -758,7 +756,7 @@ Env_Weapon_4 = PassiveSkill:new{
     Icon = "weapons/env_weapon_4.png",
     PowerCost = 3,
     Upgrades = 2,
-    UpgradeCost = {1, 2},
+    UpgradeCost = {1, 3},
     AllyImmune = false,
     BaseArea = 4,
     BaseDamage = 3,
@@ -812,12 +810,12 @@ function Env_Weapon_4:GetSkillEffect(p1, p2)
     Board:SetCustomTile(Point(2, 4), "ground_0.png")
     Board:SetCustomTile(Point(3, 2), "ground_0.png")
     Board:SetCustomTile(Point(3, 0), "ground_0.png")
-    Board:SetCustomTile(Point(0, 2), "ground_0.png")
+    -- Board:SetCustomTile(Point(0, 2), "ground_0.png")
 
     local planned = {Point(1, 1), Point(2, 4), Point(3, 2)}
     if self.Enhanced then
         planned[#planned + 1] = Point(3, 0)
-        planned[#planned + 1] = Point(0, 2)
+        -- planned[#planned + 1] = Point(0, 2)
     end
 
     local bounceAmount = 10

@@ -143,6 +143,7 @@ function Tool:EnvPassiveGenerate(planned, overlay)
                 effect:AddScript(str .. [[
                     for i, epp in ipairs(mission.EnvPassive_Planned) do
                         env.Locations[#env.Locations + 1] = epp
+                        mission.EnvPassiveGenerated[#mission.EnvPassiveGenerated + 1] = epp
                     end
                     Game:TriggerSound("/props/square_lightup")
                     mission.EnvPassive_Planned = nil
@@ -155,6 +156,19 @@ function Tool:EnvPassiveGenerate(planned, overlay)
             end
         end
     end
+end
+
+-- 判断方格是否为被环境被动锁定
+function Tool:IsEnvPassiveGenerated(point)
+    local mission = GetCurrentMission()
+    if mission and mission.EnvPassiveGenerated and #mission.EnvPassiveGenerated > 0 then
+        for i, location in ipairs(mission.EnvPassiveGenerated) do
+            if point == location then
+                return true
+            end
+        end
+    end
+    return false
 end
 
 -- 判断方格是否为有效的环境目标
@@ -214,7 +228,7 @@ function Tool:GetUniformDistributionPoints(n, quarters, ret)
         if #qb == 0 then
             qb = random_removal(qa)
         end
-        qc = random_removal(qb)
+        qc = table.remove(qb, #qb) -- 优先取战场下方两个象限
         if #quarters[qc] > 0 then
             ret[#ret + 1] = random_removal(quarters[qc])
             nCnt = nCnt + 1
@@ -225,7 +239,7 @@ end
 
 -- 获取环境被动升级区域数值
 function Tool:GetEnvPassiveUpgradeAreaValue()
-    local values = {0, 1, 2, 2}
+    local values = {0, 0, 1, 1}
     return values[GetSector()]
 end
 
