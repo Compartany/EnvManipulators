@@ -8,10 +8,10 @@ return {
 
     Env_Weapon_2_Name = "EnvLauncher",
     Env_Weapon_2_Description = "Push target and side tiles, and then load Environment on target tile.",
-    Env_Weapon_2_Upgrade1 = "Chain",
-    Env_Weapon_2_Upgrade2 = "Inward",
-    Env_Weapon_2_A_UpgradeDescription = "If target was pushed successfully, push side tiles of target's final position, otherwise push the obstruction.",
-    Env_Weapon_2_B_UpgradeDescription = "Push inward tile of target if target is movable.",
+    Env_Weapon_2_Upgrade1 = "Chain 1",
+    Env_Weapon_2_Upgrade2 = "Chain 2",
+    Env_Weapon_2_A_UpgradeDescription = "If target object was pushed successfully, push side tiles of its final position.",
+    Env_Weapon_2_B_UpgradeDescription = "If target object was pushed unsuccessfully, push its front and back tiles.",
 
     Env_Weapon_3_Name = "Conducted Pulse",
     Env_Weapon_3_Description = "Emit a pushing pulse that can be conducted between objects.",

@@ -279,7 +279,7 @@ function Tool:IsMovable(point)
     return Board:IsPawnSpace(point) and not Board:GetPawn(point):IsGuarding()
 end
 
--- 判断是否可传导
+-- 判断是否可传导（就目前来看与 IsEmptyTile() 互逆）
 function Tool:IsConductive(point)
     return Board:IsPawnSpace(point) or Board:IsBuilding(point) or Board:GetTerrain(point) == TERRAIN_MOUNTAIN
 end

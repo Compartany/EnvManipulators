@@ -8,10 +8,10 @@ return {
     
     Env_Weapon_2_Name = "环境发射器",
     Env_Weapon_2_Description = "推移目标及两侧方格，然后在目标方格加载环境。",
-    Env_Weapon_2_Upgrade1 = "连锁",
-    Env_Weapon_2_Upgrade2 = "内推",
-    Env_Weapon_2_A_UpgradeDescription = "若推移目标成功，则推移目标最终位置两侧的方格，否则推移阻碍物。",
-    Env_Weapon_2_B_UpgradeDescription = "若目标为可推移物体，则推移目标内侧方格。",
+    Env_Weapon_2_Upgrade1 = "连锁 1",
+    Env_Weapon_2_Upgrade2 = "连锁 2",
+    Env_Weapon_2_A_UpgradeDescription = "若推移目标物体成功，则推移目标最终位置两侧的方格。",
+    Env_Weapon_2_B_UpgradeDescription = "若推移目标物体失败，则推移目标前后方格。",
     
     Env_Weapon_3_Name = "传导脉冲",
     Env_Weapon_3_Description = "发射能在物体间传导的推移脉冲。",

@@ -493,8 +493,8 @@ Env_Weapon_2 = LineArtillery:new{
     Description = Weapon_Texts.Env_Weapon_2_Description,
     Class = "Ranged",
     Icon = "weapons/env_weapon_2.png",
-    InwardPush = false,
-    ChainPush = false,
+    Chain1 = false,
+    Chain2 = false,
     PowerCost = 1,
     Damage = 0,
     Upgrades = 2,
@@ -502,49 +502,49 @@ Env_Weapon_2 = LineArtillery:new{
     LaunchSound = "/weapons/gravwell",
     ImpactSound = "/impact/generic/explosion",
     TipImage = {
-        Unit = Point(2, 3),
-        Enemy = Point(2, 1),
-        Friendly = Point(3, 1),
-        Target = Point(2, 1)
+        Unit = Point(2, 4),
+        Enemy = Point(2, 2),
+        Friendly = Point(3, 2),
+        Target = Point(2, 2)
     }
 }
 
 Env_Weapon_2_A = Env_Weapon_2:new{
     UpgradeDescription = Weapon_Texts.Env_Weapon_2_A_UpgradeDescription,
-    ChainPush = true,
+    Chain1 = true,
     TipImage = {
-        Unit = Point(2, 3),
-        Enemy = Point(2, 1),
-        Enemy2 = Point(1, 0),
-        Friendly = Point(3, 1),
-        Mountain = Point(0, 0),
-        Target = Point(2, 1)
+        Unit = Point(2, 4),
+        Enemy = Point(2, 2),
+        Enemy2 = Point(1, 1),
+        Friendly = Point(3, 2),
+        Target = Point(2, 2)
     }
 }
 
 Env_Weapon_2_B = Env_Weapon_2:new{
     UpgradeDescription = Weapon_Texts.Env_Weapon_2_B_UpgradeDescription,
-    InwardPush = true,
+    Chain2 = true,
     TipImage = {
         Unit = Point(2, 4),
-        Enemy = Point(2, 1),
-        Enemy2 = Point(2, 2),
-        Friendly = Point(3, 1),
-        Target = Point(2, 1)
+        Enemy = Point(2, 2),
+        Enemy2 = Point(2, 3),
+        Friendly = Point(2, 1),
+        Friendly2 = Point(3, 2),
+        Target = Point(2, 2)
     }
 }
 
 Env_Weapon_2_AB = Env_Weapon_2:new{
-    ChainPush = true,
-    InwardPush = true,
+    Chain1 = true,
+    Chain2 = true,
     TipImage = {
         Unit = Point(2, 4),
-        Enemy = Point(2, 1),
-        Enemy2 = Point(2, 2),
-        Enemy3 = Point(1, 0),
-        Friendly = Point(3, 1),
-        Mountain = Point(0, 0),
-        Target = Point(2, 1)
+        Enemy = Point(2, 2),
+        Enemy2 = Point(2, 3),
+        Enemy3 = Point(1, 1),
+        Friendly = Point(2, 1),
+        Friendly2 = Point(3, 2),
+        Target = Point(2, 2)
     }
 }
 
@@ -562,8 +562,14 @@ function Env_Weapon_2:GetTargetArea(point)
 end
 
 function Env_Weapon_2:GetSkillEffect(p1, p2)
-    local ret = SkillEffect()
+    return tool:IsTipImage() and self:GetSkillEffect_TipImage() or self:GetSkillEffect_Inner(p1, p2)
+end
+
+function Env_Weapon_2:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect, param)
+    tipImageCall = tipImageCall or false
+    local ret = skillEffect or SkillEffect()
     local direction = GetDirection(p2 - p1)
+    local tiC1 = param and param.tiC1 or false
 
     local mission = GetCurrentMission()
     local envName = mission and mission.Environment or "Env_Null"
@@ -575,7 +581,7 @@ function Env_Weapon_2:GetSkillEffect(p1, p2)
     damage.sImageMark = "combat/icons/env_lock.png"
     ret:AddArtillery(damage, "effects/env_shot_U.png")
 
-    if envName ~= "Env_Null" and not tool:IsTipImage() then -- TipImage 会引起 Script 执行
+    if envName ~= "Env_Null" and not tipImageCall then -- TipImage 会引起 Script 执行
         local env = mission.LiveEnvironment
         local strEnv = "local env = GetCurrentMission().LiveEnvironment"
         if not mission.MasteredEnv and (not env.Locations or #env.Locations == 0 or mission.SpecialEnv) then
@@ -584,44 +590,55 @@ function Env_Weapon_2:GetSkillEffect(p1, p2)
         ret:AddScript(strEnv .. "; env.Locations[#env.Locations + 1] = " .. p2:GetString())
     end
 
-    local dirBack = (direction + 2) % 4
     local dirLeft = (direction + 3) % 4
     local dirRight = (direction + 1) % 4
     local pushDirs = {dirLeft, dirRight}
-    if self.InwardPush and tool:IsMovable(p2) then
-        pushDirs[#pushDirs + 1] = dirBack
-    end
     for i, dir in ipairs(pushDirs) do
         damage = SpaceDamage(p2 + DIR_VECTORS[dir], 0, dir)
         damage.sAnimation = PUSH_ANIMS[dir]
         ret:AddDamage(damage)
     end
-    if self.ChainPush then
-        local p3 = p2 + DIR_VECTORS[direction]
-        if tool:IsMovable(p2) then
-            if tool:IsEmptyTile(p3) then
-                ret:AddDelay(0.35)
-                for i, dir in ipairs({dirLeft, dirRight}) do
-                    damage = SpaceDamage(p3 + DIR_VECTORS[dir], 0, dir)
-                    damage.sAnimation = PUSH_ANIMS[dir]
-                    ret:AddDamage(damage)
-                end
-            else
-                ret:AddDelay(0.25)
-                damage = SpaceDamage(p3, 0, direction)
+    local p3 = p2 + DIR_VECTORS[direction]
+    if self.Chain1 then
+        if tiC1 or (tool:IsMovable(p2) and tool:IsEmptyTile(p3)) then
+            ret:AddDelay(0.35)
+            for i, dir in ipairs({dirLeft, dirRight}) do
+                damage = SpaceDamage(p3 + DIR_VECTORS[dir], 0, dir)
+                damage.sAnimation = PUSH_ANIMS[dir]
+                damage.bHide = tiC1
+                ret:AddDamage(damage)
+            end
+        end
+    end
+    if self.Chain2 then
+        if not tiC1 and not tool:IsEmptyTile(p2) and (not tool:IsMovable(p2) or not tool:IsEmptyTile(p3)) then
+            local dirBack = (direction + 2) % 4
+            ret:AddDelay(0.25)
+            for i, dir in ipairs({direction, dirBack}) do
+                damage = SpaceDamage(p2 + DIR_VECTORS[dir], 0, dir)
                 damage.sAnimation = PUSH_ANIMS[direction]
                 ret:AddDamage(damage)
             end
         end
     end
+    return ret
+end
 
-    -- 如果是使用提示，则用假方格模仿环境锁定
-    if tool:IsTipImage() then
-        ret:AddScript([[Board:SetCustomTile(Point(2, 1), "tile_lock.png")]])
+function Env_Weapon_2:GetSkillEffect_TipImage()
+    local ret = SkillEffect()
+    if self.Chain1 and self.Chain2 then
+        self:GetSkillEffect_Inner(Point(2, 4), Point(2, 2), true, ret)
+        ret:AddScript([[Board:SetCustomTile(Point(2, 2), "tile_lock.png")]])
+        ret:AddDelay(1.2)
+        self:GetSkillEffect_Inner(Point(2, 4), Point(2, 2), true, ret, {tiC1 = true})
         ret:AddDelay(1.5)
-        ret:AddScript([[Board:SetCustomTile(Point(2, 1), "ground_0.png")]])
+        ret:AddScript([[Board:SetCustomTile(Point(2, 2), "ground_0.png")]])
+    else
+        self:GetSkillEffect_Inner(Point(2, 4), Point(2, 2), true, ret)
+        ret:AddScript([[Board:SetCustomTile(Point(2, 2), "tile_lock.png")]])
+        ret:AddDelay(1.5)
+        ret:AddScript([[Board:SetCustomTile(Point(2, 2), "ground_0.png")]])
     end
-
     return ret
 end
 
