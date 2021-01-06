@@ -20,6 +20,7 @@ Env_Weapon_1 = Skill:new{
     Damage = 0,
     Push = false,
     Pull = false,
+    PullLength = 3,
     Overload = false,
     PowerCost = 0,
     Upgrades = 2,
@@ -39,8 +40,7 @@ Env_Weapon_1_A = Env_Weapon_1:new{
     TipImage = {
         Unit = Point(2, 2),
         Enemy = Point(2, 0),
-        Enemy2 = Point(3, 2),
-        Enemy3 = Point(2, 3),
+        Enemy2 = Point(5, 2),
         Target = Point(2, 1)
     }
 }
@@ -88,41 +88,36 @@ function Env_Weapon_1:GetTargetArea(point)
             end
         end
         if self.Pull then
-            curr = point + DIR_VECTORS[dir] * 2
-            if tool:IsMovable(curr) then
-                local target = curr - DIR_VECTORS[dir]
-                if tool:IsEmptyTile(target) then
+            for i = 2, self.PullLength do
+                curr = point + DIR_VECTORS[dir] * i
+                if tool:IsMovable(curr) then
                     local valid = true
-                    local terrain = Board:GetTerrain(target)
-                    if not Pawn:IsFlying() and (terrain == TERRAIN_WATER or terrain == TERRAIN_HOLE) then
-                        -- 不会飞且移动到液面或深坑上
-                        valid = false
-                    elseif Pawn:IsGrappled() then
-                        -- 被缠绕
-                        valid = false
-                    elseif not Pawn:IsIgnoreSmoke() and Board:IsSmoke(target) then
-                        -- 无烟雾免疫且移动到烟雾中
-                        valid = false
-                    elseif Board:IsDangerousItem(target) then
-                        -- 地雷等危险物体
-                        valid = false
+                    for j = 1, i - 1 do
+                        local target = curr - DIR_VECTORS[dir] * j
+                        local terrain = Board:GetTerrain(target)
+                        if not tool:IsEmptyTile(target) then
+                            valid = false
+                        elseif not Pawn:IsFlying() and (terrain == TERRAIN_WATER or terrain == TERRAIN_HOLE) then
+                            -- 不会飞且移动到液面或深坑上
+                            valid = false
+                        elseif Pawn:IsGrappled() then
+                            -- 被缠绕
+                            valid = false
+                        elseif not Pawn:IsIgnoreSmoke() and Board:IsSmoke(target) then
+                            -- 无烟雾免疫且移动到烟雾中
+                            valid = false
+                        elseif Board:IsDangerousItem(target) then
+                            -- 地雷等危险物体
+                            valid = false
+                        end
+                        if not valid then
+                            break
+                        end
                     end
                     if valid then
-                        -- 判断移动力是否足够
-                        if not tool:IsTipImage() then
-                            local mission = GetCurrentMission()
-                            local kMml = "MechMovementLeft_" .. Pawn:GetId()
-                            if not Pawn:GetPawnTable().bMoved then
-                                -- 行动前再次更新必要的移动力信息
-                                mission[kMml] = Pawn:GetMoveSpeed()
-                            end
-                            valid = mission[kMml] > 0 or Pawn:IsEnvJumpMove()
-                        end
-
-                        if valid then
-                            ret:push_back(target)
-                        end
+                        ret:push_back(point + DIR_VECTORS[dir])
                     end
+                    break
                 end
             end
         end
@@ -147,39 +142,36 @@ function Env_Weapon_1:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect)
 
     if dist == 1 and self.Pull then
         local dir = GetDirection(p2 - p1)
-        local dir2 = GetDirection(p1 - p2)
-        local obj = p2 + DIR_VECTORS[dir]
+        local dirBack = GetDirection(p1 - p2)
+        local obj = p1 + DIR_VECTORS[dir] * 2
+        for i = 3, self.PullLength do
+            if tool:IsMovable(obj) then
+                break
+            end
+            obj = p1 + DIR_VECTORS[dir] * i
+        end
+        local p3 = obj - DIR_VECTORS[dir]
+        local pullDist = obj:Manhattan(p2)
         if iFire == EFFECT_NONE then
             iFire = (Board:IsFire(p2) and not Pawn:IsIgnoreFire()) and EFFECT_CREATE or EFFECT_NONE
         end
         if iAcid == EFFECT_NONE then
             iAcid = Board:IsAcid(p2) and EFFECT_CREATE or EFFECT_NONE
         end
-        ret:AddMove(Board:GetSimplePath(p1, p2), FULL_DELAY)
-        if not tipImageCall then
-            local kMml = "MechMovementLeft_" .. Pawn:GetId()
-            local mml = GetCurrentMission()[kMml]
-            -- 考虑到西里卡机师等多次攻击的情况，还是更新一下剩余移动力信息
-            ret:AddScript(string.format("GetCurrentMission().%s = %d - 1", kMml, mml))
-            if Pawn:IsEnvJumpMove() then
-                if not mml or mml <= 1 then -- 移动力耗尽
-                    damage = SpaceDamage(p2, 1)
-                    if not Pawn:IsFire() then
-                        damage.iFire = EFFECT_CREATE
-                    end
-                    damage.sAnimation = "EnvExploRepulse"
-                    damage.sSound = "/impact/generic/explosion"
-                    ret:AddDamage(damage)
-                end
-            end
-        end
+        ret:AddMove(Board:GetSimplePath(p1, p3), FULL_DELAY)
         ret:AddDelay(0.3)
-        ret:AddMove(Board:GetSimplePath(p2, p1), FULL_DELAY)
-        damage = SpaceDamage(obj, self.Damage, dir2)
+        ret:AddMove(Board:GetSimplePath(p3, p1), FULL_DELAY)
+        damage = SpaceDamage(obj, self.Damage)
+        if pullDist < 2 then
+            damage.iPush = dirBack
+        end
         damage.iFire = iFire
         damage.iAcid = iAcid
         damage.bHide = bHide
         ret:AddDamage(damage)
+        if pullDist > 1 then
+            ret:AddCharge(Board:GetSimplePath(obj, p2), FULL_DELAY)
+        end
         if tipImageCall and self.Overload then
             ret:AddDelay(0.8)
         end
@@ -294,7 +286,7 @@ function Env_Weapon_1:GetSkillEffect_TipImage()
         if self.TI_A == 0 then
             ret = self:GetSkillEffect_Inner(Point(2, 2), Point(2, 1), true)
         else
-            ret = self:GetSkillEffect_Inner(Point(2, 2), Point(3, 3), true)
+            ret = self:GetSkillEffect_Inner(Point(2, 2), Point(3, 2), true)
         end
         self.TI_A = (self.TI_A + 1) % 2
     elseif s == "B" or s == "AB" then
@@ -429,8 +421,6 @@ local _Move_GetSkillEffect = Move.GetSkillEffect
 function Move:GetSkillEffect(p1, p2)
     if tool:HasWeapon(Pawn, "Env_Weapon_1") then
         local dist = p1:Manhattan(p2)
-        GetCurrentMission()["MechMovementLeft_" .. Pawn:GetId()] = Pawn:GetMoveSpeed() - dist
-
         if Pawn:IsEnvJumpMove() and (Pawn:IsFlying() or Board:GetTerrain(p1) ~= TERRAIN_WATER) then
             local needJump = true
             local groundReachable = Board:GetReachable(p1, Pawn:GetMoveSpeed(), Pawn:GetPathProf())
@@ -778,7 +768,7 @@ Env_Weapon_4 = PassiveSkill:new{
     BaseArea = 4,
     BaseDamage = 3,
     Enhanced = false,
-    TipDmg = 3, -- 起名 Damage 或 TipDamage 都会导致预览上显示伤害数值
+    TipDmg = 4, -- 起名 Damage 或 TipDamage 都会导致预览上显示伤害数值
     TipImage = {
         Unit = Point(2, 3),
         Enemy = Point(2, 1),

@@ -181,11 +181,15 @@ function Tool:IsValidEnvTarget(space, repeated)
     local tile = Board:GetTerrain(space)
     local pawn = Board:GetPawn(space)
     local pawnTeam = (pawn and pawn:GetTeam()) or "NOT PAWN"
+    local mission = GetCurrentMission()
+    if mission and mission.ID ~= "Mission_Force" and tile == TERRAIN_MOUNTAIN then
+        return false
+    end
     return -- TERRAIN_WATER 包括岩浆在内的所有液面
     Board:IsValid(space) and not Board:IsPod(space) and not Board:IsBuilding(space) and pawnTeam ~= TEAM_PLAYER and
-        pawnTeam ~= TEAM_NONE and tile ~= TERRAIN_MOUNTAIN and tile ~= TERRAIN_WATER and tile ~= TERRAIN_HOLE and
-        not Board:IsSmoke(space) and not Board:IsFire(space) and not Board:IsSpawning(space) and
-        not Board:IsFrozen(space) and not Board:IsDangerous(space) and not Board:IsDangerousItem(space)
+        pawnTeam ~= TEAM_NONE and tile ~= TERRAIN_WATER and tile ~= TERRAIN_HOLE and not Board:IsSmoke(space) and
+        not Board:IsFire(space) and not Board:IsSpawning(space) and not Board:IsFrozen(space) and
+        not Board:IsDangerous(space) and not Board:IsDangerousItem(space)
 end
 
 -- 在每个象限非边缘处取方格组成 4 个集合，按一、二、三、四象限顺序返回
@@ -239,14 +243,16 @@ end
 
 -- 获取环境被动升级区域数值
 function Tool:GetEnvPassiveUpgradeAreaValue()
-    local values = {0, 0, 1, 1}
-    return values[GetSector()]
+    -- local values = {0, 0, 1, 1}
+    -- return values[GetSector()]
+    return 1
 end
 
 -- 获取环境被动升级伤害数值
 function Tool:GetEnvPassiveUpgradeDamageValue()
-    local values = {0, 1, 1, 1}
-    return values[GetSector()]
+    -- local values = {0, 1, 1, 1}
+    -- return values[GetSector()]
+    return 1
 end
 
 -- 获取环境被动伤害
