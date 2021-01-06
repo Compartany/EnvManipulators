@@ -25,5 +25,5 @@ return {
     Env_Weapon_4_Upgrade1 = "Ally Immune",
     Env_Weapon_4_Upgrade2 = "Area & Damage",
     Env_Weapon_4_A_UpgradeDescription = "Try to prevent Environment activation on friendly unit tiles.",
-    Env_Weapon_4_B_UpgradeDescription = "Depending on island progress, all Environments lock on 0/0/1/1 more tiles, and Artificial Environment deals 0/1/2/2 more damage."
+    Env_Weapon_4_B_UpgradeDescription = "Depending on island progress, all Environments lock on 0/0/1/1 more tiles, and Artificial Environment deals 0/1/1/1 more damage."
 }

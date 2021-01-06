@@ -39,22 +39,26 @@ function Env_Passive:MarkSpace(space, active)
         colors[1] = GL_Color(50, 200, 50, 0.75)
         colors[2] = GL_Color(20, 200, 20, 0.75)
     else
-        local damage = tool:GetEnvPassiveDamage()
-        tooltip = "passive" .. damage
         local pawn = Board:GetPawn(space)
+        local damage = tool:GetEnvPassiveDamage(pawn)
+        tooltip = "passive" .. damage
         if pawn then
-            local line = damage
-            if pawn:IsAcid() then
-                line = line * 2
-            elseif pawn:IsArmor() then -- 装甲会被酸液腐蚀
-                line = line - 1
-            end
-            -- 不要帮忙判定火焰了
-            -- if pawn:IsFire() then -- 火焰免疫不会进入燃烧状态，不用判定
-            --     line = line + 1
-            -- end
-            if pawn:GetHealth() > line then
+            if pawn:IsFrozen() then
                 deadly = false
+            else
+                local line = damage
+                if pawn:IsAcid() then
+                    line = line * 2
+                elseif pawn:IsArmor() then -- 装甲会被酸液腐蚀
+                    line = line - 1
+                end
+                -- 不要帮忙判定火焰了
+                -- if pawn:IsFire() then -- 火焰免疫不会进入燃烧状态，不用判定
+                --     line = line + 1
+                -- end
+                if pawn:GetHealth() > line then
+                    deadly = false
+                end
             end
         end
     end
@@ -69,9 +73,10 @@ function Env_Passive:ApplyEffect()
         effect.iOwner = ENV_EFFECT
         effect:AddSound("/impact/generic/explosion_large")
         local allyImmue = IsPassiveSkill("Env_Weapon_4_A")
-        local envDamage = tool:GetEnvPassiveDamage()
         for i, location in ipairs(self.Locations) do
             if not allyImmue or Board:GetPawnTeam(location) ~= TEAM_PLAYER then
+                local pawn = Board:GetPawn(location)
+                local envDamage = tool:GetEnvPassiveDamage(pawn)
                 local damage = SpaceDamage(location, envDamage)
                 damage.sAnimation = "Env_Passive_Animation" .. random_int(2)
                 effect:AddDamage(damage)

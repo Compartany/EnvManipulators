@@ -245,15 +245,18 @@ end
 
 -- 获取环境被动升级伤害数值
 function Tool:GetEnvPassiveUpgradeDamageValue()
-    local values = {0, 1, 2, 2}
+    local values = {0, 1, 1, 1}
     return values[GetSector()]
 end
 
 -- 获取环境被动伤害
-function Tool:GetEnvPassiveDamage()
+function Tool:GetEnvPassiveDamage(pawn)
     local damage = Env_Weapon_4.BaseDamage
     if IsPassiveSkill("Env_Weapon_4_B") or IsPassiveSkill("Env_Weapon_4_AB") then
         damage = damage + self:GetEnvPassiveUpgradeDamageValue()
+    end
+    if pawn and _G[pawn:GetType()].Health > 4 then
+        damage = damage + 1
     end
     return damage
 end

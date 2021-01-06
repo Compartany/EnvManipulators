@@ -25,5 +25,5 @@ return {
     Env_Weapon_4_Upgrade1 = "友军免疫",
     Env_Weapon_4_Upgrade2 = "区域和伤害",
     Env_Weapon_4_A_UpgradeDescription = "尝试阻止锁定友方单位的环境被激活。",
-    Env_Weapon_4_B_UpgradeDescription = "根据岛屿进程，所有环境额外锁定 0/0/1/1 方格，人造环境额外造成 0/1/2/2 点伤害。"
+    Env_Weapon_4_B_UpgradeDescription = "根据岛屿进程，所有环境额外锁定 0/0/1/1 方格，人造环境额外造成 0/1/1/1 点伤害。"
 }
