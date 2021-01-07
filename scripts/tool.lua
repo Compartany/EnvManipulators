@@ -293,4 +293,41 @@ function Tool:IsConductive(point)
     return Board:IsPawnSpace(point) or Board:IsBuilding(point) or Board:GetTerrain(point) == TERRAIN_MOUNTAIN
 end
 
+-- 判断方格离中心的距离 [0, 6]
+function Tool:GetDistanceToCenter(point)
+    local dist = point:Manhattan(Point(3, 3)) + point:Manhattan(Point(4, 4))
+    dist = (dist - 2) / 2 -- 必然是整数（到两点距离和必然是 d1 + d2 = d1 + d1 + 2 为偶数）
+    return dist
+end
+
+-- 判断方格离环境被动锁定的距离
+function Tool:GetDistanceToEnvPassiveGenerated(point)
+    local dist = 15
+    local mission = GetCurrentMission()
+    if mission and mission.EnvPassiveGenerated and #mission.EnvPassiveGenerated > 0 then
+        for i, location in ipairs(mission.EnvPassiveGenerated) do
+            local current = self:GetCustomDistance(point, location)
+            if current < dist then
+                dist = current
+            end
+        end
+    end
+    return dist
+end
+
+-- 自定义距离
+function Tool:GetCustomDistance(p1, p2)
+    local dx = math.abs(p1.x - p2.x)
+    local dy = math.abs(p1.y - p2.y)
+    local d = 10000
+    if dx == 0 then
+        d = dy
+    elseif dy == 0 then
+        d = dx
+    elseif dx == 1 and dy == 1 then
+        d = 3
+    end
+    return d
+end
+
 return Tool

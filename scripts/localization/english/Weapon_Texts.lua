@@ -21,7 +21,7 @@ return {
     Env_Weapon_3_B_UpgradeDescription = "Increase range by 1.",
 
     Env_Weapon_4_Name = "EnvLoader",
-    Env_Weapon_4_Description = "Load Artificial Environment or enhance existing Environment. Prioritize Environment activation on psion tiles whenever possible, and try to terminate unit actions on activated tiles.",
+    Env_Weapon_4_Description = "Load Artificial Environment or enhance existing Environment. Prioritize Environment activation on psion tiles whenever possible, and try to terminate unit actions on activated tiles. Most units can detect danger and avoid it, but some units such as Psions will instead be attracted to it and try to approach.",
     Env_Weapon_4_Upgrade1 = "Ally Immune",
     Env_Weapon_4_Upgrade2 = "Area & Damage",
     Env_Weapon_4_A_UpgradeDescription = "Try to prevent Environment activation on friendly unit tiles.",

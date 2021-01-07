@@ -454,7 +454,7 @@ local function AdjustEnv(mission)
                         for i, location in ipairs(self.Locations) do
                             local pawn = Board:GetPawn(location)
                             if tool:IsPsion(pawn) then
-                                psions[#psions + 1] = i
+                                psions[#psions + 1] = i -- 这里不直接存 location 是为了方便后面实现随机顺序
                             end
                         end
                         local ordered = self.Ordered

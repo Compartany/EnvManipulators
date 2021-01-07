@@ -198,7 +198,8 @@ function Env_Weapon_1:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect)
                     if tipImageCall and self.Overload then
                         ret:AddDelay(0.5)
                     end
-                    return ret -- 后面不可能会有其他处理
+                    return ret
+                    -- 后面不可能会有其他处理
                 end
             end
         end
@@ -379,7 +380,8 @@ function SkillEffect:AddGrapple(source, target, ...)
 
     if pawn and pawn:IsEnvIgnoreWeb() then
         if pawn:GetHealth() > 0 and not pawn:IsFrozen() and
-            (pawn:IsFlying() or Board:GetTerrain(target) ~= TERRAIN_WATER) then
+            (pawn:IsFlying() or Board:GetTerrain(target) ~= TERRAIN_WATER) and
+            (pawn:IsIgnoreSmoke() or not Board:IsSmoke(target)) then
             ENV_GLOBAL.EnvIgnoreWeb_Pawn = pawn
             self:AddScript([[ENV_GLOBAL.EnvIgnoreWeb_Pawn:SetSpace(Point(-1, -1))]])
             self:AddDelay(0.01) -- 必须要有延时才行
@@ -412,7 +414,8 @@ end
 
 local _Move_GetTargetArea = Move.GetTargetArea
 function Move:GetTargetArea(point)
-    if Pawn:IsEnvJumpMove() and (Pawn:IsFlying() or Board:GetTerrain(point) ~= TERRAIN_WATER) then
+    if Pawn:IsEnvJumpMove() and (Pawn:IsFlying() or Board:GetTerrain(point) ~= TERRAIN_WATER) and
+        (Pawn:IsIgnoreSmoke() or not Board:IsSmoke(point)) then
         return Board:GetReachable(point, 14, PATH_FLYER)
     end
     return _Move_GetTargetArea(self, point)
@@ -421,7 +424,8 @@ local _Move_GetSkillEffect = Move.GetSkillEffect
 function Move:GetSkillEffect(p1, p2)
     if tool:HasWeapon(Pawn, "Env_Weapon_1") then
         local dist = p1:Manhattan(p2)
-        if Pawn:IsEnvJumpMove() and (Pawn:IsFlying() or Board:GetTerrain(p1) ~= TERRAIN_WATER) then
+        if Pawn:IsEnvJumpMove() and (Pawn:IsFlying() or Board:GetTerrain(p1) ~= TERRAIN_WATER) and
+            (Pawn:IsIgnoreSmoke() or not Board:IsSmoke(p1)) then
             local needJump = true
             local groundReachable = Board:GetReachable(p1, Pawn:GetMoveSpeed(), Pawn:GetPathProf())
             for i, point in ipairs(extract_table(groundReachable)) do
@@ -459,7 +463,7 @@ function Move:GetSkillEffect(p1, p2)
             else
                 local ret = SkillEffect()
                 ret:AddMove(Board:GetPath(p1, p2, Pawn:GetPathProf()), FULL_DELAY)
-                if dist == Pawn:GetMoveSpeed() then
+                if dist == Pawn:GetMoveSpeed() and dist > 1 then -- == 1 是陈容能力
                     local damage = SpaceDamage(p2, 1)
                     if not Pawn:IsFire() then
                         damage.iFire = EFFECT_CREATE
@@ -620,7 +624,9 @@ function Env_Weapon_2:GetSkillEffect_TipImage()
         self:GetSkillEffect_Inner(Point(2, 4), Point(2, 2), true, ret)
         ret:AddScript([[Board:SetCustomTile(Point(2, 2), "tile_lock.png")]])
         ret:AddDelay(1.2)
-        self:GetSkillEffect_Inner(Point(2, 4), Point(2, 2), true, ret, {tiC1 = true})
+        self:GetSkillEffect_Inner(Point(2, 4), Point(2, 2), true, ret, {
+            tiC1 = true
+        })
         ret:AddDelay(1.5)
         ret:AddScript([[Board:SetCustomTile(Point(2, 2), "ground_0.png")]])
     else
@@ -769,6 +775,8 @@ Env_Weapon_4 = PassiveSkill:new{
     BaseDamage = 3,
     Enhanced = false,
     TipDmg = 4, -- 起名 Damage 或 TipDamage 都会导致预览上显示伤害数值
+    Damage = 4,
+    MinDamage = 3,
     TipImage = {
         Unit = Point(2, 3),
         Enemy = Point(2, 1),
@@ -799,7 +807,9 @@ Env_Weapon_4_B = Env_Weapon_4:new{
     UpgradeDescription = Weapon_Texts.Env_Weapon_4_B_UpgradeDescription,
     Passive = "Env_Weapon_4_B",
     Enhanced = true,
-    TipDmg = 5
+    TipDmg = 5,
+    Damage = 5,
+    MinDamage = 4
 }
 
 Env_Weapon_4_AB = Env_Weapon_4:new{
@@ -807,7 +817,9 @@ Env_Weapon_4_AB = Env_Weapon_4:new{
     AllyImmune = true,
     Enhanced = true,
     TipImage = Env_Weapon_4_A.TipImage,
-    TipDmg = 5
+    TipDmg = 5,
+    Damage = 5,
+    MinDamage = 4
 }
 
 -- 使用提示效果，用假方格模拟环境锁定
