@@ -1,7 +1,7 @@
 EnvMechPrime = Pawn:new{
     Name = EnvMod_Texts.mech_prime_name,
     Class = "Prime",
-    Health = 4,
+    Health = 5,
     MoveSpeed = 4,
     Image = "mech_env_prime",
     ImageOffset = FURL_COLORS.EnvManipulatorsColors,
