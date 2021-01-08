@@ -782,7 +782,7 @@ Env_Weapon_4 = PassiveSkill:new{
         Enemy = Point(2, 1),
         Enemy2 = Point(1, 2),
         Friendly = Point(1, 3),
-        Friendly2 = Point(4, 4),
+        Friendly2 = Point(5, 5), -- 多添加一个友方单位使 Friendly 变成 1 号机甲
         Target = Point(2, 1),
         CustomPawn = "EnvMechRanged"
     }
@@ -828,10 +828,11 @@ function Env_Weapon_4:GetSkillEffect(p1, p2)
     Board:SetCustomTile(Point(1, 1), "ground_0.png")
     Board:SetCustomTile(Point(2, 4), "ground_0.png")
     Board:SetCustomTile(Point(3, 2), "ground_0.png")
+    Board:SetCustomTile(Point(4, 4), "ground_0.png")
     Board:SetCustomTile(Point(3, 0), "ground_0.png")
     -- Board:SetCustomTile(Point(0, 2), "ground_0.png")
 
-    local planned = {Point(1, 1), Point(2, 4), Point(3, 2)}
+    local planned = {Point(1, 1), Point(2, 4), Point(3, 2), Point(4, 4)}
     if self.Enhanced then
         planned[#planned + 1] = Point(3, 0)
         -- planned[#planned + 1] = Point(0, 2)
