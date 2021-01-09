@@ -5,7 +5,7 @@ ENV_GLOBAL = {}
 local mod = {
     id = "EnvManipulators",
     name = "EnvManipulators",
-    version = "1.5.7.20210108",
+    version = "1.5.8.20210109",
     requirements = {},
     modApiVersion = "2.5.4",
     icon = "img/icon.png",
@@ -124,6 +124,7 @@ function mod:init()
     self.weapons = require(self.scriptPath .. "weapons")
     self.env_passive = require(self.scriptPath .. "env_passive")
     self.environment = require(self.scriptPath .. "environment")
+    self.missions = require(self.scriptPath .. "missions")
     self.shop = require(self.scriptPath .. "lib/shop")
 
     modApi:appendAsset("img/combat/icons/env_lock.png", self.resourcePath .. "img/env_lock.png")

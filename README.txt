@@ -7,7 +7,7 @@ Link:
     [EN] https://subsetgames.com/forum/viewtopic.php?f=25&t=36543
     [CN] https://www.bilibili.com/read/cv9047965
 Download:
-    [github] https://github.com/Compartany/EnvManipulators/raw/master/EnvManipulators.zip
+    [github] https://github.com/Compartany/EnvManipulators/releases
     [weiyun] https://share.weiyun.com/7laJWpe3 (alternate)
 Demo Videos:
     [weapons] https://www.bilibili.com/video/BV1cK41137DF?p=1

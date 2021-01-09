@@ -7,7 +7,7 @@ MOD：环境操纵者
     [CN] https://www.bilibili.com/read/cv9047965
     [EN] https://subsetgames.com/forum/viewtopic.php?f=25&t=36543
 下载：
-    [github] https://github.com/Compartany/EnvManipulators/raw/master/EnvManipulators.zip
+    [github] https://github.com/Compartany/EnvManipulators/releases
     [weiyun] https://share.weiyun.com/7laJWpe3 （备用）
 演示视频：
     [装备] https://www.bilibili.com/video/BV1cK41137DF?p=1
