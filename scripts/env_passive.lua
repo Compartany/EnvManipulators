@@ -116,7 +116,7 @@ function Env_Passive:ApplyEffect_Inner(locations, effect)
                 if pawn and pawn:IsQueued() then -- 单位被击杀也不会进得来
                     pawn:ClearQueued()
                     Board:Ping(location, GL_Color(196, 182, 86, 0))
-                    Board:AddAlert(location, Global_Texts["Action_Terminated"])
+                    Board:AddAlert(location, EnvMod_Texts.action_terminated)
                 end
             ]])
         end
@@ -162,18 +162,20 @@ function ScorePositioning(point, pawn, ...)
 end
 
 local function EnvScorePositioning(point, pawn, score, factor)
-    factor = factor or math.random()
-    local depg = tool:GetDistanceToEnvPassiveGenerated(point)
-    if depg == 0 then
-        score = 0
-    else
-        score = score + math.max(4 - depg, 0) * factor
-    end
-    local dc = tool:GetDistanceToCenter(point)
-    if dc > 2 then
-        score = score - 1
-    elseif dc > 1 then
-        score = score - 0.3
+    if tool:HasEnvPassiveGenerated() then
+        factor = factor or math.random()
+        local depg = tool:GetDistanceToEnvPassiveGenerated(point)
+        if depg == 0 then
+            score = 0
+        else
+            score = score + math.max(4 - depg, 0) * factor
+        end
+        local dc = tool:GetDistanceToCenter(point)
+        if dc > 2 then
+            score = score - 1
+        elseif dc > 1 then
+            score = score - 0.3
+        end
     end
     return score
 end
@@ -303,7 +305,6 @@ function Burrower2:ScorePositioning(point, pawn, ...)
 end
 
 function Env_Passive:Load()
-    Global_Texts.Action_Terminated = EnvMod_Texts.action_terminated
     TILE_TOOLTIPS.passive0 = {Weapon_Texts.Env_Weapon_4_Name .. " - " .. Weapon_Texts.Env_Weapon_4_Upgrade1,
                               Weapon_Texts.Env_Weapon_4_A_UpgradeDescription}
     for damage = 1, 6 do -- 为了方便日后修改，还是将伤害从 1 到 6 全弄出 tooltip 来

@@ -5,16 +5,78 @@ ENV_GLOBAL = {}
 local mod = {
     id = "EnvManipulators",
     name = "EnvManipulators",
-    version = "1.5.8.20210109",
-    requirements = {},
+    version = "1.6.0.20210111",
+    requirements = {"kf_ModUtils"},
     modApiVersion = "2.5.4",
     icon = "img/icon.png",
     author = "Compartany"
 }
-print(mod.version) -- for package
+print(mod.version) -- for package and release
 
 -- 该 MOD 的装备不加到商店中，没有配合用不出来，且会极大程度增加 MOD 编写难度
 function mod:init()
+    self:initResources()
+
+    -- 加载的顺序很重要，不要乱调
+    env_modApiExt = require(self.scriptPath .. "modApiExt/modApiExt")
+    env_modApiExt:init()
+    self.tool = require(self.scriptPath .. "tool")
+    self.animations = require(self.scriptPath .. "animations")
+    self.mechs = require(self.scriptPath .. "mechs")
+    self.weapons = require(self.scriptPath .. "weapons")
+    self.env_passive = require(self.scriptPath .. "env_passive")
+    self.environment = require(self.scriptPath .. "environment")
+    self.missions = require(self.scriptPath .. "missions")
+    self.shop = require(self.scriptPath .. "libs/shop")
+    self.trait = require(self.scriptPath .. "libs/trait")
+
+    local weapons = {"Env_Weapon_1", "Env_Weapon_2", "Env_Weapon_3", "Env_Weapon_4"}
+    for i, weapon in ipairs(weapons) do
+        local name = Weapon_Texts[weapon .. "_Name"]
+        self.shop:addWeapon({
+            id = weapon,
+            name = name,
+            desc = string.format(EnvMod_Texts.add_to_shop, name)
+        })
+    end
+end
+
+function mod:load(options, version)
+    env_modApiExt:load(self, options, version)
+    self.mechs:Load()
+    self.weapons:Load()
+    self.env_passive:Load()
+    self.environment:Load()
+    self.missions:Load()
+    self.shop:load(options)
+    self.trait:load()
+    modApi:addSquad({EnvMod_Texts.squad_name, "EnvMechPrime", "EnvMechRanged", "EnvMechScience"},
+        EnvMod_Texts.squad_name, EnvMod_Texts.squad_description, self.resourcePath .. "img/icon.png")
+end
+
+function mod:initResources()
+    modApi:appendAsset("img/combat/icons/env_lock.png", self.resourcePath .. "img/env_lock.png")
+    -- 需提供 glow
+    modApi:appendAsset("img/combat/icons/icon_envheavy.png",
+        self.resourcePath .. "img/icon/icon_envheavy.png")
+    modApi:appendAsset("img/combat/icons/icon_envheavy_glow.png",
+        self.resourcePath .. "img/icon/icon_envheavy_glow.png")
+    -- 需提供 U、R 两张图才能被平射使用
+    modApi:appendAsset("img/effects/env_shot_U.png", self.resourcePath .. "img/env_shot.png")
+    modApi:appendAsset("img/effects/env_shot_R.png", self.resourcePath .. "img/env_shot.png")
+
+    -- 加到方格目录下，这样可以被 Board:SetCustomTile() 使用
+    local tileType = {"grass", "sand", "snow", "acid", "volcano", "lava"}
+    for i, type in ipairs(tileType) do
+        modApi:appendAsset("img/combat/tiles_" .. type .. "/tile_lock.png",
+            self.resourcePath .. "img/tile_lock/" .. type .. ".png")
+        modApi:appendAsset("img/combat/tiles_" .. type .. "/tile_lock_friendunit.png",
+            self.resourcePath .. "img/tile_lock/" .. type .. "_friendunit.png")
+    end
+
+    -- 设置图片的偏移
+    Location["combat/icons/env_lock.png"] = Point(-27, 2)
+
     if modApi:getLanguageIndex() == Languages.Chinese_Simplified then
         modApi:addWeapon_Texts(require(self.scriptPath .. "localization/chinese/Weapon_Texts"))
         require(self.scriptPath .. "localization/chinese/EnvMod_Texts")
@@ -23,7 +85,7 @@ function mod:init()
         require(self.scriptPath .. "localization/english/EnvMod_Texts")
     end
 
-    require(self.scriptPath .. "lib/FURL")(self, {{
+    require(self.scriptPath .. "libs/FURL")(mod, {{
         Type = "color",
         Name = "EnvManipulatorsColors",
         PlateHighlight = {76, 161, 255}, -- 高光    rgb(76, 161, 255)
@@ -116,52 +178,6 @@ function mod:init()
         },
         Icon = {}
     }})
-
-    -- 加载的顺序很重要，不要乱调
-    self.tool = require(self.scriptPath .. "tool")
-    self.animations = require(self.scriptPath .. "animations")
-    self.mechs = require(self.scriptPath .. "mechs")
-    self.weapons = require(self.scriptPath .. "weapons")
-    self.env_passive = require(self.scriptPath .. "env_passive")
-    self.environment = require(self.scriptPath .. "environment")
-    self.missions = require(self.scriptPath .. "missions")
-    self.shop = require(self.scriptPath .. "lib/shop")
-
-    modApi:appendAsset("img/combat/icons/env_lock.png", self.resourcePath .. "img/env_lock.png")
-    -- 需提供 U、R 两张图才能被平射使用
-    modApi:appendAsset("img/effects/env_shot_U.png", self.resourcePath .. "img/env_shot.png")
-    modApi:appendAsset("img/effects/env_shot_R.png", self.resourcePath .. "img/env_shot.png")
-
-    -- 加到方格目录下，这样可以被 Board:SetCustomTile() 使用
-    local tileType = {"grass", "sand", "snow", "acid", "volcano", "lava"}
-    for i, type in ipairs(tileType) do
-        modApi:appendAsset("img/combat/tiles_" .. type .. "/tile_lock.png",
-            self.resourcePath .. "img/tile_lock/" .. type .. ".png")
-        modApi:appendAsset("img/combat/tiles_" .. type .. "/tile_lock_friendunit.png",
-            self.resourcePath .. "img/tile_lock/" .. type .. "_friendunit.png")
-    end
-
-    -- 设置图片的偏移
-    Location["combat/icons/env_lock.png"] = Point(-27, 2)
-
-    local weapons = {"Env_Weapon_1", "Env_Weapon_2", "Env_Weapon_3", "Env_Weapon_4"}
-    for i, weapon in ipairs(weapons) do
-        local name = Weapon_Texts[weapon .. "_Name"]
-        self.shop:addWeapon({
-            id = weapon,
-            name = name,
-            desc = string.format(EnvMod_Texts.add_to_shop, name)
-        })
-    end
-end
-
-function mod:load(options, version)
-    self.weapons:Load()
-    self.env_passive:Load()
-    self.environment:Load()
-    self.shop:load(options)
-    modApi:addSquad({EnvMod_Texts.squad_name, "EnvMechPrime", "EnvMechRanged", "EnvMechScience"},
-        EnvMod_Texts.squad_name, EnvMod_Texts.squad_description, self.resourcePath .. "img/icon.png")
 end
 
 return mod

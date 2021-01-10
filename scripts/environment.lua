@@ -226,22 +226,23 @@ function Env_Tides:_ApplyEffect()
 end
 function Env_Tides:ApplyEffect(...)
     local ret = self:_ApplyEffect(...)
-    local effect = SkillEffect()
-    for i, location in ipairs(self.Locations) do
-        local floodAnim = SpaceDamage(location)
-        effect:AddSound("/props/tide_flood_last")
-        floodAnim.iTerrain = TERRAIN_WATER
-        if Board:GetTerrain(location) == TERRAIN_MOUNTAIN or Board:IsBuilding(location) then
-            floodAnim.iDamage = DAMAGE_DEATH
+    if #self.Locations > 0 then
+        local effect = SkillEffect()
+        for i, location in ipairs(self.Locations) do
+            local floodAnim = SpaceDamage(location)
+            effect:AddSound("/props/tide_flood_last")
+            floodAnim.iTerrain = TERRAIN_WATER
+            if Board:GetTerrain(location) == TERRAIN_MOUNTAIN or Board:IsBuilding(location) then
+                floodAnim.iDamage = DAMAGE_DEATH
+            end
+            effect:AddDamage(floodAnim)
+            effect:AddBounce(floodAnim.loc, -6)
         end
-        effect:AddDamage(floodAnim)
-        effect:AddBounce(floodAnim.loc, -6)
+        effect:AddDelay(0.2)
+        effect.iOwner = ENV_EFFECT
+        Board:AddEffect(effect)
+        self.Locations = {}
     end
-    effect:AddDelay(0.2)
-    effect.iOwner = ENV_EFFECT
-    Board:AddEffect(effect)
-    self.Locations = {}
-    self.Planned = false
     return ret
 end
 
@@ -285,19 +286,21 @@ function Env_Cataclysm:_ApplyEffect()
 end
 function Env_Cataclysm:ApplyEffect(...)
     local ret = self:_ApplyEffect(...)
-    local effect = SkillEffect()
-    for i, location in ipairs(self.Locations) do
-        local damage = SpaceDamage(location)
-        damage.iTerrain = TERRAIN_HOLE
-        damage.fDelay = 0.2
-        if Board:IsBuilding(location) then
-            damage.iDamage = DAMAGE_DEATH
+    if #self.Locations > 0 then
+        local effect = SkillEffect()
+        for i, location in ipairs(self.Locations) do
+            local damage = SpaceDamage(location)
+            damage.iTerrain = TERRAIN_HOLE
+            damage.fDelay = 0.2
+            if Board:IsBuilding(location) then
+                damage.iDamage = DAMAGE_DEATH
+            end
+            effect:AddDamage(damage)
         end
-        effect:AddDamage(damage)
+        effect.iOwner = ENV_EFFECT
+        Board:AddEffect(effect)
+        self.Locations = {}
     end
-    effect.iOwner = ENV_EFFECT
-    Board:AddEffect(effect)
-    self.Locations = {}
     return ret
 end
 
@@ -418,7 +421,7 @@ local function AdjustEnv(mission)
                                 if pawn and pawn:IsQueued() then
                                     pawn:ClearQueued()
                                     Board:Ping(location, GL_Color(196, 182, 86, 0))
-                                    Board:AddAlert(location, Global_Texts["Action_Terminated"])
+                                    Board:AddAlert(location, EnvMod_Texts.action_terminated)
                                 end
                             ]])
                         end

@@ -24,7 +24,7 @@ MOD：环境操纵者
 
 使用：
 1. 解压 MOD 加载器至游戏目录（https://subsetgames.com/forum/viewtopic.php?f=26&p=117100）
-2. 将 MOD 解压至【mods】目录下
+2. 将 MOD 解压至【mods】目录下（本文件路径应该为【%游戏目录%/mods/EnvManipulators/说明.txt】）
 3. 运行游戏
 4. 在【Configure Mods】中启用 MOD
 5. 在【Edit Squads】中启用环境操纵者

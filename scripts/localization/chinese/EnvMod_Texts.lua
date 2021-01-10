@@ -9,6 +9,9 @@ EnvMod_Texts = {
     env_passive_basic_description = "造成 3 点基础伤害，若方格内单位基础血量大于 4 则追加 1 伤害。",
     env_overload_disabled = "无法过载",
     env_passive_disabled = "环境加载器无法工作。",
+    heavy_title = "重型",
+    heavy_description = "重型单位的移动力无法被增加，且会在移动力耗尽时受到 1 点伤害。",
+    heavy_alert = "移动力降低",
     action_terminated = "行动终止",
     add_to_shop = "添加%s到商店"
 }

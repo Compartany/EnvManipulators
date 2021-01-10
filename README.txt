@@ -25,7 +25,7 @@ Notes:
 
 Use:
 1. Extract Mod Loader to game directory (https://subsetgames.com/forum/viewtopic.php?f=26&p=117100)
-2. Extract MOD to [mods] directory
+2. Extract MOD to [mods] directory (The path to this file should be [%GAME_DIR%/mods/EnvManipulators/README.txt])
 3. Run game
 4. Enable MOD in [Configure Mods]
 5. Enable EnvManipulators in [Edit Squads]

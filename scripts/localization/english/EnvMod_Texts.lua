@@ -9,6 +9,9 @@ EnvMod_Texts = {
     env_passive_basic_description = "Deal 3 basic damage, and plus 1 if basic health of unit on tile is greater than 4.",
     env_overload_disabled = "Cannot overload.",
     env_passive_disabled = "EnvLoader does not work.",
+    heavy_title = "Heavy",
+    heavy_description = "Heavy unit cannot have its movement increased, and take 1 damage when running out of mobility.",
+    heavy_alert = "Movement Reduced",
     action_terminated = "Action Terminated",
     add_to_shop = "Add %s to shop."
 }

@@ -3,8 +3,8 @@ return {
     Env_Weapon_1_Description = "Shift object to a side tile, and transfer Mech's negative status to object. Prioritize counterclockwise pushing when multiple objects exist.",
     Env_Weapon_1_Upgrade1 = "Pull",
     Env_Weapon_1_Upgrade2 = "Overload",
-    Env_Weapon_1_A_UpgradeDescription = "Pull object to make it move 1 - 2 tiles.",
-    Env_Weapon_1_B_UpgradeDescription = "Gain the ability to jump unlimited distances and ignore web. Take 1 fire damage when activating ability or running out of mobility.",
+    Env_Weapon_1_A_UpgradeDescription = "Pull object to move it by 1 - 2 tiles.",
+    Env_Weapon_1_B_UpgradeDescription = "Take 1 fire damage to gain the ability to jump unlimited distances and ignore web.",
 
     Env_Weapon_2_Name = "EnvLauncher",
     Env_Weapon_2_Description = "Push target and side tiles, and then load Environment on target tile.",
@@ -25,5 +25,5 @@ return {
     Env_Weapon_4_Upgrade1 = "Ally Immune",
     Env_Weapon_4_Upgrade2 = "Area & Damage",
     Env_Weapon_4_A_UpgradeDescription = "Try to prevent Environment activation on friendly unit tiles.",
-    Env_Weapon_4_B_UpgradeDescription = "All Environments lock on 1 more tile, and Artificial Environment deals 1 more damage."
+    Env_Weapon_4_B_UpgradeDescription = "Depending on island progress, all Environments lock on 0/1/1/1 more tiles, and Artificial Environment deals 0/0/1/1 more damage."
 }

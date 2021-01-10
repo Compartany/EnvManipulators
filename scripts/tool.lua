@@ -23,6 +23,12 @@ function Map:Get(id, key)
 end
 Tool.Map = Map
 
+-- 判断是否为环境操纵者小队
+function Tool:IsSquad()
+    local squad = GAME.squadTitles["TipTitle_" .. GameData.ach_info.squad]
+    return squad == "环境操纵者" or squad == "EnvManipulators" -- 不要用 EnvMod_Texts.squad_name 来判断，否则换了语言就不对
+end
+
 -- 判断是否为使用提示
 function Tool:IsTipImage()
     return Board:GetSize() == Point(6, 6)
@@ -120,7 +126,7 @@ function Tool:EnvPassiveGenerate(planned, overlay)
         local pawn = Board:GetPawn(id)
         if self:HasWeapon(pawn, "Env_Weapon_4") then
             local point = pawn:GetSpace()
-            if point and pawn:GetHealth() > 0 and not pawn:IsFrozen() and
+            if point and not pawn:IsDead() and not pawn:IsFrozen() and
                 (pawn:IsFlying() or Board:GetTerrain(point) ~= TERRAIN_WATER) then
                 local effect = SkillEffect()
                 local damage = SpaceDamage(point, 0)
@@ -169,6 +175,12 @@ function Tool:IsEnvPassiveGenerated(point)
         end
     end
     return false
+end
+
+-- 判断是否存在环境被动锁定方格
+function Tool:HasEnvPassiveGenerated()
+    local mission = GetCurrentMission()
+    return mission and mission.EnvPassiveGenerated and #mission.EnvPassiveGenerated > 0
 end
 
 -- 判断方格是否为有效的环境目标
@@ -243,16 +255,14 @@ end
 
 -- 获取环境被动升级区域数值
 function Tool:GetEnvPassiveUpgradeAreaValue()
-    -- local values = {0, 0, 1, 1}
-    -- return values[GetSector()]
-    return 1
+    local values = {0, 1, 1, 1}
+    return values[GetSector()]
 end
 
 -- 获取环境被动升级伤害数值
 function Tool:GetEnvPassiveUpgradeDamageValue()
-    -- local values = {0, 1, 1, 1}
-    -- return values[GetSector()]
-    return 1
+    local values = {0, 0, 1, 1}
+    return values[GetSector()]
 end
 
 -- 获取环境被动伤害

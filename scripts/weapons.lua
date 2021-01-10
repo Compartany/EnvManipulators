@@ -379,8 +379,7 @@ function SkillEffect:AddGrapple(source, target, ...)
     local pawn = Board:GetPawn(target)
 
     if pawn and pawn:IsEnvIgnoreWeb() then
-        if pawn:GetHealth() > 0 and not pawn:IsFrozen() and
-            (pawn:IsFlying() or Board:GetTerrain(target) ~= TERRAIN_WATER) and
+        if not pawn:IsDead() and not pawn:IsFrozen() and (pawn:IsFlying() or Board:GetTerrain(target) ~= TERRAIN_WATER) and
             (pawn:IsIgnoreSmoke() or not Board:IsSmoke(target)) then
             ENV_GLOBAL.EnvIgnoreWeb_Pawn = pawn
             self:AddScript([[ENV_GLOBAL.EnvIgnoreWeb_Pawn:SetSpace(Point(-1, -1))]])
@@ -395,7 +394,7 @@ function SkillEffect:AddGrapple(source, target, ...)
             damage.sSound = "/impact/generic/explosion"
             self:AddDamage(damage)
         else
-            self:AddScript([[Board:AddAlert(]] .. target:GetString() .. [[, Global_Texts.EnvOverloadDisabled)]])
+            self:AddScript([[Board:AddAlert(]] .. target:GetString() .. [[, EnvMod_Texts.env_overload_disabled)]])
         end
     end
     return ret
@@ -413,21 +412,28 @@ function BoardPawn:IsEnvJumpMove()
 end
 
 local _Move_GetTargetArea = Move.GetTargetArea
-function Move:GetTargetArea(point)
+function Move:GetTargetArea(point, ...)
     if Pawn:IsEnvJumpMove() and (Pawn:IsFlying() or Board:GetTerrain(point) ~= TERRAIN_WATER) and
         (Pawn:IsIgnoreSmoke() or not Board:IsSmoke(point)) then
         return Board:GetReachable(point, 14, PATH_FLYER)
     end
-    return _Move_GetTargetArea(self, point)
+    return _Move_GetTargetArea(self, point, ...)
 end
 local _Move_GetSkillEffect = Move.GetSkillEffect
-function Move:GetSkillEffect(p1, p2)
+function Move:GetSkillEffect(p1, p2, ...)
     if tool:HasWeapon(Pawn, "Env_Weapon_1") then
-        local dist = p1:Manhattan(p2)
         if Pawn:IsEnvJumpMove() and (Pawn:IsFlying() or Board:GetTerrain(p1) ~= TERRAIN_WATER) and
             (Pawn:IsIgnoreSmoke() or not Board:IsSmoke(p1)) then
             local needJump = true
-            local groundReachable = Board:GetReachable(p1, Pawn:GetMoveSpeed(), Pawn:GetPathProf())
+            local speed = nil
+            if Pawn:IsAbility("Shifty") and Pawn:GetMoveSpeed() == 1 then
+                speed = 1
+            elseif Pawn:IsEnvHeavy() then
+                speed = Pawn:GetBasicMoveSpeed()
+            else
+                speed = Pawn:GetMoveSpeed()
+            end
+            local groundReachable = Board:GetReachable(p1, speed, Pawn:GetPathProf())
             for i, point in ipairs(extract_table(groundReachable)) do
                 if p2 == point then
                     needJump = false
@@ -457,26 +463,20 @@ function Move:GetSkillEffect(p1, p2)
                 damage.sAnimation = "EnvExploRepulse"
                 damage.sSound = "/impact/generic/explosion"
                 ret:AddDamage(damage)
+                ret:AddScript(string.format([[
+                    local pawn = Board:GetPawn(%d)
+                    local hp = pawn:GetHealth()
+                    if hp > 1 then
+                        Game:TriggerSound("/ui/battle/critical_damage")
+                    end
+                ]], Pawn:GetId()))
                 ret:AddSound("/impact/generic/mech")
                 ret:AddBounce(p2, 3)
-                return ret
-            else
-                local ret = SkillEffect()
-                ret:AddMove(Board:GetPath(p1, p2, Pawn:GetPathProf()), FULL_DELAY)
-                if dist == Pawn:GetMoveSpeed() and dist > 1 then -- == 1 是陈容能力
-                    local damage = SpaceDamage(p2, 1)
-                    if not Pawn:IsFire() then
-                        damage.iFire = EFFECT_CREATE
-                    end
-                    damage.sAnimation = "EnvExploRepulse"
-                    damage.sSound = "/impact/generic/explosion"
-                    ret:AddDamage(damage)
-                end
                 return ret
             end
         end
     end
-    return _Move_GetSkillEffect(self, p1, p2)
+    return _Move_GetSkillEffect(self, p1, p2, ...)
 end
 
 ------------------
@@ -922,7 +922,6 @@ end
 
 local Weapons = {}
 function Weapons:Load()
-    Global_Texts.EnvOverloadDisabled = EnvMod_Texts.env_overload_disabled
     Global_Texts.EnvPassiveDisabled_Title = Weapon_Texts.Env_Weapon_4_Name
     Global_Texts.EnvPassiveDisabled_Text = EnvMod_Texts.env_passive_disabled
 
