@@ -12,5 +12,8 @@ ECHO Version: %version%
 
 gh release create v%version% EnvManipulators.zip -t v%version%
 
+ECHO GitHub Release 描述默认显示为提交信息。若该版本包含的更新不仅限于提交信息内容，请手动修改。
+explorer https://github.com/Compartany/EnvManipulators/releases
+
 :END
-ECHO done
+ECHO 完成
