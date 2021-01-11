@@ -610,7 +610,7 @@ function Env_Weapon_2:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect, pa
             ret:AddDelay(0.25)
             for i, dir in ipairs({direction, dirBack}) do
                 damage = SpaceDamage(p2 + DIR_VECTORS[dir], 0, dir)
-                damage.sAnimation = PUSH_ANIMS[direction]
+                damage.sAnimation = PUSH_ANIMS[dir]
                 ret:AddDamage(damage)
             end
         end
