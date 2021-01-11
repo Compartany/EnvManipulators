@@ -5,7 +5,7 @@ ENV_GLOBAL = {}
 local mod = {
     id = "EnvManipulators",
     name = "EnvManipulators",
-    version = "1.6.1.20210111",
+    version = "1.6.2.20210111",
     requirements = {"kf_ModUtils"},
     modApiVersion = "2.5.4",
     icon = "img/icon.png",
@@ -13,36 +13,13 @@ local mod = {
 }
 print(mod.version) -- for package and release
 
--- 该 MOD 的装备不加到商店中，没有配合用不出来，且会极大程度增加 MOD 编写难度
 function mod:init()
     self:initResources()
-
-    -- 加载的顺序很重要，不要乱调
-    env_modApiExt = require(self.scriptPath .. "modApiExt/modApiExt")
-    env_modApiExt:init()
-    self.tool = require(self.scriptPath .. "tool")
-    self.animations = require(self.scriptPath .. "animations")
-    self.mechs = require(self.scriptPath .. "mechs")
-    self.weapons = require(self.scriptPath .. "weapons")
-    self.env_passive = require(self.scriptPath .. "env_passive")
-    self.environment = require(self.scriptPath .. "environment")
-    self.missions = require(self.scriptPath .. "missions")
-    self.shop = require(self.scriptPath .. "libs/shop")
-    self.trait = require(self.scriptPath .. "libs/trait")
-
-    local weapons = {"Env_Weapon_1", "Env_Weapon_2", "Env_Weapon_3", "Env_Weapon_4"}
-    local disabled = {Env_Weapon_4 = true}
-    for i, weapon in ipairs(weapons) do
-        local name = Weapon_Texts[weapon .. "_Name"]
-        self.shop:addWeapon({
-            id = weapon,
-            name = name,
-            desc = string.format(EnvMod_Texts.add_to_shop, name),
-            default = disabled[weapon] and {enabled = false} or nil
-        })
-    end
+    self:initScripts()
+    self:initOptions()
 end
 
+-- 改变设置、继续游戏都会重新加载
 function mod:load(options, version)
     env_modApiExt:load(self, options, version)
     self.mechs:Load()
@@ -56,13 +33,44 @@ function mod:load(options, version)
         EnvMod_Texts.squad_name, EnvMod_Texts.squad_description, self.resourcePath .. "img/icon.png")
 end
 
+function mod:initScripts()
+    -- 加载的顺序很重要，不要乱调
+    env_modApiExt = require(self.scriptPath .. "modApiExt/modApiExt")
+    env_modApiExt:init()
+    self.tool = require(self.scriptPath .. "tool")
+    self.animations = require(self.scriptPath .. "animations")
+    self.mechs = require(self.scriptPath .. "mechs")
+    self.weapons = require(self.scriptPath .. "weapons")
+    self.env_passive = require(self.scriptPath .. "env_passive")
+    self.environment = require(self.scriptPath .. "environment")
+    self.missions = require(self.scriptPath .. "missions")
+    self.shop = require(self.scriptPath .. "libs/shop")
+    self.trait = require(self.scriptPath .. "libs/trait")
+end
+
+function mod:initOptions()
+    local weapons = {"Env_Weapon_1", "Env_Weapon_2", "Env_Weapon_3", "Env_Weapon_4"}
+    local disabled = {
+        Env_Weapon_4 = true
+    }
+    for i, weapon in ipairs(weapons) do
+        local name = Weapon_Texts[weapon .. "_Name"]
+        self.shop:addWeapon({
+            id = weapon,
+            name = name,
+            desc = string.format(EnvMod_Texts.add_to_shop, name),
+            default = disabled[weapon] and {
+                enabled = false
+            } or nil
+        })
+    end
+end
+
 function mod:initResources()
     modApi:appendAsset("img/combat/icons/env_lock.png", self.resourcePath .. "img/env_lock.png")
     -- 需提供 glow
-    modApi:appendAsset("img/combat/icons/icon_envheavy.png",
-        self.resourcePath .. "img/icon/icon_envheavy.png")
-    modApi:appendAsset("img/combat/icons/icon_envheavy_glow.png",
-        self.resourcePath .. "img/icon/icon_envheavy_glow.png")
+    modApi:appendAsset("img/combat/icons/icon_envheavy.png", self.resourcePath .. "img/icon/icon_envheavy.png")
+    modApi:appendAsset("img/combat/icons/icon_envheavy_glow.png", self.resourcePath .. "img/icon/icon_envheavy_glow.png")
     -- 需提供 U、R 两张图才能被平射使用
     modApi:appendAsset("img/effects/env_shot_U.png", self.resourcePath .. "img/env_shot.png")
     modApi:appendAsset("img/effects/env_shot_R.png", self.resourcePath .. "img/env_shot.png")

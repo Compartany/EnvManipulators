@@ -125,16 +125,16 @@ end
 
 -- 选择目标方格
 function Env_Passive:SelectSpaces()
-    local quarters = tool:GetEnvQuarters() -- 先在每个象限取一格
+    local quarters = tool:GetEnvQuarters()
     local area = self.BaseArea
     if IsPassiveSkill("Env_Weapon_4_B") or IsPassiveSkill("Env_Weapon_4_AB") then
-        area = area + tool:GetEnvPassiveUpgradeAreaValue() -- 虽然 BaseArea 目前是 4，但还是假装不知道吧
+        area = area + tool:GetEnvPassiveUpgradeAreaValue()
     end
     return tool:GetUniformDistributionPoints(area, quarters)
 end
 
--- 阻止爆卵虫将卵产在环境被动锁定的方格内，蜘蛛之上没有这么低不用做特殊处理
--- 这是游戏后期难度偏低的主要原因之一！
+-- 阻止爆卵虫将卵产在环境被动锁定的方格内，蜘蛛智商没有这么低不用做特殊处理
+-- 这是游戏后期难度偏低的主要原因之一！这个处理偶尔会失效，不知道是什么原因导致的
 local _BlobberAtk1_GetTargetScore = BlobberAtk1.GetTargetScore
 function BlobberAtk1:GetTargetScore(p1, p2, ...)
     return tool:IsEnvPassiveGenerated(p2) and -10 or _BlobberAtk1_GetTargetScore(self, p1, p2, ...)
