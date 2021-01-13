@@ -128,6 +128,7 @@ function Tool:EnvPassiveGenerate(planned, overlay)
             local point = pawn:GetSpace()
             if point and not pawn:IsDead() and not pawn:IsFrozen() and
                 (pawn:IsFlying() or Board:GetTerrain(point) ~= TERRAIN_WATER) then
+                mission.EnvPassiveGenerated = mission.EnvPassive_Planned
                 local effect = SkillEffect()
                 local damage = SpaceDamage(point, 0)
                 damage.sSound = "/weapons/gravwell"
@@ -149,7 +150,6 @@ function Tool:EnvPassiveGenerate(planned, overlay)
                 effect:AddScript(str .. [[
                     for i, epp in ipairs(mission.EnvPassive_Planned) do
                         env.Locations[#env.Locations + 1] = epp
-                        mission.EnvPassiveGenerated[#mission.EnvPassiveGenerated + 1] = epp
                     end
                     Game:TriggerSound("/props/square_lightup")
                     mission.EnvPassive_Planned = nil
@@ -202,6 +202,15 @@ function Tool:IsValidEnvTarget(space, repeated)
         pawnTeam ~= TEAM_NONE and tile ~= TERRAIN_WATER and tile ~= TERRAIN_HOLE and not Board:IsSmoke(space) and
         not Board:IsFire(space) and not Board:IsSpawning(space) and not Board:IsFrozen(space) and
         not Board:IsDangerous(space) and not Board:IsDangerousItem(space)
+end
+
+-- 标记友军免疫
+local allySpaceIcon = "combat/tile_icon/tile_airstrike.png"
+local allySpaceColors = {GL_Color(50, 200, 50, 0.75), GL_Color(20, 200, 20, 0.75)}
+function Tool:MarkAllySpace(location, active, env)
+    local icon = (env and env.CombatIcon) or allySpaceIcon
+    Board:MarkSpaceImage(location, icon, active and allySpaceColors[2] or allySpaceColors[1])
+    Board:MarkSpaceDesc(location, "passive0", false)
 end
 
 -- 在每个象限非边缘处取方格组成 4 个集合，按一、二、三、四象限顺序返回

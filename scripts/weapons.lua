@@ -491,6 +491,7 @@ Env_Weapon_2 = LineArtillery:new{
     Chain2 = false,
     PowerCost = 1,
     Damage = 0,
+    Range = 7,
     Upgrades = 2,
     UpgradeCost = {1, 1},
     LaunchSound = "/weapons/gravwell",
@@ -545,10 +546,12 @@ Env_Weapon_2_AB = Env_Weapon_2:new{
 function Env_Weapon_2:GetTargetArea(point)
     local ret = PointList()
     for dir = DIR_START, DIR_END do
-        for i = 2, 8 do
+        for i = 2, self.Range do
             local curr = point + DIR_VECTORS[dir] * i
             if Board:IsValid(curr) then
                 ret:push_back(curr)
+            else
+                break
             end
         end
     end
@@ -697,23 +700,12 @@ Env_Weapon_3_AB = Env_Weapon_3:new{
 function Env_Weapon_3:GetTargetArea(point)
     local ret = PointList()
     for dir = DIR_START, DIR_END do
-        local chainStart = false -- 为 true 表示之前已经找到传导物
-        local chainMaintain = false -- 为 true 表示前一件传导物可动
-        for i = 1, self.Range do
+        for i = 2, self.Range do
             local curr = point + DIR_VECTORS[dir] * i
-            if chainStart then
-                if tool:IsEmptyTile(curr) then
-                    if chainMaintain then
-                        ret:push_back(curr)
-                    else
-                        break
-                    end
-                else
-                    chainMaintain = tool:IsMovable(curr)
-                end
-            elseif tool:IsConductive(curr) then
-                chainStart = true
-                chainMaintain = tool:IsMovable(curr)
+            if Board:IsValid(curr) then
+                ret:push_back(curr)
+            else
+                break
             end
         end
     end
@@ -726,7 +718,7 @@ function Env_Weapon_3:GetSkillEffect(p1, p2)
     local dist = p1:Manhattan(p2)
     local objs = {} -- 所有被传导的物体
     local dests = {} -- 被传导物体的最终位置
-    for i = 1, dist - 1 do
+    for i = 1, dist do -- 将 dist 处的 obj 也加进来方便 dest 计算
         local curr = p1 + DIR_VECTORS[direction] * i
         if tool:IsConductive(curr) then
             objs[#objs + 1] = curr
@@ -744,15 +736,24 @@ function Env_Weapon_3:GetSkillEffect(p1, p2)
 
         ret:AddProjectile(SpaceDamage(objs[1], 0), "effects/env_shot", FULL_DELAY) -- 对应 U、R 两张图
         for i, obj in ipairs(objs) do
-            ret:AddCharge(Board:GetSimplePath(obj, dests[i]), FULL_DELAY)
-            if i ~= #objs then
-                local damage = SpaceDamage(dests[i], self.Damage)
+            local needMove = obj ~= dests[i]
+            local movable = tool:IsMovable(obj)
+            if needMove and movable then
+                ret:AddCharge(Board:GetSimplePath(obj, dests[i]), FULL_DELAY)
+            end
+            local dest = tool:IsMovable(obj) and dests[i] or obj
+            if dest ~= p2 then
+                local damage = SpaceDamage(dest, self.Damage)
                 damage.sAnimation = "EnvExploRepulse"
                 damage.sSound = "/impact/generic/explosion"
                 ret:AddDamage(damage)
-                ret:AddBounce(dests[i], -2)
+                ret:AddBounce(dest, -2)
+                ret:AddDelay(0.05)
             else
-                ret:AddDamage(SpaceDamage(dests[i], self.Damage)) -- 一定要加，否则 XP 会被平分
+                ret:AddDamage(SpaceDamage(dest, self.Damage)) -- 一定要加，否则 XP 会被平分
+            end
+            if needMove and not movable then -- 需将 obj 移动却移动不了，说明已经断链
+                break
             end
         end
     end

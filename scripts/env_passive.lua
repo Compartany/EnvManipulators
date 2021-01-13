@@ -27,7 +27,7 @@ function Env_Passive:Plan()
 end
 
 -- 标记目标方格，仅改变 UI
--- 回合内自动调用 N 次，具体原理不明，直接调用无效
+-- 回合内在需要更新方格状态时自动调用，手动调用无用
 function Env_Passive:MarkSpace(space, active)
     local allyImmue = IsPassiveSkill("Env_Weapon_4_A")
     local tooltip = nil
@@ -75,34 +75,39 @@ function Env_Passive:ApplyEffect()
         effect.iOwner = ENV_EFFECT
         effect:AddSound("/impact/generic/explosion_large")
         local allyImmue = IsPassiveSkill("Env_Weapon_4_A")
-        for i, location in ipairs(self.Locations) do
-            if not allyImmue or Board:GetPawnTeam(location) ~= TEAM_PLAYER then
-                local pawn = Board:GetPawn(location)
-                if tool:IsPsion(pawn) then
-                    psions[#psions + 1] = location
-                else
-                    others[#others + 1] = location
+        if self.Locations.NoPsion then
+            others = self.Locations
+        else
+            for i, location in ipairs(self.Locations) do
+                if not allyImmue or Board:GetPawnTeam(location) ~= TEAM_PLAYER then
+                    local pawn = Board:GetPawn(location)
+                    if tool:IsPsion(pawn) then
+                        psions[#psions + 1] = location
+                    else
+                        others[#others + 1] = location
+                    end
                 end
             end
         end
         if #psions > 0 then
             self:ApplyEffect_Inner(psions, effect)
             effect:AddDelay(0.5)
-            self.Locations = others
             Board:AddEffect(effect)
-            return true
+            self.Locations = others
+            self.Locations.NoPsion = true
         else
             -- 不能在击杀灵虫后接一个延时立即在 effect 上添加其他效果
             -- 这样由于没有结算完毕，灵虫的效果依然还在
             self:ApplyEffect_Inner(others, effect)
-            self.Locations = {}
             Board:AddEffect(effect)
-            return false
+            self.Locations = {}
         end
     end
+    return self:IsEffect()
 end
 
 function Env_Passive:ApplyEffect_Inner(locations, effect)
+    self.CurrentAttack = locations
     for i, location in ipairs(locations) do
         local pawn = Board:GetPawn(location)
         local envDamage = tool:GetEnvPassiveDamage(pawn)

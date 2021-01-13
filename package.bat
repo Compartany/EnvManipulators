@@ -5,7 +5,8 @@ CHCP 65001
 
 SET zip=%ProgramFiles%/WinRAR/WinRAR
 SET archive=archive
-SET package=EnvManipulators.zip
+SET name=EnvManipulators
+SET package=%name%.zip
 
 lua scripts\init.lua >version.txt
 SET /P version=<version.txt
@@ -17,11 +18,11 @@ if EXIST %package% (
 )
 
 @REM -r 递归
-"%zip%" a -r %package% img\
-"%zip%" a -r %package% scripts\
-"%zip%" a %package% "说明.txt"
-"%zip%" a %package% "README.txt"
-"%zip%" a %package% "version.txt"
+"%zip%" a -ap%name% -r %package% img\
+"%zip%" a -ap%name% -r %package% scripts\
+"%zip%" a -ap%name% %package% "说明.txt"
+"%zip%" a -ap%name% %package% "README.txt"
+"%zip%" a -ap%name% %package% "version.txt"
 ECHO Package %package%
 
 COPY %package% %archive%\%version%.zip

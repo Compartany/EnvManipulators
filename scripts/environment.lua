@@ -172,6 +172,38 @@ function Env_Volcano:GetAttackEffect(location, effect, ...)
     return effect
 end
 
+-- 优化空中支援友军免疫
+local _Env_Airstrike_MarkBoard = Env_Airstrike.MarkBoard
+function Env_Airstrike:MarkBoard(...)
+    if IsPassiveSkill("Env_Weapon_4_A") then
+        local allies = {}
+        local others = {}
+        if not self:IsEffect() and not Board:IsBusy() then
+            self.CurrentAttack = nil
+        end
+        for i, location in ipairs(self.Locations) do
+            if Board:GetPawnTeam(location) == TEAM_PLAYER then
+                allies[#allies + 1] = location
+            else
+                others[#others + 1] = location
+            end
+        end
+        -- 先处理免疫再除非其他，让后面的危险区域覆盖前面的安全区域
+        for i, ally in ipairs(allies) do
+            local active = self.CurrentAttack == ally
+            local spaces = self:GetAttackArea(ally)
+            for j, space in ipairs(spaces) do
+                tool:MarkAllySpace(space, active, self)
+            end
+        end
+        for i, other in ipairs(others) do
+            self:MarkSpace(other, self.CurrentAttack == other)
+        end
+    else
+        return _Env_Airstrike_MarkBoard(self, ...)
+    end
+end
+
 -- 支持巨浪环境
 local _Env_Tides_Start = Env_Tides.Start
 function Env_Tides:Start(...)
@@ -347,22 +379,15 @@ local function AdjustEnv(mission)
             local _MarkBoard = env.MarkBoard
             function env:MarkBoard(...)
                 local ret = _MarkBoard(self, ...)
-                local mission = GetCurrentMission()
                 local trueLocations = self:GetTrueLocations()
                 self.OverlayEnv:MarkBoard()
-                if IsPassiveSkill("Env_Weapon_4_A") and
+                if IsPassiveSkill("Env_Weapon_4_A") and mission.Environment ~= "Env_Airstrike" and
                     (mission.MasteredEnv or (trueLocations and #trueLocations > 0 and not mission.SpecialEnv)) then
-                    if not self:IsEffect() and not Board:IsBusy() then
-                        self.CurrentAttack = nil
-                    end
-                    local icon = "combat/tile_icon/tile_airstrike.png"
-                    local colors = {GL_Color(50, 200, 50, 0.75), GL_Color(20, 200, 20, 0.75)}
                     for i, location in ipairs(trueLocations) do
                         if Board:GetPawnTeam(location) == TEAM_PLAYER then
                             local focused = self.CurrentAttack == location or
                                                 (self.Instant and self.CurrentAttack ~= nil)
-                            Board:MarkSpaceImage(location, icon, focused and colors[2] or colors[1])
-                            Board:MarkSpaceDesc(location, "passive0", false)
+                            tool:MarkAllySpace(location, focused, self)
                         end
                     end
                 end
