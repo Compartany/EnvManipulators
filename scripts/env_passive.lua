@@ -73,7 +73,6 @@ function Env_Passive:ApplyEffect()
         local psions = {} -- 原版游戏中不可能出现多只水母，但鬼知道其他 MOD 会不会改
         local others = {} -- 其他 pawn
         effect.iOwner = ENV_EFFECT
-        effect:AddSound("/impact/generic/explosion_large")
         local allyImmue = IsPassiveSkill("Env_Weapon_4_A")
         if self.Locations.NoPsion then
             others = self.Locations
@@ -91,7 +90,7 @@ function Env_Passive:ApplyEffect()
         end
         if #psions > 0 then
             self:ApplyEffect_Inner(psions, effect)
-            effect:AddDelay(0.5)
+            effect:AddDelay(0.6)
             Board:AddEffect(effect)
             self.Locations = others
             self.Locations.NoPsion = true
@@ -108,22 +107,29 @@ end
 
 function Env_Passive:ApplyEffect_Inner(locations, effect)
     self.CurrentAttack = locations
-    for i, location in ipairs(locations) do
-        local pawn = Board:GetPawn(location)
-        local envDamage = tool:GetEnvPassiveDamage(pawn)
-        local damage = SpaceDamage(location, envDamage)
-        damage.sAnimation = "Env_Passive_Animation" .. random_int(2)
-        effect:AddDamage(damage)
-        if IsPassiveSkill("Env_Weapon_4") then
-            effect:AddScript([[ -- 取消行动
-                local location = ]] .. location:GetString() .. [[
-                local pawn = Board:GetPawn(location)
-                if pawn and pawn:IsQueued() then -- 单位被击杀也不会进得来
-                    pawn:ClearQueued()
-                    Board:Ping(location, GL_Color(196, 182, 86, 0))
-                    Board:AddAlert(location, EnvMod_Texts.action_terminated)
-                end
-            ]])
+    if #locations > 0 then
+        effect:AddSound("/impact/generic/explosion_large")
+        while #locations > 0 do
+            local location = random_removal(locations)
+            local pawn = Board:GetPawn(location)
+            local envDamage = tool:GetEnvPassiveDamage(pawn)
+            local damage = SpaceDamage(location, envDamage)
+            damage.sAnimation = "Env_Passive_Animation" .. random_int(2)
+            effect:AddDamage(damage)
+            if IsPassiveSkill("Env_Weapon_4") then
+                effect:AddScript([[ -- 取消行动
+                    local location = ]] .. location:GetString() .. [[
+                    local pawn = Board:GetPawn(location)
+                    if pawn and pawn:IsQueued() then -- 单位被击杀也不会进得来
+                        pawn:ClearQueued()
+                        Board:Ping(location, GL_Color(196, 182, 86, 0))
+                        Board:AddAlert(location, EnvMod_Texts.action_terminated)
+                    end
+                ]])
+            end
+            if #locations > 1 then
+                effect:AddDelay(math.random() * 0.006 + 0.025) -- 稍微错开时间，使动画不至于不自然
+            end
         end
     end
 end
@@ -263,8 +269,7 @@ local function BurrowerScorePositioning(point, pawn)
     elseif edge1 or edge2 then
         return 0 -- edges are discouraged
     end
-    local enemy = (pawn:GetTeam() == TEAM_PLAYER) and TEAM_ENEMY or
-                      TEAM_PLAYER
+    local enemy = (pawn:GetTeam() == TEAM_PLAYER) and TEAM_ENEMY or TEAM_PLAYER
     if not pawn:IsRanged() then
         for i = DIR_START, DIR_END do
             if Board:IsPawnTeam(point + DIR_VECTORS[i], enemy) then
