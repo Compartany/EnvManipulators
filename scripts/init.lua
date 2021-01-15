@@ -5,7 +5,7 @@ ENV_GLOBAL = {}
 local mod = {
     id = "EnvManipulators",
     name = "EnvManipulators",
-    version = "1.6.4.20210114",
+    version = "1.6.5.20210116",
     requirements = {"kf_ModUtils"},
     modApiVersion = "2.5.4",
     icon = "img/icon.png",
@@ -83,9 +83,13 @@ function mod:initResources()
         modApi:appendAsset("img/combat/tiles_" .. type .. "/tile_lock_friendunit.png",
             self.resourcePath .. "img/tile_lock/" .. type .. "_friendunit.png")
     end
-
-    -- 设置图片的偏移
+    -- 设置图片偏移
     Location["combat/icons/env_lock.png"] = Point(-27, 2)
+
+    local weaponImgs = {"env_weapon_1.png", "env_weapon_2.png", "env_weapon_3.png", "env_weapon_4.png"}
+    for i, weaponImg in ipairs(weaponImgs) do
+        modApi:appendAsset("img/weapons/" .. weaponImg, self.resourcePath .. "img/weapons/" .. weaponImg)
+    end
 
     if modApi:getLanguageIndex() == Languages.Chinese_Simplified then
         modApi:addWeapon_Texts(require(self.scriptPath .. "localization/chinese/Weapon_Texts"))

@@ -1,13 +1,6 @@
 local mod = mod_loader.mods[modApi.currentMod]
 local tool = mod.tool
-local path = mod.resourcePath
-local iconPath = path .. "img/weapons/"
 local pawnMap = tool.Map:new()
-
-local files = {"env_weapon_1.png", "env_weapon_2.png", "env_weapon_3.png", "env_weapon_4.png"}
-for _, file in ipairs(files) do
-    modApi:appendAsset("img/weapons/" .. file, iconPath .. file)
-end
 
 ------------------
 -- Env_Weapon_1 --
@@ -126,7 +119,7 @@ function Env_Weapon_1:GetTargetArea(point)
 end
 
 function Env_Weapon_1:GetSkillEffect(p1, p2)
-    return tool:IsTipImage() and self:GetSkillEffect_TipImage() or self:GetSkillEffect_Inner(p1, p2)
+    return Board:IsTipImage() and self:GetSkillEffect_TipImage() or self:GetSkillEffect_Inner(p1, p2)
 end
 
 -- 不能直接在 GetSkillEffect() 上追加参数，因为其他 MOD 引进的 modApiExt 也可能在上面追加参数导致冲突
@@ -367,47 +360,25 @@ end
 -- 反缠绕 --
 ------------
 function BoardPawn:IsEnvIgnoreWeb()
-    if IsTestMechScenario() then
+    if self:IsIgnoreWeb() then
+        return false
+    elseif IsTestMechScenario() then
         return IsEnvWeapon1_B_TMS(self)
     else
-        return not self:IsIgnoreWeb() and pawnMap:Get(self:GetId(), "IgnoreWeb")
+        return pawnMap:Get(self:GetId(), "IgnoreWeb")
     end
 end
-local _SkillEffect_AddGrapple = SkillEffect.AddGrapple
-function SkillEffect:AddGrapple(source, target, ...)
-    local ret = _SkillEffect_AddGrapple(self, source, target, ...)
-    local pawn = Board:GetPawn(target)
-
-    if pawn and pawn:IsEnvIgnoreWeb() then
-        if not pawn:IsDead() and not pawn:IsFrozen() and (pawn:IsFlying() or Board:GetTerrain(target) ~= TERRAIN_WATER) and
-            (pawn:IsIgnoreSmoke() or not Board:IsSmoke(target)) then
-            ENV_GLOBAL.EnvIgnoreWeb_Pawn = pawn
-            self:AddScript([[ENV_GLOBAL.EnvIgnoreWeb_Pawn:SetSpace(Point(-1, -1))]])
-            self:AddDelay(0.01) -- 必须要有延时才行
-            self:AddScript([[ENV_GLOBAL.EnvIgnoreWeb_Pawn:SetSpace(]] .. target:GetString() .. [[)]])
-            self:AddDelay(0.25)
-            local damage = SpaceDamage(target, 1)
-            if not pawn:IsFire() then
-                damage.iFire = EFFECT_CREATE
-            end
-            damage.sAnimation = "EnvExploRepulse"
-            damage.sSound = "/impact/generic/explosion"
-            self:AddDamage(damage)
-        else
-            self:AddScript([[Board:AddAlert(]] .. target:GetString() .. [[, EnvMod_Texts.env_overload_disabled)]])
-        end
-    end
-    return ret
-end
+-- 具体处理通过 modApiExt:addPawnIsGrappledHook() 完成
 
 --------------
 -- 跳跃移动 --
 --------------
 function BoardPawn:IsEnvJumpMove()
+    -- jumper 也得处理
     if IsTestMechScenario() then
         return IsEnvWeapon1_B_TMS(self)
     else
-        return not self:IsJumper() and pawnMap:Get(self:GetId(), "JumpMove")
+        return pawnMap:Get(self:GetId(), "JumpMove")
     end
 end
 
@@ -457,9 +428,7 @@ function Move:GetSkillEffect(p1, p2, ...)
                     ret:AddDamage(damage)
                 end
                 local damage = SpaceDamage(p2, 1)
-                if not Pawn:IsFire() then
-                    damage.iFire = EFFECT_CREATE
-                end
+                damage.iFire = EFFECT_CREATE
                 damage.sAnimation = "EnvExploRepulse"
                 damage.sSound = "/impact/generic/explosion"
                 ret:AddDamage(damage)
@@ -487,6 +456,7 @@ Env_Weapon_2 = LineArtillery:new{
     Description = Weapon_Texts.Env_Weapon_2_Description,
     Class = "Ranged",
     Icon = "weapons/env_weapon_2.png",
+    Explosion = "", -- modApiExt 重写了 GetSkillEffect()，导致 Explosion 会在机甲上播放，清空以避免之
     Chain1 = false,
     Chain2 = false,
     PowerCost = 1,
@@ -559,7 +529,7 @@ function Env_Weapon_2:GetTargetArea(point)
 end
 
 function Env_Weapon_2:GetSkillEffect(p1, p2)
-    return tool:IsTipImage() and self:GetSkillEffect_TipImage() or self:GetSkillEffect_Inner(p1, p2)
+    return Board:IsTipImage() and self:GetSkillEffect_TipImage() or self:GetSkillEffect_Inner(p1, p2)
 end
 
 function Env_Weapon_2:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect, param)
@@ -940,6 +910,29 @@ function Weapons:Load()
                 initMissionWeapon(mission)
             end
         end)
+    end)
+
+    env_modApiExt:addPawnIsGrappledHook(function(mission, pawn, isGrappled)
+        if isGrappled and pawn:IsEnvIgnoreWeb() then
+            local effect = SkillEffect()
+            local target = pawn:GetSpace()
+            if not pawn:IsDead() and not pawn:IsFrozen() and (pawn:IsFlying() or Board:GetTerrain(target) ~= TERRAIN_WATER) and
+                (pawn:IsIgnoreSmoke() or not Board:IsSmoke(target)) then
+                ENV_GLOBAL.EnvIgnoreWeb_Pawn = pawn
+                local damage = SpaceDamage(target, 1)
+                damage.iFire = EFFECT_CREATE
+                damage.sAnimation = "EnvExploRepulse"
+                damage.sSound = "/impact/generic/explosion"
+                effect:AddDamage(damage)
+                effect:AddScript([[ENV_GLOBAL.EnvIgnoreWeb_Pawn:SetSpace(Point(-1, -1))]])
+                effect:AddDelay(0.01) -- 必须要有延时才行
+                effect:AddScript([[ENV_GLOBAL.EnvIgnoreWeb_Pawn:SetSpace(]] .. target:GetString() .. [[)]])
+                effect:AddDelay(0.25)
+            else
+                effect:AddScript([[Board:AddAlert(]] .. target:GetString() .. [[, EnvMod_Texts.env_overload_disabled)]])
+            end
+            Board:AddEffect(effect)
+        end
     end)
 end
 return Weapons

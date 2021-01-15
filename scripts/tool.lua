@@ -29,11 +29,6 @@ function Tool:IsSquad()
     return squad == "环境操纵者" or squad == "EnvManipulators" -- 不要用 EnvMod_Texts.squad_name 来判断，否则换了语言就不对
 end
 
--- 判断是否为使用提示
-function Tool:IsTipImage()
-    return Board:GetSize() == Point(6, 6)
-end
-
 -- 判断机甲是否有装备
 -- 自定义中有同名机甲时，判断会出错。
 -- 且由于 GameData 数据具有延后性，更换装备到其他机甲上后，不能立即获得正确的最新位置，正常情况下还是可能出错。
