@@ -80,14 +80,22 @@ function Move:GetSkillEffect(p1, p2, ...)
         local pathLength = path:size() - 1 -- 路径长度为途经的点数减 1
         local speed = Pawn:GetBasicMoveSpeed()
         if pathLength == speed or (Pawn:IsAbility("Shifty") and Pawn:GetMoveSpeed() == 1) then
-            ret:AddDamage(SpaceDamage(p2, 1))
+            local damage = SpaceDamage(p2, 0)
+            damage.sImageMark = "combat/icons/icon_envheavy.png"
+            ret:AddDamage(damage)
+            local id = Pawn:GetId()
+            local dmg = (Pawn:IsAcid() and 2) or (Pawn:IsArmor() and 0) or 1
             ret:AddScript(string.format([[
                 local pawn = Board:GetPawn(%d)
-                local hp = pawn:GetHealth()
-                if hp > 1 then
+                pawn:ApplyDamage(SpaceDamage(pawn:GetSpace(), 1))
+            ]], id))
+            if Pawn:GetHealth() - dmg > 1 and dmg > 0 then
+                ret:AddScript(string.format([[
+                    local pawn = Board:GetPawn(%d)
+                    local hp = pawn:GetHealth()
                     Game:TriggerSound("/ui/battle/critical_damage")
-                end
-            ]], Pawn:GetId()))
+                ]], id))
+            end
         end
     end
     return ret

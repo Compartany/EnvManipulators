@@ -123,11 +123,12 @@ function Env_Weapon_1:GetSkillEffect(p1, p2)
 end
 
 -- 不能直接在 GetSkillEffect() 上追加参数，因为其他 MOD 引进的 modApiExt 也可能在上面追加参数导致冲突
-function Env_Weapon_1:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect)
+function Env_Weapon_1:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect, param)
     tipImageCall = tipImageCall or false
     local iFire = ((tipImageCall and self.Overload) or Pawn:IsFire()) and EFFECT_CREATE or EFFECT_NONE
     local iAcid = Pawn:IsAcid() and EFFECT_CREATE or EFFECT_NONE
     local bHide = tipImageCall and self.Overload
+    local hidePullPath = param and param.hidePullPath or false
 
     local ret = skillEffect or SkillEffect()
     local dist = p1:Manhattan(p2)
@@ -146,14 +147,27 @@ function Env_Weapon_1:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect)
         local p3 = obj - DIR_VECTORS[dir]
         local pullDist = obj:Manhattan(p2)
         if iFire == EFFECT_NONE then
-            iFire = (Board:IsFire(p2) and not Pawn:IsIgnoreFire()) and EFFECT_CREATE or EFFECT_NONE
+            iFire = (Board:IsFire(p3) and not Pawn:IsIgnoreFire()) and EFFECT_CREATE or EFFECT_NONE
         end
         if iAcid == EFFECT_NONE then
-            iAcid = Board:IsAcid(p2) and EFFECT_CREATE or EFFECT_NONE
+            iAcid = Board:IsAcid(p3) and EFFECT_CREATE or EFFECT_NONE
         end
-        ret:AddMove(Board:GetSimplePath(p1, p3), FULL_DELAY)
-        ret:AddDelay(0.3)
-        ret:AddMove(Board:GetSimplePath(p3, p1), FULL_DELAY)
+        if hidePullPath then
+            ret:AddScript(string.format([[
+                local p1 = %s
+                local p3 = %s
+                local effect = SkillEffect()
+                effect:AddMove(Board:GetSimplePath(p1, p3), FULL_DELAY)
+                effect:AddDelay(0.3)
+                effect:AddMove(Board:GetSimplePath(p3, p1), FULL_DELAY)
+                Board:AddEffect(effect)
+            ]], p1:GetString(), p3:GetString()))
+            ret:AddDelay(0.5) -- 让 script 在 delay 期间运行
+        else
+            ret:AddMove(Board:GetSimplePath(p1, p3), FULL_DELAY)
+            ret:AddDelay(0.3)
+            ret:AddMove(Board:GetSimplePath(p3, p1), FULL_DELAY)
+        end
         damage = SpaceDamage(obj, self.Damage)
         if pullDist < 2 then
             damage.iPush = dirBack
@@ -287,11 +301,7 @@ function Env_Weapon_1:GetSkillEffect_TipImage()
         local effect = SkillEffect()
         local p1 = Point(2, 4)
         local p2 = Point(2, 2)
-        ENV_GLOBAL.EnvIgnoreWeb_Pawn_TipImage = Board:GetPawn(p1)
         effect:AddGrapple(Point(2, 3), p1, "hold")
-        effect:AddScript([[ENV_GLOBAL.EnvIgnoreWeb_Pawn_TipImage:SetSpace(Point(-1, -1))]])
-        effect:AddDelay(0.01) -- 必须要有延时才行
-        effect:AddScript([[ENV_GLOBAL.EnvIgnoreWeb_Pawn_TipImage:SetSpace(Point(2, 4))]])
         effect:AddDelay(0.25)
         local damage = SpaceDamage(p1, 1)
         damage.iFire = EFFECT_CREATE
@@ -299,42 +309,59 @@ function Env_Weapon_1:GetSkillEffect_TipImage()
         damage.sAnimation = "EnvExploRepulse"
         damage.sSound = "/impact/generic/explosion"
         effect:AddDamage(damage)
-        effect:AddDelay(1.3)
-        local move = PointList()
-        effect:AddSound("/weapons/leap")
-        move:push_back(p1)
-        move:push_back(p2)
-        effect:AddBurst(p1, "Emitter_Burst_$tile", DIR_NONE)
-        effect:AddLeap(move, FULL_DELAY)
-        effect:AddBurst(p2, "Emitter_Burst_$tile", DIR_NONE)
-        for i = DIR_START, DIR_END do
-            local damage = SpaceDamage(p2 + DIR_VECTORS[i], 0)
-            damage.sAnimation = PUSH_ANIMS[i]
+        local pointStr = p1:GetString()
+        effect:AddScript(string.format([[
+            ENV_GLOBAL.EnvIgnoreWeb_PawnStack_TipImage = Board:MovePawnsFromTile(%s)
+        ]], pointStr))
+        effect:AddDelay(0.01) -- 必须要有延时才行
+        effect:AddScript(string.format([[
+            Board:RestorePawnsToTile(%s, ENV_GLOBAL.EnvIgnoreWeb_PawnStack_TipImage)
+        ]], pointStr))
+        effect:AddDelay(1)
+        effect:AddScript(string.format([[
+            local effect = SkillEffect()
+            local p1 = %s
+            local p2 = %s
+            local move = PointList()
+            effect:AddSound("/weapons/leap")
+            move:push_back(p1)
+            move:push_back(p2)
+            effect:AddBurst(p1, "Emitter_Burst_$tile", DIR_NONE)
+            effect:AddLeap(move, FULL_DELAY)
+            effect:AddBurst(p2, "Emitter_Burst_$tile", DIR_NONE)
+            for i = DIR_START, DIR_END do
+                local damage = SpaceDamage(p2 + DIR_VECTORS[i], 0)
+                damage.sAnimation = PUSH_ANIMS[i]
+                effect:AddDamage(damage)
+            end
+            local damage = SpaceDamage(p2, 1)
+            damage.iFire = EFFECT_CREATE
+            damage.sAnimation = "EnvExploRepulse"
+            damage.sSound = "/impact/generic/explosion"
             effect:AddDamage(damage)
-        end
-        damage = SpaceDamage(p2, 1)
-        damage.bHide = true
-        damage.sAnimation = "EnvExploRepulse"
-        damage.sSound = "/impact/generic/explosion"
-        effect:AddDamage(damage)
-        effect:AddSound("/impact/generic/mech")
-        effect:AddBounce(p2, 3)
-        effect:AddDelay(0.5)
+            effect:AddSound("/impact/generic/mech")
+            effect:AddBounce(p2, 3)
+            Board:AddEffect(effect)
+        ]], p1:GetString(), p2:GetString()))
+        effect:AddDelay(1.6) -- script 会在 delay 期间运行（感谢 Lemonymous 提供的技巧）
 
         if s == "B" then
             if self.TI_B == 0 then
                 ret = self:GetSkillEffect_Inner(Point(2, 2), Point(1, 1), true, effect)
+                ret:AddDelay(0.2)
             else
                 ret = self:GetSkillEffect_Inner(Point(2, 2), Point(3, 3), true, effect)
-                ret:AddDelay(0.5)
+                ret:AddDelay(0.6)
             end
             self.TI_B = (self.TI_B + 1) % 2
         else
             if self.TI_AB == 0 then
-                ret = self:GetSkillEffect_Inner(Point(2, 2), Point(2, 1), true, effect)
+                effect:AddDelay(0.2)
+                ret = self:GetSkillEffect_Inner(Point(2, 2), Point(2, 1), true, effect, {hidePullPath = true})
+                ret:AddDelay(0.2)
             else
                 ret = self:GetSkillEffect_Inner(Point(2, 2), Point(3, 3), true, effect)
-                ret:AddDelay(0.5)
+                ret:AddDelay(0.6)
             end
             self.TI_AB = (self.TI_AB + 1) % 2
         end
@@ -456,7 +483,6 @@ Env_Weapon_2 = LineArtillery:new{
     Description = Weapon_Texts.Env_Weapon_2_Description,
     Class = "Ranged",
     Icon = "weapons/env_weapon_2.png",
-    Explosion = "", -- modApiExt 重写了 GetSkillEffect()，导致 Explosion 会在机甲上播放，清空以避免之
     Chain1 = false,
     Chain2 = false,
     PowerCost = 1,
@@ -918,16 +944,19 @@ function Weapons:Load()
             local target = pawn:GetSpace()
             if not pawn:IsDead() and not pawn:IsFrozen() and (pawn:IsFlying() or Board:GetTerrain(target) ~= TERRAIN_WATER) and
                 (pawn:IsIgnoreSmoke() or not Board:IsSmoke(target)) then
-                ENV_GLOBAL.EnvIgnoreWeb_Pawn = pawn
                 local damage = SpaceDamage(target, 1)
                 damage.iFire = EFFECT_CREATE
                 damage.sAnimation = "EnvExploRepulse"
                 damage.sSound = "/impact/generic/explosion"
                 effect:AddDamage(damage)
-                effect:AddScript([[ENV_GLOBAL.EnvIgnoreWeb_Pawn:SetSpace(Point(-1, -1))]])
-                effect:AddDelay(0.01) -- 必须要有延时才行
-                effect:AddScript([[ENV_GLOBAL.EnvIgnoreWeb_Pawn:SetSpace(]] .. target:GetString() .. [[)]])
-                effect:AddDelay(0.25)
+                local pointStr = pawn:GetSpace():GetString()
+                effect:AddScript(string.format([[
+                    ENV_GLOBAL.EnvIgnoreWeb_PawnStack = Board:MovePawnsFromTile(%s)
+                ]], pointStr))
+                effect:AddDelay(0.01) -- 必须有延时才行，且延时必须加在 effect 上，用 modApi 的延时函数不可
+                effect:AddScript(string.format([[
+                    Board:RestorePawnsToTile(%s, ENV_GLOBAL.EnvIgnoreWeb_PawnStack)
+                ]], pointStr))
             else
                 effect:AddScript([[Board:AddAlert(]] .. target:GetString() .. [[, EnvMod_Texts.env_overload_disabled)]])
             end

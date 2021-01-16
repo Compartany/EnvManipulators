@@ -5,7 +5,7 @@ ENV_GLOBAL = {}
 local mod = {
     id = "EnvManipulators",
     name = "EnvManipulators",
-    version = "1.6.5.20210116",
+    version = "1.7.0.20210117",
     requirements = {"kf_ModUtils"},
     modApiVersion = "2.5.4",
     icon = "img/icon.png",
@@ -76,15 +76,17 @@ function mod:initResources()
     modApi:appendAsset("img/effects/env_shot_R.png", self.resourcePath .. "img/env_shot.png")
 
     -- 加到方格目录下，这样可以被 Board:SetCustomTile() 使用
-    local tileType = {"grass", "sand", "snow", "acid", "volcano", "lava"}
-    for i, type in ipairs(tileType) do
+    local tileTypes = {"grass", "sand", "snow", "acid", "volcano", "lava"}
+    for i, type in ipairs(tileTypes) do
         modApi:appendAsset("img/combat/tiles_" .. type .. "/tile_lock.png",
             self.resourcePath .. "img/tile_lock/" .. type .. ".png")
         modApi:appendAsset("img/combat/tiles_" .. type .. "/tile_lock_friendunit.png",
             self.resourcePath .. "img/tile_lock/" .. type .. "_friendunit.png")
     end
+
     -- 设置图片偏移
     Location["combat/icons/env_lock.png"] = Point(-27, 2)
+    Location["combat/icons/icon_envheavy.png"] = Point(-12, 8)
 
     local weaponImgs = {"env_weapon_1.png", "env_weapon_2.png", "env_weapon_3.png", "env_weapon_4.png"}
     for i, weaponImg in ipairs(weaponImgs) do
