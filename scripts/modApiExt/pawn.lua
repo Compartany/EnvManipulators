@@ -46,7 +46,7 @@ function pawn:safeDamage(pawn, spaceDamage)
 	local wasOnBoard = self.board:isPawnOnBoard(pawn)
 
 	local pawnSpace = pawn:GetSpace()
-	local safeSpace = self.board:getUnoccupiedRestorableSpace()
+	local safeSpace = self.board:getSafeSpace()
 
 	local terrainData = self.board:getRestorableTerrainData(safeSpace)
 
@@ -54,9 +54,15 @@ function pawn:safeDamage(pawn, spaceDamage)
 		Board:AddPawn(pawn, safeSpace)
 	end
 
+	-- Set to water first to get rid of potential fire on the tile
+	Board:SetTerrain(safeSpace, TERRAIN_WATER)
 	-- change it to basic terrain so we don't trigger sounds if it's
 	-- sand or forest tile or other.
 	Board:SetTerrain(safeSpace, TERRAIN_ROAD)
+	-- Pawns get affected by acid if moved onto an acid tile
+	-- (even though technically they shouldn't, since the pawn doesn't
+	-- stand on the tile during missionUpdate step?)
+	Board:SetAcid(safeSpace, false)
 
 	pawn:SetSpace(safeSpace)
 
@@ -186,15 +192,19 @@ function pawn:getWeaponData(ptable, field)
 	return t
 end
 
+local function isPowered(upgrade)
+	return upgrade and (#upgrade == 0 or (upgrade[1] and upgrade[1] > 0))
+end
+
 local function getUpgradeSuffix(wtable)
-	if
-		wtable.upgrade1 and wtable.upgrade1[1] == 1 and
-		wtable.upgrade2 and wtable.upgrade2[1] == 1
-	then
+	local hasUpgradeA = isPowered(wtable.upgrade1)
+	local hasUpgradeB = isPowered(wtable.upgrade2)
+
+	if hasUpgradeA and hasUpgradeB then
 		return "_AB"
-	elseif wtable.upgrade1 and wtable.upgrade1[1] == 1 then
+	elseif hasUpgradeA then
 		return "_A"
-	elseif wtable.upgrade2 and wtable.upgrade2[1] == 1 then
+	elseif hasUpgradeB then
 		return "_B"
 	end
 

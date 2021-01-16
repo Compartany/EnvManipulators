@@ -70,11 +70,11 @@ function modApiExtHooks:trackAndUpdatePawns(mission)
 				if pd.undoPossible ~= undo then
 					-- Undo was possible in previous game update, but no longer is.
 					-- Positions are different, which means that the undo was *not*
-					-- disabled due to skill usage on a pawn -- swap skills
-					-- are not instant, so we wouldn't register change in *both*
-					-- undo state AND pawn position in a single update if that were
-					-- the case. So it has to be the 'undo move' option.
-					if pd.undoPossible and not undo and pd.loc ~= p then
+					-- disabled due to skill usage on a pawn as that would make the pawn inactive
+					-- while most skills are not instant, leap and dash skills are problematic
+					-- as undo state changes at the same time as a move
+					-- So it has to be the 'undo move' option.
+					if pd.undoPossible and not undo and pd.loc ~= p and pawn:IsActive() then
 						self.dialog:triggerRuledDialog("MoveUndo", { main = id })
 						modApiExt_internal.firePawnUndoMoveHooks(mission, pawn, pd.loc)
 					end
@@ -104,7 +104,7 @@ function modApiExtHooks:trackAndUpdatePawns(mission)
 
 					pd.curHealth = hp
 				end
-				
+
 				local isFire = pawn:IsFire()
 				if pd.isFire ~= isFire then
 					if isFire then
@@ -116,7 +116,7 @@ function modApiExtHooks:trackAndUpdatePawns(mission)
 					
 					pd.isFire = isFire
 				end
-				
+
 				local isAcid = pawn:IsAcid()
 				if pd.isAcid ~= isAcid then
 					if isAcid then
@@ -128,7 +128,7 @@ function modApiExtHooks:trackAndUpdatePawns(mission)
 					
 					pd.isAcid = isAcid
 				end
-				
+
 				local isFrozen = pawn:IsFrozen()
 				if pd.isFrozen ~= isFrozen then
 					if isFrozen then
@@ -140,7 +140,7 @@ function modApiExtHooks:trackAndUpdatePawns(mission)
 					
 					pd.isFrozen = isFrozen
 				end
-				
+
 				local isGrappled = pawn:IsGrappled()
 				if pd.isGrappled ~= isGrappled then
 					if isGrappled then
@@ -152,7 +152,7 @@ function modApiExtHooks:trackAndUpdatePawns(mission)
 					
 					pd.isGrappled = isGrappled
 				end
-				
+
 				local isShield = pawn:IsShield()
 				if pd.isShield ~= isShield then
 					if isShield then
@@ -171,6 +171,37 @@ function modApiExtHooks:trackAndUpdatePawns(mission)
 					modApiExt_internal.firePawnDeselectedHooks(mission, pawn)
 
 					pd.selected = false
+				end
+
+				if
+					Pawn and Pawn:GetId() == id and
+					Pawn:IsSelected() and not pd.selected and
+					Pawn:IsActive() and
+					Pawn:GetTeam() == TEAM_ENEMY and
+					Game:GetTeamTurn() == TEAM_ENEMY
+				then
+					-- Vek movement detection
+					if modApiExt_internal.scheduledMovePawns[id] == nil then
+						modApiExt_internal.scheduledMovePawns[id] = Pawn:GetSpace()
+
+						modApiExt_internal.fireVekMoveStartHooks(modApiExt_internal.mission, pawn)
+
+						modApi:conditionalHook(
+							function()
+								return modApiExt_internal.scheduledMovePawns[id] and
+								      (not Board:IsBusy() or not Pawn or Pawn:GetId() ~= id or not pd.selected)
+									
+							end,
+							function()
+								modApiExt_internal.fireVekMoveEndHooks(
+									modApiExt_internal.mission, pawn,
+									modApiExt_internal.scheduledMovePawns[id],
+									pawn:GetSpace()
+								)
+								modApiExt_internal.scheduledMovePawns[id] = nil
+							end
+						)
+					end
 				end
 			else
 				-- pawn was nil or invalid, remove this entry
@@ -195,6 +226,12 @@ function modApiExtHooks:trackAndUpdatePawns(mission)
 					pd.dead = true
 					self.dialog:triggerRuledDialog("PawnKilled", { target = id })
 					modApiExt_internal.firePawnKilledHooks(mission, pawn)
+				end
+
+				if pd.dead and pd.curHealth ~= 0 then
+					pd.dead = false
+					self.dialog:triggerRuledDialog("PawnRevived", { target = id })
+					modApiExt_internal.firePawnRevivedHooks(mission, pawn)
 				end
 
 				-- Treat pawns not registered in the onBoard table as on board.
@@ -255,13 +292,19 @@ function modApiExtHooks:updateTiles()
 	if Board then
 		if not GAME.trackedPods then GAME.trackedPods = {} end
 
-		local mtile = mouseTile()
-		if modApiExt_internal.currentTile ~= mtile then
+		local mTile, mTileDir = mouseTileAndEdge()
+
+		if modApiExt_internal.currentTileDirection ~= mTileDir then
+			modApiExt_internal.fireTileDirectionChangedHooks(mission, mTile, mTileDir)
+			modApiExt_internal.currentTileDirection = mTileDir
+		end
+
+		if modApiExt_internal.currentTile ~= mTile then
 			if modApiExt_internal.currentTile then -- could be nil
 				modApiExt_internal.fireTileUnhighlightedHooks(mission, modApiExt_internal.currentTile)
 			end
 
-			modApiExt_internal.currentTile = mtile
+			modApiExt_internal.currentTile = mTile
 
 			if modApiExt_internal.currentTile then -- could be nil
 				modApiExt_internal.fireTileHighlightedHooks(mission, modApiExt_internal.currentTile)
@@ -305,15 +348,34 @@ function modApiExtHooks:findAndTrackPods()
 end
 
 --[[
-	Fix for skill hooks override automatically granting 'Ramming Speed'
-	achievement. This achievement is granted if a skill effect's
-	DamageList (.effect field) contains a SpaceDamage instance whose
-	.loc field is further away than 5 tiles from the target.
-
-	Since scripts added via AddScript() function have their .loc
-	automatically set to (-1, -1), we need to build the script instances
-	ourselves to properly set their location.
+	Fix for SpaceScript function causing the game to update the tile
+	the damage occurs on. This causes some inconsistency with vanilla
+	game behaviour, most notably self-pushing, self-harming damage
+	instances (eg. Unstable Mech's weapon) setting forests on fire,
+	and the update causing the fire to spread to the mech before it
+	is pushed off the tile.
 --]]
+function GetClosestOffBoardLocation(loc)
+	local minPoint = nil
+	local minDistance = 100
+
+	for y = -1, 8 do
+		for x = -1, 8 do
+			if x == -1 or x == 8 or y == -1 or y == 8 then
+				local point = Point(x, y)
+				local d = loc:Manhattan(point)
+
+				if d < minDistance then
+					minPoint = point
+					minDistance = d
+				end
+			end
+		end
+	end
+
+	return minPoint
+end
+
 function SpaceScript(loc, script)
 	local d = SpaceDamage(loc)
 	d.sScript = script
@@ -327,24 +389,28 @@ function SpaceScript(loc, script)
 	return d
 end
 
-local function modApiExtGetSkillEffect(self, p1, p2, parentSkill)
+local function modApiExtGetSkillEffect(self, p1, p2, parentSkill, ...)
 	-- Dereference to weapon object
 	if type(self) == "string" then
 		self = _G[self]
 	end
 
+	local isValidSkillTable = parentSkill and type(parentSkill) == "table" and
+	                          type(parentSkill.GetSkillEffect) == "function"
+	local isPrimaryCall = not isValidSkillTable
+
 	local skillFx = nil
-	if parentSkill == nil then
-		skillFx = modApiExt_internal.oldSkills[self.__Id](self, p1, p2, getmetatable(self))
+	if isPrimaryCall then
+		skillFx = modApiExt_internal.oldSkills[self.__Id](self, p1, p2, getmetatable(self), ...)
 	else
 		-- Defer to parent skill's GetSkillEffect.
-		skillFx = modApiExt_internal.oldSkills[parentSkill.__Id](self, p1, p2, getmetatable(parentSkill))
+		skillFx = modApiExt_internal.oldSkills[parentSkill.__Id](self, p1, p2, getmetatable(parentSkill), ...)
 	end
 
 	-- If it's a secondary call to the GetSkillEffect, then we don't
 	-- want it to fire hooks (since the primary call already fired them).
 	-- For vanilla skills, the additional argument will be ignored.
-	if parentSkill == nil then
+	if isPrimaryCall then
 		if not Board.gameBoard then
 			if Board:GetSize() == Point(6, 6) then
 				-- Hacky AF solution to detect when tip image is visible
@@ -375,27 +441,37 @@ local function modApiExtGetSkillEffect(self, p1, p2, parentSkill)
 		)
 
 		if not skillFx.effect:empty() then
-			local dlist = DamageList()
+			local fx = SkillEffect()
+			local effects = extract_table(skillFx.effect)
 
-			dlist:push_back(SpaceScript(
-				p1,
+			fx:AddScript(
 				"modApiExt_internal.fireSkillStartHooks("
 				.."modApiExt_internal.mission, Pawn,"
 				.."\""..self.__Id.."\","..p1:GetString()..","..p2:GetString()..")"
-			))
+			)
 
-			for _, e in pairs(extract_table(skillFx.effect)) do
-				dlist:push_back(e)
+			for _, e in pairs(effects) do
+				fx.effect:push_back(e)
 			end
 
-			dlist:push_back(SpaceScript(
-				p1,
+			fx:AddScript(
 				"modApiExt_internal.fireSkillEndHooks("
 				.."modApiExt_internal.mission, Pawn,"
 				.."\""..self.__Id.."\","..p1:GetString()..","..p2:GetString()..")"
-			))
+			)
 
-			skillFx.effect = dlist
+			if
+				self == Prime_Punchmech    or
+				self == Prime_Punchmech_A  or
+				self == Prime_Punchmech_B  or
+				self == Prime_Punchmech_AB
+			then
+				-- Add a dummy damage instance to fix Ramming Speed
+				-- achievement being incorrectly granted
+				fx:AddDamage(SpaceDamage(GetProjectileEnd(p1, p2)))
+			end
+
+			skillFx.effect = fx.effect
 		end
 
 		if not skillFx.q_effect:empty() then
@@ -483,11 +559,11 @@ modApiExtHooks.missionUpdate = function(mission)
 	-- the missionUpdate hook.
 	-- Set it here, in case we load into a game in progress (missionStart
 	-- is not executed then)
-	if not modApiExt_internal.mission and mission then
+	if mission then
 		modApiExt_internal.mission = mission
 	end
 	if Board and not Board.gameBoard then
-		Board.gameBoard = true 
+		Board.gameBoard = true
 	end
 
 	local t = modApi:elapsedTime()

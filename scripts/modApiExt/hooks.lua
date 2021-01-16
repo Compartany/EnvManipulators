@@ -12,6 +12,12 @@ function hooks:addGameLoadedHook(fn)
 	table.insert(self.gameLoadedHooks,fn)
 end
 
+hooks.tileDirectionChangedHooks = {}
+function hooks:addTileDirectionChangedHook(fn)
+	assert(type(fn) == "function")
+	table.insert(self.tileDirectionChangedHooks,fn)
+end
+
 hooks.tileHighlightedHooks = {}
 function hooks:addTileHighlightedHook(fn)
 	assert(type(fn) == "function")
@@ -46,6 +52,18 @@ hooks.pawnMoveEndHooks = {}
 function hooks:addPawnMoveEndHook(fn)
 	assert(type(fn) == "function")
 	table.insert(self.pawnMoveEndHooks,fn)
+end
+
+hooks.vekMoveStartHooks = {}
+function hooks:addVekMoveStartHook(fn)
+	assert(type(fn) == "function")
+	table.insert(self.vekMoveStartHooks,fn)
+end
+
+hooks.vekMoveEndHooks = {}
+function hooks:addVekMoveEndHook(fn)
+	assert(type(fn) == "function")
+	table.insert(self.vekMoveEndHooks,fn)
 end
 
 hooks.pawnPositionChangedHooks = {}
@@ -88,6 +106,12 @@ hooks.pawnKilledHooks = {}
 function hooks:addPawnKilledHook(fn)
 	assert(type(fn) == "function")
 	table.insert(self.pawnKilledHooks,fn)
+end
+
+hooks.pawnRevivedHooks = {}
+function hooks:addPawnRevivedHook(fn)
+	assert(type(fn) == "function")
+	table.insert(self.pawnRevivedHooks,fn)
 end
 
 hooks.pawnIsFireHooks = {}

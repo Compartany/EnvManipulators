@@ -10,14 +10,6 @@ function modApiExt:loadModule(path)
 	return m
 end
 
-function modApiExt:scheduleHook(msTime, fn)
-	modApi:scheduleHook(msTime, fn)
-end
-
-function modApiExt:runLater(f)
-	modApi:runLater(f)
-end
-
 function modApiExt:clearHooks()
 	-- too lazy to update this function with new hooks every time
 	for k, v in pairs(self) do
@@ -51,10 +43,6 @@ end
 function modApiExt:getMostRecent()
 	assert(modApiExt_internal)
 	return modApiExt_internal:getMostRecent()
-end
-
-function modApiExt:getParentPath(path)
-	return path:sub(0, path:find("/[^/]*$"))
 end
 
 function modApiExt:forkMostRecent(mod, options, version)
@@ -107,11 +95,13 @@ function modApiExt:init(modulesDir)
 	self.version = require(self.modulesDir.."init").version
 	self.isProxy = false
 
-	local minv = "2.2.3"
+	local minv = "2.3.0"
 	if not modApi:isVersion(minv) then
 		error("modApiExt could not be loaded because version of the mod loader is out of date. "
 			..string.format("Installed version: %s, required: %s", modApi.version, minv))
 	end
+
+	self.compat = self:loadModule(self.modulesDir.."compat"):init(self)
 
 	require(self.modulesDir.."internal"):init(self)
 	table.insert(modApiExt_internal.extObjects, self)
@@ -149,7 +139,8 @@ function modApiExt:load(mod, options, version)
 	self.hooks = self:loadModule(self.modulesDir.."alter")
 
 	if not self.isProxy then
-		self.board:__init()
+		--self.board:__init()
+		self.compat:load(self, mod, options, version)
 	end
 
 	modApi:addPostLoadGameHook(function()
@@ -171,37 +162,24 @@ function modApiExt:load(mod, options, version)
 		end
 	end)
 
-	modApi:scheduleHook(50, function()
-		-- Execute on roughly the next frame.
-		-- This allows us to reset the loaded flag after all other
-		-- mods are done loading.
+	modApi:addModsLoadedHook(function()
 		self.loaded = false
 
 		if self:getMostRecent() == self and not self.isProxy then
 			modApi:addMissionStartHook(self.hooks.missionStart)
+			modApi:addTestMechEnteredHook(self.hooks.missionStart)
 			modApi:addMissionEndHook(self.hooks.missionEnd)
+			modApi:addTestMechExitedHook(self.hooks.missionEnd)
 			modApi:addMissionUpdateHook(self.hooks.missionUpdate)
 
-			self.board:__load()
+			--self.board:__load()
 
 			if self.hooks.overrideAllSkills then
 				-- Make sure the most recent version overwrites all others
 				dofile(self.modulesDir.."global.lua")
 				self.hooks:overrideAllSkills()
 
-				-- Ensure backwards compatibility
-				self:addSkillStartHook(function(mission, pawn, skill, p1, p2)
-					if skill == "Move" then
-						self.dialog:triggerRuledDialog("MoveStart", { main = pawn:GetId() })
-						modApiExt_internal.fireMoveStartHooks(mission, pawn, p1, p2)
-					end
-				end)
-				self:addSkillEndHook(function(mission, pawn, skill, p1, p2)
-					if skill == "Move" then
-						self.dialog:triggerRuledDialog("MoveEnd", { main = pawn:GetId() })
-						modApiExt_internal.fireMoveEndHooks(mission, pawn, p1, p2)
-					end
-				end)
+				self.compat:registerMoveHooks(self)
 			end
 
 			modApi:addVoiceEventHook(self.hooks.voiceEvent)
@@ -214,8 +192,24 @@ function modApiExt:load(mod, options, version)
 	end)
 
 	self.loaded = true
+
+	--[[
+	self:addSkillBuildHook(function(m, p, w, p1, p2, fx)
+		LOG("---", w)
+		local metadata = fx:GetMetadata()
+		if #metadata == 0 then
+			metadata = fx:GetQueuedMetadata()
+		end
+
+		for i,v in ipairs(metadata) do
+			if v then
+				LOG(i, save_table(v))
+			end
+		end
+	end)
+	--]]
 end
 
-modApiExt.modulesDir = modApiExt:getParentPath(...)
+modApiExt.modulesDir = GetParentPath(...)
 
 return modApiExt
