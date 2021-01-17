@@ -17,7 +17,7 @@ These Mechs have the ability to manipulate Environments, and use them to fight t
 
 Notes:
 1. Performance of the squad is closely related to types of enemies, and difficulty of game largely depends on the order of islands. If you feel that the squad is weak (in fact it's designed to be a bit strong), try to save hardly handled enemies such as Burrower, Blast Psions, Psion Abomination, Large Goo and Bot Leader for late game.
-2. Recommended pilots: Camila Vera, Harold Schmidt, Abe Isamu
+2. Recommended pilots: Camila Vera, Harold Schmidt, Chen Rong, Abe Isamu
 3. Please do not add multiple Shift Mechs to Custom Squad, or their skills will be performed incorrectly.
 4. Environments provided by other MODs has been considered in the design, but I don't promise that there will be no bugs when used together, at least there would probably be game balance problems.
 5. When the game language is not simplified Chinese, the MOD will be displayed in English. 

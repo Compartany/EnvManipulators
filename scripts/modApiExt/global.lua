@@ -156,7 +156,7 @@ function screenPointToTile(sourcePointScreenSpace, findTileEdge)
 				end
 
 				if findTileEdge then
-					local closestTileEdge = computeClosestTileEdge(tile, th, sourcePointBoardSpace)
+					local closestTileEdge = computeClosestTileEdge(tile, th)
 				
 					return Point(tileX, tileY), closestTileEdge
 				else

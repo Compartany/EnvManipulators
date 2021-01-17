@@ -157,9 +157,9 @@ function Env_Volcano:GetAttackEffect(location, effect, ...)
     if self.Mode == 2 then -- ENV_LAVA == 2
         local damage = SpaceDamage(location, 0)
         effect:AddSound("/props/lava_tile") -- 声音还是给一下吧
-        if location ~= Point(1, 1) then
+        if location.x > 1 or location.y > 1 then
             -- 火山关卡如果 Point(1, 1) 变成岩浆会很奇怪，稍微处理一下
-            -- Point(0, 0), Point(0, 1), Point(1, 0) 都被做了特殊处理，只要 Point(1, 1) 没变都进不去，不用额外处理
+            -- 虽然 Point(0, 0), Point(0, 1), Point(1, 0) 变成岩浆虽然看不出来，但飞行单位可以进去，同样屏蔽
             damage.iTerrain = TERRAIN_LAVA
             if Board:GetTerrain(location) == TERRAIN_MOUNTAIN or Board:IsBuilding(location) then
                 damage.iDamage = DAMAGE_DEATH
@@ -340,8 +340,17 @@ end
 local _Mission_ApplyEnvironmentEffect = Mission.ApplyEnvironmentEffect
 function Mission:ApplyEnvironmentEffect(...)
     local env = self.LiveEnvironment
-    if env and env.OverlayEnv then
-        env.OverlayEnv:ApplyEffect()
+    if env and env.OverlayEnv and env.OverlayEnv:IsEffect() then
+        -- 先执行完 overlayEnv 再进行后续计算
+        local continue = env.OverlayEnv:ApplyEffect()
+        -- overLayEnv 执行完后，必须要进行延时，否则可能会影响 liveEnv 的执行
+        if not continue then
+            local effect = SkillEffect()
+            effect:AddDelay(1.3) -- 1.2 即可，为了安全起见稍微增大一点数值
+            Board:AddEffect(effect)
+        end
+        -- 无论如何都 return，这样 overLayEnv 与 liveEnv 会被分成两次计算，否则前者可能会影响后者的执行！
+        return true
     end
     return _Mission_ApplyEnvironmentEffect(self, ...)
 end
