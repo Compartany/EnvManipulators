@@ -53,14 +53,6 @@ EnvMechScience = Pawn:new{
     Flying = true
 }
 
-function BoardPawn:IsEnvHeavy()
-    return _G[self:GetType()].EnvHeavy
-end
-
-function BoardPawn:GetBasicMoveSpeed()
-    return _G[self:GetType()].MoveSpeed
-end
-
 local _Move_GetTargetArea = Move.GetTargetArea
 function Move:GetTargetArea(point, ...)
     if Pawn:IsEnvHeavy() then
@@ -101,9 +93,9 @@ function Move:GetSkillEffect(p1, p2, ...)
     return ret
 end
 
-local Mechs = {}
+local this = {}
 
-function Mechs:InitHeavy(mission, alert)
+function this:InitHeavy(mission, alert)
     alert = alert or false
     mission.EnvMechs_Heavy = 0
     local pawns = extract_table(Board:GetPawns(TEAM_MECH))
@@ -127,7 +119,7 @@ function Mechs:InitHeavy(mission, alert)
     end
 end
 
-function Mechs:DestoryHeavy(mission)
+function this:DestoryHeavy(mission)
     if mission and mission.EnvMechs_Heavy > 0 then
         local pawns = extract_table(Board:GetPawns(TEAM_MECH))
         local cnt = 0
@@ -144,7 +136,7 @@ function Mechs:DestoryHeavy(mission)
     end
 end
 
-function Mechs:Load()
+function this:Load()
     modApi:addNextTurnHook(function(mission)
         if not mission.EnvMechs_Init then
             self:InitHeavy(mission, true)
@@ -163,4 +155,4 @@ function Mechs:Load()
     end)
 end
 
-return Mechs
+return this

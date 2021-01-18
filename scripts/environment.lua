@@ -356,11 +356,11 @@ function Mission:ApplyEnvironmentEffect(...)
 end
 
 -- 初始化关卡环境被动
-local function EnvPassiveInit(mission)
+local function EnvArtificialInit(mission)
     local envName = mission.Environment
     if envName == "Env_Null" or not envName or not mission.LiveEnvironment then
-        mission.Environment = "Env_Passive"
-        mission.LiveEnvironment = Env_Passive:new()
+        mission.Environment = "EnvArtificial"
+        mission.LiveEnvironment = EnvArtificial:new()
         mission.LiveEnvironment:Start()
         mission.MasteredEnv = true
         mission.NoOverlayEnv = true
@@ -377,7 +377,7 @@ local function AdjustEnv(mission)
     if IsPassiveSkill("Env_Weapon_4") or tool:GetWeapon("Env_Weapon_2") then
         local env = mission.LiveEnvironment
         if env then
-            env.OverlayEnv = Env_Passive:new{
+            env.OverlayEnv = EnvArtificial:new{
                 IsOverlay = true
             }
             env.OverlayEnv:Start()
@@ -411,7 +411,7 @@ local function AdjustEnv(mission)
                 if not ret then -- 原规划完成后再加
                     if mission.MasteredEnv or (self.Locations and #self.Locations > 0 and not mission.SpecialEnv) then
                         if IsPassiveSkill("Env_Weapon_4_B") or IsPassiveSkill("Env_Weapon_4_AB") then
-                            local additionalArea = tool:GetEnvPassiveUpgradeAreaValue()
+                            local additionalArea = tool:GetEnvArtificialUpgradeAreaValue()
                             local spaces = self:SelectAdditionalSpace()
                             local env_planned = {}
                             if spaces.quarters then
@@ -425,7 +425,7 @@ local function AdjustEnv(mission)
                                 end
                             end
                             if #env_planned > 0 then
-                                tool:EnvPassiveGenerate(env_planned)
+                                tool:EnvArtificialGenerate(env_planned)
                             end
                         end
                         -- 部分环境在后面会停止（如地震活动），如果之前检测到有活动就标记一下，不要发动空袭
@@ -490,7 +490,7 @@ local function AdjustEnv(mission)
                         local psions = {} -- 原版游戏中不可能出现多只水母，但鬼知道其他 MOD 会不会改
                         for i, location in ipairs(self.Locations) do
                             local pawn = Board:GetPawn(location)
-                            if tool:IsPsion(pawn) then
+                            if pawn and pawn:IsPsion() then
                                 psions[#psions + 1] = i -- 这里不直接存 location 是为了方便后面实现随机顺序
                             end
                         end
@@ -570,8 +570,8 @@ local function AdjustEnv(mission)
                 self.ApplyEffect = temp.ApplyEffect
             end
         else
-            mission.Environment = "Env_Passive"
-            mission.LiveEnvironment = Env_Passive:new()
+            mission.Environment = "EnvArtificial"
+            mission.LiveEnvironment = EnvArtificial:new()
             mission.LiveEnvironment:Start()
             mission.MasteredEnv = true
             mission.NoOverlayEnv = true
@@ -579,15 +579,15 @@ local function AdjustEnv(mission)
     end
 end
 
-local Environment = {}
-function Environment:Load()
+local this = {}
+function this:Load()
     -- MissionStartHook 对应的是关卡生成，此时添加会导致人造环境显示在警告中
     -- 没有对应真正意义上的“关卡开始”钩子，只能用 NextTurnHook 来顶替
     modApi:addNextTurnHook(function(mission)
         -- 添加人造环境，不需要添加到继续游戏的 Hook 中，设置了 Environment 后会自动加载
         if IsPassiveSkill("Env_Weapon_4") or tool:GetWeapon("Env_Weapon_2") then
             if not mission.Env_Init then
-                EnvPassiveInit(mission)
+                EnvArtificialInit(mission)
                 if not mission.NoOverlayEnv then
                     AdjustEnv(mission)
                 end
@@ -605,9 +605,9 @@ function Environment:Load()
                 if mission.Env_Init and not mission.NoOverlayEnv then
                     AdjustEnv(mission)
                 end
-                if mission.EnvPassive_Planned then
+                if mission.EnvArtificial_Planned then
                     -- 如果有没有执行完的 plan，继续执行
-                    tool:EnvPassiveGenerate(mission.EnvPassive_Planned, mission.EnvPassive_Planned_Overlay)
+                    tool:EnvArtificialGenerate(mission.EnvArtificial_Planned, mission.EnvArtificial_Planned_Overlay)
                 end
             end
         end)
@@ -615,9 +615,9 @@ function Environment:Load()
     modApi:addTestMechEnteredHook(function(mission)
         -- 机甲测试无需检查，直接给环境
         if not mission.Env_Init then
-            EnvPassiveInit(mission)
+            EnvArtificialInit(mission)
             mission.Env_Init = true
         end
     end)
 end
-return Environment
+return this

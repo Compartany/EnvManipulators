@@ -5,7 +5,7 @@ ENV_GLOBAL = {}
 local mod = {
     id = "EnvManipulators",
     name = "EnvManipulators",
-    version = "1.7.1.20210118",
+    version = "1.8.0.20210119",
     requirements = {"kf_ModUtils"},
     modApiVersion = "2.5.4",
     icon = "img/icon.png",
@@ -22,9 +22,10 @@ end
 -- 改变设置、继续游戏都会重新加载
 function mod:load(options, version)
     env_modApiExt:load(self, options, version)
+    self.pawns:Load()
     self.mechs:Load()
     self.weapons:Load()
-    self.env_passive:Load()
+    self.envArtificial:Load()
     self.environment:Load()
     self.missions:Load()
     self.shop:load(options)
@@ -39,9 +40,10 @@ function mod:initScripts()
     env_modApiExt:init()
     self.tool = require(self.scriptPath .. "tool")
     self.animations = require(self.scriptPath .. "animations")
+    self.pawns = require(self.scriptPath .. "pawns")
     self.mechs = require(self.scriptPath .. "mechs")
     self.weapons = require(self.scriptPath .. "weapons")
-    self.env_passive = require(self.scriptPath .. "env_passive")
+    self.envArtificial = require(self.scriptPath .. "envArtificial")
     self.environment = require(self.scriptPath .. "environment")
     self.missions = require(self.scriptPath .. "missions")
     self.shop = require(self.scriptPath .. "libs/shop")

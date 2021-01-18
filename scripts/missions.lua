@@ -1,11 +1,11 @@
 local mod = mod_loader.mods[modApi.currentMod]
 local tool = mod.tool
 
-local Missions = {
+local this = {
     Init = false
 }
 
-function Missions:InitEnvMissions()
+function this:InitEnvMissions()
     local isSquad = tool:IsSquad()
     local tBonusPools = {
         {BONUS_GRID, BONUS_MECHS},
@@ -43,7 +43,7 @@ function Missions:InitEnvMissions()
     end
 end
 
-function Missions:Load()
+function this:Load()
     modApi:addPostStartGameHook(function()
         self:InitEnvMissions()
     end)
@@ -52,4 +52,4 @@ function Missions:Load()
     end)
 end
 
-return Missions
+return this

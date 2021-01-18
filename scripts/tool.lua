@@ -1,4 +1,4 @@
-local Tool = {}
+local this = {}
 
 local Map = {
     T = {}
@@ -21,10 +21,19 @@ end
 function Map:Get(id, key)
     return self.T[id] and self.T[id][key]
 end
-Tool.Map = Map
+this.Map = Map
+this._maps = {}
+
+-- 获取 Map
+function this:GetMap(key)
+    if not this._maps[key] then
+        this._maps[key] = this.Map:new()
+    end
+    return this._maps[key]
+end
 
 -- 判断是否为环境操纵者小队
-function Tool:IsSquad()
+function this:IsSquad()
     local squad = GAME.squadTitles["TipTitle_" .. GameData.ach_info.squad]
     return squad == "环境操纵者" or squad == "EnvManipulators" -- 不要用 EnvMod_Texts.squad_name 来判断，否则换了语言就不对
 end
@@ -32,7 +41,7 @@ end
 -- 判断机甲是否有装备
 -- 自定义中有同名机甲时，判断会出错。
 -- 且由于 GameData 数据具有延后性，更换装备到其他机甲上后，不能立即获得正确的最新位置，正常情况下还是可能出错。
-function Tool:HasWeapon(pawn, weapon)
+function this:HasWeapon(pawn, weapon)
     if pawn then
         local pt = pawn:GetPawnTable()
         if pt.id then
@@ -51,7 +60,7 @@ function Tool:HasWeapon(pawn, weapon)
 end
 
 -- 获得机甲序号
-function Tool:GetMechNo(name)
+function this:GetMechNo(name)
     if GameData and GameData.current and GameData.current.mechs then
         for i, mech in ipairs(GameData.current.mechs) do
             if mech == name then
@@ -63,7 +72,7 @@ function Tool:GetMechNo(name)
 end
 
 -- 获得装备序号
-function Tool:GetWeaponNo(name)
+function this:GetWeaponNo(name)
     if GameData and GameData.current and GameData.current.weapons then
         for i, weapon in ipairs(GameData.current.weapons) do
             if modApi:stringStartsWith(weapon, name) then
@@ -78,7 +87,7 @@ end
 
 -- 判断指定装备是否生效，也可活动装备的升级状态
 -- 被动可用 IsPassiveSkill() 检测，同样可判断装备升级状态
-function Tool:GetWeapon(name)
+function this:GetWeapon(name)
     if GameData and GameData.current and GameData.current.weapons then
         for i, weapon in ipairs(GameData.current.weapons) do
             if modApi:stringStartsWith(weapon, name) then
@@ -100,7 +109,7 @@ function Tool:GetWeapon(name)
 end
 
 -- 判断方格是否在集合内
-function Tool:IsRepeatedTile(space, repeated)
+function this:IsRepeatedTile(space, repeated)
     for i, location in ipairs(repeated) do
         if space == location then
             return true
@@ -110,11 +119,11 @@ function Tool:IsRepeatedTile(space, repeated)
 end
 
 -- 找出装备环境被动的机甲，添加环境锁定特效
-function Tool:EnvPassiveGenerate(planned, overlay)
+function this:EnvArtificialGenerate(planned, overlay)
     overlay = overlay or false
     local mission = GetCurrentMission()
-    mission.EnvPassive_Planned = planned -- 赶紧把状态存进 mission 里，防止保存游戏时没保存上
-    mission.EnvPassive_Planned_Overlay = overlay
+    mission.EnvArtificial_Planned = planned -- 赶紧把状态存进 mission 里，防止保存游戏时没保存上
+    mission.EnvArtificial_Planned_Overlay = overlay
     local pawns = extract_table(Board:GetPawns(TEAM_MECH))
     local bounceAmount = 10
     for i, id in ipairs(pawns) do
@@ -123,7 +132,7 @@ function Tool:EnvPassiveGenerate(planned, overlay)
             local point = pawn:GetSpace()
             if point and not pawn:IsDead() and not pawn:IsFrozen() and
                 (pawn:IsFlying() or Board:GetTerrain(point) ~= TERRAIN_WATER) then
-                mission.EnvPassiveGenerated = mission.EnvPassive_Planned
+                mission.EnvArtificialGenerated = mission.EnvArtificial_Planned
                 local effect = SkillEffect()
                 local damage = SpaceDamage(point, 0)
                 damage.sSound = "/weapons/gravwell"
@@ -143,27 +152,27 @@ function Tool:EnvPassiveGenerate(planned, overlay)
                     str = str .. ".OverlayEnv"
                 end
                 effect:AddScript(str .. [[
-                    for i, epp in ipairs(mission.EnvPassive_Planned) do
+                    for i, epp in ipairs(mission.EnvArtificial_Planned) do
                         env.Locations[#env.Locations + 1] = epp
                     end
                     Game:TriggerSound("/props/square_lightup")
-                    mission.EnvPassive_Planned = nil
-                    mission.EnvPassive_Planned_Overlay = nil
+                    mission.EnvArtificial_Planned = nil
+                    mission.EnvArtificial_Planned_Overlay = nil
                 ]])
                 Board:AddEffect(effect)
                 break -- 多个环境被动会被游戏禁止，不用考虑这种问题
             else
-                Game:AddTip("EnvPassiveDisabled", point)
+                Game:AddTip("EnvArtificialDisabled", point)
             end
         end
     end
 end
 
 -- 判断方格是否为被环境被动锁定
-function Tool:IsEnvPassiveGenerated(point)
+function this:IsEnvArtificialGenerated(point)
     local mission = GetCurrentMission()
-    if mission and mission.EnvPassiveGenerated and #mission.EnvPassiveGenerated > 0 then
-        for i, location in ipairs(mission.EnvPassiveGenerated) do
+    if mission and mission.EnvArtificialGenerated and #mission.EnvArtificialGenerated > 0 then
+        for i, location in ipairs(mission.EnvArtificialGenerated) do
             if point == location then
                 return true
             end
@@ -173,13 +182,13 @@ function Tool:IsEnvPassiveGenerated(point)
 end
 
 -- 判断是否存在环境被动锁定方格
-function Tool:HasEnvPassiveGenerated()
+function this:HasEnvArtificialGenerated()
     local mission = GetCurrentMission()
-    return mission and mission.EnvPassiveGenerated and #mission.EnvPassiveGenerated > 0
+    return mission and mission.EnvArtificialGenerated and #mission.EnvArtificialGenerated > 0
 end
 
 -- 判断方格是否为有效的环境目标
-function Tool:IsValidEnvTarget(space, repeated)
+function this:IsValidEnvTarget(space, repeated)
     -- 已锁定的方格无效
     if repeated and self:IsRepeatedTile(space, repeated) then
         return false
@@ -202,14 +211,14 @@ end
 -- 标记友军免疫
 local allySpaceIcon = "combat/tile_icon/tile_airstrike.png"
 local allySpaceColors = {GL_Color(50, 200, 50, 0.75), GL_Color(20, 200, 20, 0.75)}
-function Tool:MarkAllySpace(location, active, env)
+function this:MarkAllySpace(location, active, env)
     local icon = (env and env.CombatIcon) or allySpaceIcon
     Board:MarkSpaceImage(location, icon, active and allySpaceColors[2] or allySpaceColors[1])
     Board:MarkSpaceDesc(location, "passive0", false)
 end
 
 -- 在每个象限非边缘处取方格组成 4 个集合，按一、二、三、四象限顺序返回
-function Tool:GetEnvQuarters(repeated)
+function this:GetEnvQuarters(repeated)
     local quarters = {}
     local start = Point(1, 1)
     for count = 1, 4 do
@@ -235,7 +244,7 @@ function Tool:GetEnvQuarters(repeated)
 end
 
 -- 均匀地从四个象限中取 n 个点
-function Tool:GetUniformDistributionPoints(n, quarters, ret)
+function this:GetUniformDistributionPoints(n, quarters, ret)
     ret = ret or {}
     local qa = {}
     local qb = {}
@@ -258,68 +267,57 @@ function Tool:GetUniformDistributionPoints(n, quarters, ret)
 end
 
 -- 获取环境被动升级区域数值
-function Tool:GetEnvPassiveUpgradeAreaValue()
+function this:GetEnvArtificialUpgradeAreaValue()
     local values = {0, 1, 1, 1}
     return values[GetSector()]
 end
 
 -- 获取环境被动升级伤害数值
-function Tool:GetEnvPassiveUpgradeDamageValue()
+function this:GetEnvArtificialUpgradeDamageValue()
     local values = {0, 0, 1, 1}
     return values[GetSector()]
 end
 
 -- 获取环境被动伤害
-function Tool:GetEnvPassiveDamage(pawn)
+function this:GetEnvArtificialDamage(pawn)
     local damage = Env_Weapon_4.BaseDamage
     if IsPassiveSkill("Env_Weapon_4_B") or IsPassiveSkill("Env_Weapon_4_AB") then
-        damage = damage + self:GetEnvPassiveUpgradeDamageValue()
+        damage = damage + self:GetEnvArtificialUpgradeDamageValue()
     end
-    if pawn and _G[pawn:GetType()].Health > 4 then
-        damage = damage + 1
-    end
+    -- if pawn and _G[pawn:GetType()].Health > 4 then
+    --     damage = damage + 1
+    -- end
     return damage
 end
 
--- 判断是否为灵虫
-function Tool:IsPsion(pawn)
-    if pawn then
-        local type = pawn:GetType()
-        return
-            type == "Jelly_Health1" or type == "Jelly_Armor1" or type == "Jelly_Regen1" or type == "Jelly_Explode1" or
-                type == "Jelly_Lava1" or type == "Jelly_Boss"
-    end
-    return false
-end
-
 -- 判断是否为空地
-function Tool:IsEmptyTile(point)
+function this:IsEmptyTile(point)
     return Board:IsValid(point) and not Board:IsBlocked(point, PATH_PROJECTILE)
 end
 
 -- 判断是否可移动
-function Tool:IsMovable(point)
+function this:IsMovable(point)
     return Board:IsPawnSpace(point) and not Board:GetPawn(point):IsGuarding()
 end
 
 -- 判断是否可传导（就目前来看与 IsEmptyTile() 互逆）
-function Tool:IsConductive(point)
+function this:IsConductive(point)
     return Board:IsPawnSpace(point) or Board:IsBuilding(point) or Board:GetTerrain(point) == TERRAIN_MOUNTAIN
 end
 
 -- 判断方格离中心的距离 [0, 6]
-function Tool:GetDistanceToCenter(point)
+function this:GetDistanceToCenter(point)
     local dist = point:Manhattan(Point(3, 3)) + point:Manhattan(Point(4, 4))
     dist = (dist - 2) / 2 -- 必然是整数（到两点距离和必然是 d1 + d2 = d1 + d1 + 2 为偶数）
     return dist
 end
 
 -- 判断方格离环境被动锁定的距离
-function Tool:GetDistanceToEnvPassiveGenerated(point)
+function this:GetDistanceToEnvArtificialGenerated(point)
     local dist = 15
     local mission = GetCurrentMission()
-    if mission and mission.EnvPassiveGenerated and #mission.EnvPassiveGenerated > 0 then
-        for i, location in ipairs(mission.EnvPassiveGenerated) do
+    if mission and mission.EnvArtificialGenerated and #mission.EnvArtificialGenerated > 0 then
+        for i, location in ipairs(mission.EnvArtificialGenerated) do
             local current = self:GetCustomDistance(point, location)
             if current < dist then
                 dist = current
@@ -330,7 +328,7 @@ function Tool:GetDistanceToEnvPassiveGenerated(point)
 end
 
 -- 自定义距离
-function Tool:GetCustomDistance(p1, p2)
+function this:GetCustomDistance(p1, p2)
     local dx = math.abs(p1.x - p2.x)
     local dy = math.abs(p1.y - p2.y)
     local d = 10000
@@ -344,4 +342,4 @@ function Tool:GetCustomDistance(p1, p2)
     return d
 end
 
-return Tool
+return this

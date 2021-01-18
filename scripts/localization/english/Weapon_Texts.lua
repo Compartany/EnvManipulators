@@ -1,6 +1,6 @@
 return {
     Env_Weapon_1_Name = "Shifter",
-    Env_Weapon_1_Description = "Shift object to a side tile, and transfer Mech's negative status to object. Prioritize counterclockwise pushing when multiple objects exist.",
+    Env_Weapon_1_Description = "Shift object to a side tile and transfer own debuffs to object. Prioritize CCW push when multiple objects exist.",
     Env_Weapon_1_Upgrade1 = "Pull",
     Env_Weapon_1_Upgrade2 = "Overload",
     Env_Weapon_1_A_UpgradeDescription = "Pull object to move it by 1 - 2 tiles.",

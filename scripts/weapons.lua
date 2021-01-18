@@ -1,6 +1,6 @@
 local mod = mod_loader.mods[modApi.currentMod]
 local tool = mod.tool
-local pawnMap = tool.Map:new()
+local pawnMap = tool:GetMap("pawnMap")
 
 ------------------
 -- Env_Weapon_1 --
@@ -17,7 +17,7 @@ Env_Weapon_1 = Skill:new{
     Overload = false,
     PowerCost = 0,
     Upgrades = 2,
-    UpgradeCost = {1, 3},
+    UpgradeCost = {1, 2},
     TipImage = {
         Unit = Point(2, 2),
         Enemy = Point(2, 1),
@@ -376,39 +376,7 @@ function Env_Weapon_1:GetSkillEffect_TipImage()
     return ret
 end
 
--- 这种判断方式具有延时性，Hook 进入时无法判断是否获取到最新数据，故无法靠 TMS Hook 来解决
--- 当然可以在 UpdateSaveData Hook 中处理，但 UpdateSaveData 非常频繁，属实没有必要，每次都算一遍反而更优
-local function IsEnvWeapon1_B_TMS(pawn)
-    local wp1 = tool:GetWeapon("Env_Weapon_1")
-    return (wp1 == "B" or wp1 == "AB") and tool:HasWeapon(pawn, "Env_Weapon_1")
-end
-
-------------
--- 反缠绕 --
-------------
-function BoardPawn:IsEnvIgnoreWeb()
-    if self:IsIgnoreWeb() then
-        return false
-    elseif IsTestMechScenario() then
-        return IsEnvWeapon1_B_TMS(self)
-    else
-        return pawnMap:Get(self:GetId(), "IgnoreWeb")
-    end
-end
--- 具体处理通过 modApiExt:addPawnIsGrappledHook() 完成
-
---------------
--- 跳跃移动 --
---------------
-function BoardPawn:IsEnvJumpMove()
-    -- jumper 也得处理
-    if IsTestMechScenario() then
-        return IsEnvWeapon1_B_TMS(self)
-    else
-        return pawnMap:Get(self:GetId(), "JumpMove")
-    end
-end
-
+-- 反缠绕通过 modApiExt:addPawnIsGrappledHook() 完成
 local _Move_GetTargetArea = Move.GetTargetArea
 function Move:GetTargetArea(point, ...)
     if Pawn:IsEnvJumpMove() and (Pawn:IsFlying() or Board:GetTerrain(point) ~= TERRAIN_WATER) and
@@ -769,11 +737,10 @@ Env_Weapon_4 = PassiveSkill:new{
     UpgradeCost = {1, 3},
     AllyImmune = false,
     BaseArea = 4,
-    BaseDamage = 3,
+    BaseDamage = 4,
     Enhanced = false,
     TipDmg = 4, -- 起名 Damage 或 TipDamage 都会导致预览上显示伤害数值
     Damage = 4,
-    MinDamage = 3,
     TipImage = {
         Unit = Point(2, 3),
         Enemy = Point(2, 1),
@@ -805,8 +772,7 @@ Env_Weapon_4_B = Env_Weapon_4:new{
     Passive = "Env_Weapon_4_B",
     Enhanced = true,
     TipDmg = 5,
-    Damage = 5,
-    MinDamage = 4
+    Damage = 5
 }
 
 Env_Weapon_4_AB = Env_Weapon_4:new{
@@ -815,8 +781,7 @@ Env_Weapon_4_AB = Env_Weapon_4:new{
     Enhanced = true,
     TipImage = Env_Weapon_4_A.TipImage,
     TipDmg = 5,
-    Damage = 5,
-    MinDamage = 4
+    Damage = 5
 }
 
 -- 使用提示效果，用假方格模拟环境锁定
@@ -854,17 +819,17 @@ function Env_Weapon_4:GetSkillEffect(p1, p2)
     -- 必须要用不同的全局变量存储，否则在不同 TipImage 间切换会混
     local global = nil
     if not self.AllyImmune and not self.Enhanced then
-        global = "ENV_GLOBAL.Env_Passive_TipImage_Planned"
-        ENV_GLOBAL.Env_Passive_TipImage_Planned = planned
+        global = "ENV_GLOBAL.EnvArtificial_TipImage_Planned"
+        ENV_GLOBAL.EnvArtificial_TipImage_Planned = planned
     elseif self.AllyImmune and not self.Enhanced then
-        global = "ENV_GLOBAL.Env_Passive_TipImage_Planned_A"
-        ENV_GLOBAL.Env_Passive_TipImage_Planned_A = planned
+        global = "ENV_GLOBAL.EnvArtificial_TipImage_Planned_A"
+        ENV_GLOBAL.EnvArtificial_TipImage_Planned_A = planned
     elseif not self.AllyImmune and self.Enhanced then
-        global = "ENV_GLOBAL.Env_Passive_TipImage_Planned_B"
-        ENV_GLOBAL.Env_Passive_TipImage_Planned_B = planned
+        global = "ENV_GLOBAL.EnvArtificial_TipImage_Planned_B"
+        ENV_GLOBAL.EnvArtificial_TipImage_Planned_B = planned
     elseif self.AllyImmune and self.Enhanced then
-        global = "ENV_GLOBAL.Env_Passive_TipImage_Planned_AB"
-        ENV_GLOBAL.Env_Passive_TipImage_Planned_AB = planned
+        global = "ENV_GLOBAL.EnvArtificial_TipImage_Planned_AB"
+        ENV_GLOBAL.EnvArtificial_TipImage_Planned_AB = planned
     end
     ret:AddScript([[
         for i, epp in ipairs(]] .. global .. [[) do
@@ -887,7 +852,7 @@ function Env_Weapon_4:GetSkillEffect(p1, p2)
     for i, location in ipairs(planned) do
         if not self.AllyImmune or location ~= Point(3, 2) then -- 此处 PawnTeam 不是 TEAM_PLAYER，只能写死判断
             damage = SpaceDamage(location, self.TipDmg)
-            damage.sAnimation = "Env_Passive_Animation" .. random_int(2)
+            damage.sAnimation = "EnvArtificial_Animation" .. random_int(2)
             damage.bHide = true
             ret:AddDamage(damage)
         end
@@ -919,8 +884,8 @@ end
 
 local Weapons = {}
 function Weapons:Load()
-    Global_Texts.EnvPassiveDisabled_Title = Weapon_Texts.Env_Weapon_4_Name
-    Global_Texts.EnvPassiveDisabled_Text = EnvMod_Texts.env_passive_disabled
+    Global_Texts.EnvArtificialDisabled_Title = Weapon_Texts.Env_Weapon_4_Name
+    Global_Texts.EnvArtificialDisabled_Text = EnvMod_Texts.envArtificial_disabled
 
     modApi:addNextTurnHook(function(mission)
         if not mission.EnvWeapon_Init then

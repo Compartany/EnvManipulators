@@ -1,4 +1,4 @@
-ANIMS.Env_Passive_Animation0 = ANIMS.Animation:new{
+ANIMS.EnvArtificial_Animation0 = ANIMS.Animation:new{
     Image = "effects/lightning_bolt0.png",
     NumFrames = 1,
     Time = 0.45,
@@ -7,7 +7,7 @@ ANIMS.Env_Passive_Animation0 = ANIMS.Animation:new{
     Loop = false
 }
 
-ANIMS.Env_Passive_Animation1 = ANIMS.Env_Passive_Animation0:new{
+ANIMS.EnvArtificial_Animation1 = ANIMS.EnvArtificial_Animation0:new{
     Image = "effects/lightning_bolt1.png"
 }
 
