@@ -18,3 +18,11 @@ ANIMS.EnvExploRepulse = ANIMS.Animation:new{
     PosX = -33,
     PosY = -14
 }
+
+local this = {}
+
+function this:Load()
+    -- nothing to do
+end
+
+return this

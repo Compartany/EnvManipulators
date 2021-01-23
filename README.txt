@@ -1,7 +1,7 @@
 MOD: EnvManipulators
 Author: Compartany
 Version: See [version.txt]
-Base: Into the Breach v1.2.24.20200528, Mod Loader v2.5.4
+Base: Into the Breach v1.2.24, Mod Loader v2.5.4, modApiExt v1.13
 Code: https://github.com/Compartany/EnvManipulators
 Link:
     [EN] https://subsetgames.com/forum/viewtopic.php?f=25&t=36543
@@ -9,7 +9,7 @@ Link:
 Download:
     [github] https://github.com/Compartany/EnvManipulators/releases
     [weiyun] https://share.weiyun.com/7laJWpe3 (alternate)
-Demo Videos:
+Demo Videos (v1.1.1.20201231):
     [weapons] https://www.bilibili.com/video/BV1cK41137DF?p=1
     [perfect final island with default weapons] https://www.bilibili.com/video/BV1cK41137DF?p=2
 
@@ -17,11 +17,10 @@ These Mechs have the ability to manipulate Environments, and use them to fight t
 
 Notes:
 1. Performance of the squad is closely related to types of enemies, and difficulty of game largely depends on the order of islands. If you feel that the squad is weak (in fact it's designed to be a bit strong), try to save hardly handled enemies such as Burrower, Blast Psions, Psion Abomination, Large Goo and Bot Leader for late game.
-2. Recommended pilots: Camila Vera, Harold Schmidt, Chen Rong, Abe Isamu
-3. Please do not add multiple Shift Mechs to Custom Squad, or their skills will be performed incorrectly.
-4. Environments provided by other MODs has been considered in the design, but I don't promise that there will be no bugs when used together, at least there would probably be game balance problems.
-5. When the game language is not simplified Chinese, the MOD will be displayed in English. 
-6. I'm not a native English speaker, and all translations were done with the help of DeepL Translate, so the English text in MOD must be very terrible. If you are interested in helping to optimize the translation, please open the [scripts/localization/english] directory to make changes and send them to 2994359861@qq.com.
+2. Please do not add multiple Shift Mechs to Custom Squad, or their skills will be performed incorrectly.
+3. Environments provided by other MODs has been considered in the design, but I don't promise that there will be no bugs when used together, at least there would probably be game balance problems.
+4. When the game language is not simplified Chinese, the MOD will be displayed in English. 
+5. I'm not a native English speaker, and all translations were done with the help of DeepL Translate, so the English text in MOD must be very terrible. If you are interested in helping to optimize the translation, please open the [scripts/localization/english] directory to make changes and send them to 2994359861@qq.com.
 
 Use:
 1. Extract Mod Loader to game directory (https://subsetgames.com/forum/viewtopic.php?f=26&p=117100)

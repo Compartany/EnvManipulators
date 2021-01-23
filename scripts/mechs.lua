@@ -1,10 +1,12 @@
 local mod = mod_loader.mods[modApi.currentMod]
 local path = mod.resourcePath
-local trait = require(path .. "scripts/libs/trait")
+local trait = mod.lib.trait
+local palettes = mod.lib.palettes
+local colorOffset = palettes.getOffset("envManipulators_palette")
 
 -- 在单位状态上显示“重型”
 trait:Add{
-    PawnTypes = "EnvMechPrime",
+    PawnTypes = {"EnvMechPrime", "EnvMechRanged"},
     Icon = {"img/combat/icons/icon_envheavy.png", Point(0, 0)},
     Description = {EnvMod_Texts.heavy_title, EnvMod_Texts.heavy_description}
 }
@@ -12,10 +14,10 @@ trait:Add{
 EnvMechPrime = Pawn:new{
     Name = EnvMod_Texts.mech_prime_name,
     Class = "Prime",
-    Health = 5,
+    Health = 4,
     MoveSpeed = 4,
     Image = "mech_env_prime",
-    ImageOffset = FURL_COLORS.EnvManipulatorsColors,
+    ImageOffset = colorOffset,
     SkillList = {"Env_Weapon_1"},
     SoundLocation = "/mech/prime/rock_mech/",
     DefaultTeam = TEAM_PLAYER,
@@ -28,14 +30,15 @@ EnvMechRanged = Pawn:new{
     Name = EnvMod_Texts.mech_ranged_name,
     Class = "Ranged",
     Health = 2,
-    MoveSpeed = 3,
+    MoveSpeed = 4,
     Image = "mech_env_ranged",
-    ImageOffset = FURL_COLORS.EnvManipulatorsColors,
+    ImageOffset = colorOffset,
     SkillList = {"Env_Weapon_2", "Env_Weapon_4"},
     SoundLocation = "/mech/distance/dstrike_mech/",
     DefaultTeam = TEAM_PLAYER,
     ImpactMaterial = IMPACT_METAL,
-    Massive = true
+    Massive = true,
+    EnvHeavy = true
 }
 
 EnvMechScience = Pawn:new{
@@ -44,7 +47,7 @@ EnvMechScience = Pawn:new{
     Health = 2,
     MoveSpeed = 4,
     Image = "mech_env_science",
-    ImageOffset = FURL_COLORS.EnvManipulatorsColors,
+    ImageOffset = colorOffset,
     SkillList = {"Env_Weapon_3"},
     SoundLocation = "/mech/science/science_mech/",
     DefaultTeam = TEAM_PLAYER,
@@ -76,17 +79,52 @@ function Move:GetSkillEffect(p1, p2, ...)
             damage.sImageMark = "combat/icons/icon_envheavy.png"
             ret:AddDamage(damage)
             local id = Pawn:GetId()
-            local dmg = (Pawn:IsAcid() and 2) or (Pawn:IsArmor() and 0) or 1
+            local dmg =  1
+            if Pawn:IsArmor() then
+                local acid = Pawn:IsAcid()
+                if not acid then
+                    if Board:IsAcid(p2) then
+                        if not Pawn:IsFlying() or Board:GetTerrain(p2) ~= TERRAIN_WATER then
+                            acid = true
+                        end
+                    end
+                end
+                if not acid then
+                    dmg = 2
+                end
+            end
+            local trueDmg = (Pawn:IsAcid() or Board:IsAcid(p2)) and 2 or 1
             ret:AddScript(string.format([[
                 local pawn = Board:GetPawn(%d)
-                pawn:ApplyDamage(SpaceDamage(pawn:GetSpace(), 1))
-            ]], id))
-            if Pawn:GetHealth() - dmg > 1 and dmg > 0 then
-                ret:AddScript(string.format([[
-                    local pawn = Board:GetPawn(%d)
-                    local hp = pawn:GetHealth()
-                    Game:TriggerSound("/ui/battle/critical_damage")
-                ]], id))
+                if pawn then
+                    local shield = pawn:IsShield()
+                    local dmg = %d
+                    local p2 = %s
+                    if shield then
+                        local fx = SkillEffect()
+                        local damage = SpaceDamage(p2, dmg)
+                        fx:AddSafeDamage(damage)
+                        fx:AddSafeDamage(damage)
+                        -- 移除机甲及地形效果
+                        damage = SpaceDamage(p2, 0)
+                        damage.iShield = EFFECT_CREATE
+                        damage.iFire = pawn:IsFire() and EFFECT_NONE or EFFECT_REMOVE
+                        damage.iAcid = pawn:IsAcid() and EFFECT_NONE or EFFECT_REMOVE
+                        fx:AddDamage(damage)
+                        -- 恢复地形效果
+                        damage = SpaceDamage(p2, 0)
+                        damage.iFire = Board:IsFire(p2) and EFFECT_CREATE or EFFECT_NONE
+                        damage.iAcid = Board:IsAcid(p2) and EFFECT_CREATE or EFFECT_NONE
+                        fx:AddDamage(damage)
+                        Board:AddEffect(fx)
+                    else
+                        pawn:ApplyDamage(SpaceDamage(p2, dmg))
+                    end
+                end
+            ]], id, dmg, p2:GetString()))
+            -- 由于伤害在 script 中完成，下一个 script 中获取到 pawn 的生命值来不及更新，只能手动算血线
+            if Pawn:GetHealth() - trueDmg > 1 then
+                ret:AddScript([[Game:TriggerSound("/ui/battle/critical_damage")]])
             end
         end
     end
@@ -95,42 +133,50 @@ end
 
 local this = {}
 
-function this:InitHeavy(mission, alert)
-    alert = alert or false
-    mission.EnvMechs_Heavy = 0
+-- 修改移动力后，在退出关卡时需要还原回来；某些情况无法做到还原（如机甲测试），则设置 unchange 为 true
+function this:InitHeavy(mission, unchange)
+    unchange = unchange or false
+    mission.EnvHeavySpeed = {}
     local pawns = extract_table(Board:GetPawns(TEAM_MECH))
-    for i, id in ipairs(pawns) do
+    for _, id in ipairs(pawns) do
         local pawn = Board:GetPawn(id)
         if pawn and pawn:IsEnvHeavy() then
             local speed1 = pawn:GetBasicMoveSpeed()
-            local speed2 = pawn:GetMoveSpeed()
-            if speed1 ~= speed2 then
+            local speed2 = pawn:GetMoveSpeed() -- 此时没有缠绕等状态影响，获取到的是加成后的移动力
+            if speed1 < speed2 then
                 local space = pawn:GetSpace()
-                local bonusSpeed = speed2 - speed1
-                local speed3 = math.max(speed1 - bonusSpeed, 0)
-                pawn:SetMoveSpeed(speed3)
-                mission.EnvMechs_Heavy = mission.EnvMechs_Heavy + 1
-                if alert then
-                    Board:Ping(space, GL_Color(255, 255, 255, 0))
-                    Board:AddAlert(space, EnvMod_Texts.heavy_alert)
+                if not unchange then
+                    local bonusSpeed = speed2 - speed1
+                    local speed3 = math.max(speed1 - bonusSpeed, 1)
+                    pawn:SetMoveSpeed(speed3)
+                    mission.EnvHeavySpeed[id] = speed3
                 end
+                pawn:SetShield(true)
+                Board:Ping(space, GL_Color(255, 255, 255, 0))
+                Board:AddAlert(space, EnvMod_Texts.heavy_alert)
+            end
+        end
+    end
+end
+
+-- 重新初始化重型，此时 pawn 可能被缠绕，无法获取到正确的移动力，按之前的办法重新算会出错
+function this:ReinitHeavy(mission)
+    if mission and mission.EnvHeavySpeed then
+        for id, speed in pairs(mission.EnvHeavySpeed) do
+            local pawn = Board:GetPawn(id)
+            if pawn then
+                pawn:SetMoveSpeed(speed)
             end
         end
     end
 end
 
 function this:DestoryHeavy(mission)
-    if mission and mission.EnvMechs_Heavy > 0 then
-        local pawns = extract_table(Board:GetPawns(TEAM_MECH))
-        local cnt = 0
-        for i, id in ipairs(pawns) do
+    if mission and mission.EnvHeavySpeed then
+        for id, speed in pairs(mission.EnvHeavySpeed) do
             local pawn = Board:GetPawn(id)
-            if pawn and pawn:IsEnvHeavy() then
+            if pawn then
                 pawn:SetMoveSpeed(pawn:GetBasicMoveSpeed())
-                cnt = cnt + 1
-                if cnt >= mission.EnvMechs_Heavy then
-                    break
-                end
             end
         end
     end
@@ -139,19 +185,24 @@ end
 function this:Load()
     modApi:addNextTurnHook(function(mission)
         if not mission.EnvMechs_Init then
-            self:InitHeavy(mission, true)
+            self:InitHeavy(mission)
             mission.EnvMechs_Init = true
         end
     end)
     modApi:addPostLoadGameHook(function() -- 虽然关卡结束不会还原，但退出游戏却会还原……
         modApi:runLater(function(mission)
             if mission.EnvMechs_Init then
-                self:InitHeavy(mission)
+                self:ReinitHeavy(mission)
             end
         end)
     end)
     modApi:addMissionEndHook(function(mission) -- 关卡结束不会自动还原
         self:DestoryHeavy(mission)
+    end)
+    modApi:addTestMechEnteredHook(function(mission)
+        modApi:runLater(function(mission)
+            self:InitHeavy(mission, true) -- 机甲测试退出 Hook 时无法还原移动力，这里做做样子即可
+        end)
     end)
 end
 
