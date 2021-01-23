@@ -20,6 +20,49 @@ function Environment:GetRepeated(repeated)
     return ret
 end
 
+-- 获取环境对应的 sImageMark
+function Environment:GetEnvImageMark(immune)
+    local mark = self.CombatIcon
+    if mark then
+        local valid = false
+        mark = string.gsub(mark, "^combat/tile_icon/tile_", "")
+        mark = string.gsub(mark, ".png$", "")
+        for _, imageMark in ipairs(ENV_GLOBAL.envImageMarks) do
+            if mark == imageMark then
+                valid = true
+                break
+            end
+        end
+        if valid then
+            local start = "combat/icons/imagemark_"
+            if immune then
+                start = start .. "immune_"
+            end
+            mark = start .. mark .. ".png"
+            return mark
+        end
+    end
+    return nil
+end
+function Env_Volcano:GetEnvImageMark(immune)
+    local mark = self.Mode == 1 and "fireball" or "lava"
+    local start = "combat/icons/imagemark_"
+    if immune then
+        start = start .. "immune_"
+    end
+    mark = start .. mark .. ".png"
+    return mark
+end
+function Env_Final:GetEnvImageMark(immune)
+    local mark = self.Mode == 1 and "rock" or "tentacle"
+    local start = "combat/icons/imagemark_"
+    if immune then
+        start = start .. "immune_"
+    end
+    mark = start .. mark .. ".png"
+    return mark
+end
+
 -- 获取真正意义上的 Locations
 function Environment:GetTrueLocations()
     return self.Locations and self.Locations or {}

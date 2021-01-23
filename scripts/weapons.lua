@@ -566,24 +566,37 @@ function Env_Weapon_2:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect, pa
     local tiC1 = param and param.tiC1 or false
 
     local mission = GetCurrentMission()
+    local env = mission and mission.LiveEnvironment
     local envName = mission and mission.Environment or "Env_Null"
     envName = envName and envName or "Env_Null"
 
     ret:AddBounce(p1, 10)
     local damage = SpaceDamage(p2, self.Damage, direction)
-    damage.sAnimation = "EnvExploRepulse"
+    damage.sAnimation = "EnvExplo"
     local envImmune = not (mission and mission.NoEnvImmune) and IsPassiveSkill("Env_Weapon_4_A")
-    if envImmune and tool:IsEnvImmuneProtected(p2, envName == "EnvArtificial") then
-        damage.sImageMark = "combat/icons/env_lock_immune.png"
-    elseif tool:IsGroundReflective(p2) then
-        damage.sImageMark = "combat/icons/env_lock_dark.png"
+    local sImageMark = "combat/icons/env_lock.png"
+    if envName == "EnvArtificial" or tipImageCall or
+        (not mission.MasteredEnv and (not env.Locations or #env.Locations == 0 or mission.SpecialEnv)) then
+        if envImmune and tool:IsEnvImmuneProtected(p2, true) then
+            sImageMark = "combat/icons/env_lock_immune.png"
+        elseif tool:IsGroundReflective(p2) then
+            sImageMark = "combat/icons/env_lock_dark.png"
+        end
     else
-        damage.sImageMark = "combat/icons/env_lock.png"
+        local immune = envImmune and tool:IsEnvImmuneProtected(p2)
+        local mark = env and env:GetEnvImageMark(immune)
+        if mark then
+            sImageMark = mark
+        elseif immune then
+            sImageMark = "combat/icons/env_lock_immune.png"
+        elseif tool:IsGroundReflective(p2) then
+            sImageMark = "combat/icons/env_lock_dark.png"
+        end
     end
+    damage.sImageMark = sImageMark
     ret:AddArtillery(damage, "effects/env_shot_U.png")
 
     if envName ~= "Env_Null" and not tipImageCall then -- TipImage 会引起 Script 执行
-        local env = mission.LiveEnvironment
         local strEnv = "local env = GetCurrentMission().LiveEnvironment"
         if not mission.MasteredEnv and (not env.Locations or #env.Locations == 0 or mission.SpecialEnv) then
             strEnv = strEnv .. ".OverlayEnv"
@@ -749,7 +762,7 @@ function Env_Weapon_3:GetSkillEffect(p1, p2)
             local dest = tool:IsMovable(obj) and dests[i] or obj
             if dest ~= p2 then
                 local damage = SpaceDamage(dest, self.Damage)
-                damage.sAnimation = "EnvExploRepulse"
+                damage.sAnimation = "EnvExplo"
                 damage.sSound = "/impact/generic/explosion"
                 ret:AddDamage(damage)
                 ret:AddBounce(dest, -2)
@@ -842,7 +855,7 @@ function Env_Weapon_4:GetSkillEffect(p1, p2)
     for i, space in ipairs(planned) do
         damage = SpaceDamage(space, 0)
         local delay = i < #planned and NO_DELAY or FULL_DELAY
-        damage.sAnimation = "EnvExploRepulse"
+        damage.sAnimation = "EnvExplo"
         damage.sSound = "/impact/generic/explosion"
         damage.bHide = true
         ret:AddArtillery(point, damage, "effects/env_shot_U.png", delay)

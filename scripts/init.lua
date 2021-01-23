@@ -1,7 +1,7 @@
 local mod = {
     id = "EnvManipulators",
     name = "EnvManipulators",
-    version = "2.0.0.20210123",
+    version = "2.0.1.20210123",
     requirements = {"kf_ModUtils"},
     modApiVersion = "2.5.4",
     icon = "img/icon.png",
@@ -14,6 +14,8 @@ function mod:init()
     -- 某些状态需要退出游戏后固化到本地，可以存在 Mission 上
     ENV_GLOBAL = {
         weaponNames = {"Env_Weapon_1", "Env_Weapon_2", "Env_Weapon_3", "Env_Weapon_4"},
+        envImageMarks = {"airstrike", "crack", "fireball", "hightide", "lava", "lightning", "rock", "snowstorm",
+        "tentacle"},
         themeColor = GL_Color(196, 182, 86, 0)
     }
 
@@ -100,16 +102,28 @@ function mod:initResources()
         local wpImg = string.lower(weapon) .. ".png"
         modApi:appendAsset("img/weapons/" .. wpImg, self.resourcePath .. "img/weapons/" .. wpImg)
     end
-    modApi:appendAsset("img/combat/icons/env_lock.png", self.resourcePath .. "img/icon/env_lock.png")
-    modApi:appendAsset("img/combat/icons/env_lock_dark.png", self.resourcePath .. "img/icon/env_lock_dark.png")
-    modApi:appendAsset("img/combat/icons/env_lock_immune.png", self.resourcePath .. "img/icon/env_lock_immune.png")
-    modApi:appendAsset("img/combat/icons/icon_envheavy.png", self.resourcePath .. "img/icon/icon_envheavy.png")
-    modApi:appendAsset("img/combat/icons/icon_envheavy_glow.png", self.resourcePath .. "img/icon/icon_envheavy_glow.png")
-    modApi:appendAsset("img/combat/icons/icon_env_rmdebuff1.png", self.resourcePath .. "img/icon/icon_env_rmdebuff1.png")
-    modApi:appendAsset("img/combat/icons/icon_env_rmdebuff2.png", self.resourcePath .. "img/icon/icon_env_rmdebuff2.png")
+    modApi:appendAsset("img/combat/icons/env_lock.png", self.resourcePath .. "img/icons/env_lock.png")
+    modApi:appendAsset("img/combat/icons/env_lock_dark.png", self.resourcePath .. "img/icons/env_lock_dark.png")
+    modApi:appendAsset("img/combat/icons/env_lock_immune.png", self.resourcePath .. "img/icons/env_lock_immune.png")
+    modApi:appendAsset("img/combat/icons/icon_envheavy.png", self.resourcePath .. "img/icons/icon_envheavy.png")
+    modApi:appendAsset("img/combat/icons/icon_envheavy_glow.png",
+        self.resourcePath .. "img/icons/icon_envheavy_glow.png")
+    modApi:appendAsset("img/combat/icons/icon_env_rmdebuff1.png",
+        self.resourcePath .. "img/icons/icon_env_rmdebuff1.png")
+    modApi:appendAsset("img/combat/icons/icon_env_rmdebuff2.png",
+        self.resourcePath .. "img/icons/icon_env_rmdebuff2.png")
+
     -- 需提供 U、R 两张图才能被平射使用
-    modApi:appendAsset("img/effects/env_shot_U.png", self.resourcePath .. "img/env_shot.png")
-    modApi:appendAsset("img/effects/env_shot_R.png", self.resourcePath .. "img/env_shot.png")
+    modApi:appendAsset("img/effects/env_shot_U.png", self.resourcePath .. "img/effects/env_shot.png")
+    modApi:appendAsset("img/effects/env_shot_R.png", self.resourcePath .. "img/effects/env_shot.png")
+    modApi:appendAsset("img/effects/envArtificial_effect0.png",
+        self.resourcePath .. "img/effects/envArtificial_effect0.png")
+    modApi:appendAsset("img/effects/envArtificial_effect1.png",
+        self.resourcePath .. "img/effects/envArtificial_effect1.png")
+    modApi:appendAsset("img/effects/envExplo.png", self.resourcePath .. "img/effects/envExplo.png")
+
+    modApi:appendAsset("img/combat/tile_icon/tile_artificial.png",
+        self.resourcePath .. "img/environments/tile_artificial.png")
 
     -- 加到方格目录下，这样可以被 Board:SetCustomTile() 使用
     local tileTypes = {"grass", "sand", "snow", "acid", "volcano", "lava"}
@@ -120,7 +134,17 @@ function mod:initResources()
             self.resourcePath .. "img/tile_lock/" .. type .. "_immune.png")
     end
 
+    for _, mark in ipairs(ENV_GLOBAL.envImageMarks) do
+        local f1 = "imagemark_" .. mark .. ".png"
+        local f2 = "imagemark_immune_" .. mark .. ".png"
+        modApi:appendAsset("img/combat/icons/" .. f1, self.resourcePath .. "img/environments/" .. f1)
+        modApi:appendAsset("img/combat/icons/" .. f2, self.resourcePath .. "img/environments/" .. f2)
+        Location["combat/icons/" .. f1] = Point(-27, 2)
+        Location["combat/icons/" .. f2] = Point(-27, 2)
+    end
+
     -- 设置图片偏移
+    Location["combat/tile_icon/tile_artificial.png"] = Point(-27, 2)
     Location["combat/icons/env_lock.png"] = Point(-27, 2)
     Location["combat/icons/env_lock_dark.png"] = Point(-27, 2)
     Location["combat/icons/env_lock_immune.png"] = Point(-27, 2)

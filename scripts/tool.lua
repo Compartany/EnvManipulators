@@ -165,7 +165,7 @@ function this:EnvArtificialGenerate(planned, overlay)
                     Board:SetDangerous(space)
                     damage = SpaceDamage(space, 0)
                     local delay = i < #planned and NO_DELAY or FULL_DELAY
-                    damage.sAnimation = "EnvExploRepulse"
+                    damage.sAnimation = "EnvExplo"
                     damage.sSound = "/impact/generic/explosion"
                     fx:AddArtillery(point, damage, "effects/env_shot_U.png", delay)
                 end
@@ -241,7 +241,7 @@ function this:IsValidEnvTarget(space, repeated)
 end
 
 -- 标记环境免疫
-local allySpaceIcon = "combat/tile_icon/tile_airstrike.png"
+local allySpaceIcon = "combat/tile_icon/tile_artificial.png"
 local allySpaceColors = {GL_Color(50, 200, 50, 0.75), GL_Color(20, 200, 20, 0.75)}
 function this:MarkAllySpace(location, active, env)
     local icon = (env and env.CombatIcon) or allySpaceIcon
@@ -464,7 +464,7 @@ function this:OverloadDamage(dmg, point, pawnPoint, forceAcid)
     end
     local damage = SpaceDamage(point, dmg)
     damage.iFire = EFFECT_CREATE
-    damage.sAnimation = "EnvExploRepulse"
+    damage.sAnimation = "EnvExplo"
     damage.sSound = "/impact/generic/explosion"
     return damage
 end

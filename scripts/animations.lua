@@ -1,5 +1,5 @@
 ANIMS.EnvArtificial_Animation0 = ANIMS.Animation:new{
-    Image = "effects/lightning_bolt0.png",
+    Image = "effects/envArtificial_effect0.png",
     NumFrames = 1,
     Time = 0.45,
     PosX = -26,
@@ -8,11 +8,11 @@ ANIMS.EnvArtificial_Animation0 = ANIMS.Animation:new{
 }
 
 ANIMS.EnvArtificial_Animation1 = ANIMS.EnvArtificial_Animation0:new{
-    Image = "effects/lightning_bolt1.png"
+    Image = "effects/envArtificial_effect1.png"
 }
 
-ANIMS.EnvExploRepulse = ANIMS.Animation:new{
-    Image = "effects/explo_repulse3.png",
+ANIMS.EnvExplo = ANIMS.Animation:new{
+    Image = "effects/envExplo.png",
     NumFrames = 8,
     Time = 0.05,
     PosX = -33,
