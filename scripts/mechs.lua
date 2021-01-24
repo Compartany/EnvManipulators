@@ -118,7 +118,16 @@ function Move:GetSkillEffect(p1, p2, ...)
                         fx:AddDamage(damage)
                         Board:AddEffect(fx)
                     else
-                        pawn:ApplyDamage(SpaceDamage(p2, dmg))
+                        local freezeMine = ENV_GLOBAL.tool:IsFreezeMine(p2)
+                        if freezeMine then
+                            local fx = SkillEffect()
+                            local damage = SpaceDamage(p2, dmg)
+                            damage.iFrozen = EFFECT_CREATE
+                            fx:AddSafeDamage(damage)
+                            Board:AddEffect(fx)
+                        else
+                            pawn:ApplyDamage(SpaceDamage(p2, dmg))
+                        end
                     end
                 end
             ]], id, dmg, p2:GetString()))

@@ -244,7 +244,7 @@ end
 local allySpaceIcon = "combat/tile_icon/tile_artificial.png"
 local allySpaceColors = {GL_Color(50, 200, 50, 0.75), GL_Color(20, 200, 20, 0.75)}
 function this:MarkAllySpace(location, active, env)
-    local icon = (env and env.CombatIcon) or allySpaceIcon
+    local icon = (env and (env:GetEnvImageMark() or env.CombatIcon)) or allySpaceIcon
     Board:MarkSpaceImage(location, icon, active and allySpaceColors[2] or allySpaceColors[1])
     Board:MarkSpaceDesc(location, "passive0", false)
 end
@@ -485,6 +485,15 @@ function this:IsGroundReflective(space)
         return true
     end
     return Game and Game:GetCorp() and Game:GetCorp().bark_name == "Corp_Snow_Bark"
+end
+
+-- 判断是否为冰雷
+function this:IsFreezeMine(space)
+    if space then
+        local entry = env_modApiExt.board:getTileTable(space)
+        return entry and entry.item == "Freeze_Mine"
+    end
+    return false
 end
 
 function this:Load()

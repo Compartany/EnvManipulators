@@ -50,7 +50,7 @@ function this:MarkSpace(space, active)
         local damage = tool:GetEnvArtificialDamage(self)
         tooltip = "passive" .. damage
         if pawn then
-            if pawn:IsFrozen() then
+            if pawn:IsShield() or pawn:IsFrozen() then
                 deadly = false
             else
                 local line = damage

@@ -114,6 +114,14 @@ function BlobBoss:ScorePositioning(point, pawn, ...)
     end
     return EnvScorePositioning(point, pawn, score, 1, true)
 end
+local _SpiderBoss_ScorePositioning = SpiderBoss.ScorePositioning
+function SpiderBoss:ScorePositioning(point, pawn, ...)
+    local score = _SpiderBoss_ScorePositioning and _SpiderBoss_ScorePositioning(point, pawn, ...)
+    if not score or type(score) ~= "number" then
+        score = _ScorePositioning(point, pawn, ...)
+    end
+    return EnvScorePositioning(point, pawn, score, 1, true)
+end
 
 local this = {}
 function this:Load()
