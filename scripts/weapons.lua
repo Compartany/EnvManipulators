@@ -1,14 +1,11 @@
 local mod = mod_loader.mods[modApi.currentMod]
 local tool = mod.tool
 
-------------------
--- Env_Weapon_1 --
-------------------
-Env_Weapon_1 = Skill:new{
-    Name = EnvWeapon_Texts.Env_Weapon_1_Name,
-    Description = EnvWeapon_Texts.Env_Weapon_1_Description,
+EnvWeapon1 = Skill:new{
+    Name = EnvWeapon_Texts.EnvWeapon1_Name,
+    Description = EnvWeapon_Texts.EnvWeapon1_Description,
     Class = "Prime",
-    Icon = "weapons/env_weapon_1.png",
+    Icon = "weapons/EnvWeapon1.png",
     Damage = 0,
     Pull = false,
     PullLength = 3,
@@ -16,7 +13,7 @@ Env_Weapon_1 = Skill:new{
     PowerCost = 0,
     Upgrades = 2,
     UpgradeCost = {2, 3},
-    UpgradeList = {EnvWeapon_Texts.Env_Weapon_1_Upgrade1, EnvWeapon_Texts.Env_Weapon_1_Upgrade2},
+    UpgradeList = {EnvWeapon_Texts.EnvWeapon1_Upgrade1, EnvWeapon_Texts.EnvWeapon1_Upgrade2},
     TipImage = {
         Unit = Point(2, 2),
         Enemy = Point(2, 1),
@@ -26,8 +23,8 @@ Env_Weapon_1 = Skill:new{
     }
 }
 
-Env_Weapon_1_A = Env_Weapon_1:new{
-    UpgradeDescription = EnvWeapon_Texts.Env_Weapon_1_A_UpgradeDescription,
+EnvWeapon1_A = EnvWeapon1:new{
+    UpgradeDescription = EnvWeapon_Texts.EnvWeapon1_A_UpgradeDescription,
     Pull = true,
     TipImage = {
         Unit = Point(2, 2),
@@ -37,8 +34,8 @@ Env_Weapon_1_A = Env_Weapon_1:new{
     }
 }
 
-Env_Weapon_1_B = Env_Weapon_1:new{
-    UpgradeDescription = EnvWeapon_Texts.Env_Weapon_1_B_UpgradeDescription,
+EnvWeapon1_B = EnvWeapon1:new{
+    UpgradeDescription = EnvWeapon_Texts.EnvWeapon1_B_UpgradeDescription,
     Overload = true,
     TipImage = {
         Unit = Point(2, 4),
@@ -49,7 +46,7 @@ Env_Weapon_1_B = Env_Weapon_1:new{
     }
 }
 
-Env_Weapon_1_AB = Env_Weapon_1:new{
+EnvWeapon1_AB = EnvWeapon1:new{
     Pull = true,
     Overload = true,
     TipImage = {
@@ -61,7 +58,7 @@ Env_Weapon_1_AB = Env_Weapon_1:new{
     }
 }
 
-function Env_Weapon_1:GetTargetArea(point)
+function EnvWeapon1:GetTargetArea(point)
     local ret = PointList()
     for dir = DIR_START, DIR_END do
         local curr = point + DIR_VECTORS[dir]
@@ -114,12 +111,12 @@ function Env_Weapon_1:GetTargetArea(point)
     return ret
 end
 
-function Env_Weapon_1:GetSkillEffect(p1, p2)
+function EnvWeapon1:GetSkillEffect(p1, p2)
     return Board:IsTipImage() and self:GetSkillEffect_TipImage() or self:GetSkillEffect_Inner(p1, p2)
 end
 
 -- 不能直接在 GetSkillEffect() 上追加参数，因为其他 MOD 引进的 modApiExt 也可能在上面追加参数导致冲突
-function Env_Weapon_1:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect, param)
+function EnvWeapon1:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect, param)
     tipImageCall = tipImageCall or false
     local overloadActive = Pawn:IsEnvOverloadActive()
     local tipImageFire = tipImageCall and self.Overload
@@ -306,7 +303,7 @@ function Env_Weapon_1:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect, pa
 end
 
 -- 注意：TipImage 必须要设置 Unit、Enemy、Target，且它们必须得满足正常攻击发起的逻辑，否则 TipImage 无效
-function Env_Weapon_1:GetSkillEffect_TipImage()
+function EnvWeapon1:GetSkillEffect_TipImage()
     local ret = nil
     local selfSpace = Point(2, 2)
     local s = "Z"
@@ -472,14 +469,11 @@ function Move:GetSkillEffect(p1, p2, ...)
     return _Move_GetSkillEffect(self, p1, p2, ...)
 end
 
-------------------
--- Env_Weapon_2 --
-------------------
-Env_Weapon_2 = LineArtillery:new{
-    Name = EnvWeapon_Texts.Env_Weapon_2_Name,
-    Description = EnvWeapon_Texts.Env_Weapon_2_Description,
+EnvWeapon2 = LineArtillery:new{
+    Name = EnvWeapon_Texts.EnvWeapon2_Name,
+    Description = EnvWeapon_Texts.EnvWeapon2_Description,
     Class = "Ranged",
-    Icon = "weapons/env_weapon_2.png",
+    Icon = "weapons/EnvWeapon2.png",
     Chain1 = false,
     Chain2 = false,
     PowerCost = 0,
@@ -487,7 +481,7 @@ Env_Weapon_2 = LineArtillery:new{
     Range = 7,
     Upgrades = 2,
     UpgradeCost = {2, 2},
-    UpgradeList = {EnvWeapon_Texts.Env_Weapon_2_Upgrade1, EnvWeapon_Texts.Env_Weapon_2_Upgrade2},
+    UpgradeList = {EnvWeapon_Texts.EnvWeapon2_Upgrade1, EnvWeapon_Texts.EnvWeapon2_Upgrade2},
     LaunchSound = "/weapons/gravwell",
     ImpactSound = "/impact/generic/explosion",
     TipImage = {
@@ -498,8 +492,8 @@ Env_Weapon_2 = LineArtillery:new{
     }
 }
 
-Env_Weapon_2_A = Env_Weapon_2:new{
-    UpgradeDescription = EnvWeapon_Texts.Env_Weapon_2_A_UpgradeDescription,
+EnvWeapon2_A = EnvWeapon2:new{
+    UpgradeDescription = EnvWeapon_Texts.EnvWeapon2_A_UpgradeDescription,
     Chain1 = true,
     TipImage = {
         Unit = Point(2, 4),
@@ -510,8 +504,8 @@ Env_Weapon_2_A = Env_Weapon_2:new{
     }
 }
 
-Env_Weapon_2_B = Env_Weapon_2:new{
-    UpgradeDescription = EnvWeapon_Texts.Env_Weapon_2_B_UpgradeDescription,
+EnvWeapon2_B = EnvWeapon2:new{
+    UpgradeDescription = EnvWeapon_Texts.EnvWeapon2_B_UpgradeDescription,
     Chain2 = true,
     TipImage = {
         Unit = Point(2, 4),
@@ -523,7 +517,7 @@ Env_Weapon_2_B = Env_Weapon_2:new{
     }
 }
 
-Env_Weapon_2_AB = Env_Weapon_2:new{
+EnvWeapon2_AB = EnvWeapon2:new{
     Chain1 = true,
     Chain2 = true,
     TipImage = {
@@ -537,7 +531,7 @@ Env_Weapon_2_AB = Env_Weapon_2:new{
     }
 }
 
-function Env_Weapon_2:GetTargetArea(point)
+function EnvWeapon2:GetTargetArea(point)
     local ret = PointList()
     for dir = DIR_START, DIR_END do
         for i = 2, self.Range do
@@ -552,11 +546,11 @@ function Env_Weapon_2:GetTargetArea(point)
     return ret
 end
 
-function Env_Weapon_2:GetSkillEffect(p1, p2)
+function EnvWeapon2:GetSkillEffect(p1, p2)
     return Board:IsTipImage() and self:GetSkillEffect_TipImage() or self:GetSkillEffect_Inner(p1, p2)
 end
 
-function Env_Weapon_2:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect, param)
+function EnvWeapon2:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect, param)
     tipImageCall = tipImageCall or false
     local ret = skillEffect or SkillEffect()
     local direction = GetDirection(p2 - p1)
@@ -570,7 +564,7 @@ function Env_Weapon_2:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect, pa
     ret:AddBounce(p1, 10)
     local damage = SpaceDamage(p2, self.Damage, direction)
     damage.sAnimation = "EnvExplo"
-    local envImmune = not (mission and mission.NoEnvImmune) and IsPassiveSkill("Env_Weapon_4_A")
+    local envImmune = not (mission and mission.NoEnvImmune) and IsPassiveSkill("EnvWeapon4_A")
     local sImageMark = "combat/icons/env_lock.png"
     if envName == "EnvArtificial" or tipImageCall or
         (not mission.MasteredEnv and (not env.Locations or #env.Locations == 0 or mission.SpecialEnv)) then
@@ -591,7 +585,7 @@ function Env_Weapon_2:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect, pa
         end
     end
     damage.sImageMark = sImageMark
-    ret:AddArtillery(damage, "effects/env_shot_U.png")
+    ret:AddArtillery(damage, "effects/envShot_U.png")
 
     if envName ~= "Env_Null" and not tipImageCall then -- TipImage 会引起 Script 执行
         local strEnv = "local env = GetCurrentMission().LiveEnvironment"
@@ -635,7 +629,7 @@ function Env_Weapon_2:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect, pa
     return ret
 end
 
-function Env_Weapon_2:GetSkillEffect_TipImage()
+function EnvWeapon2:GetSkillEffect_TipImage()
     local ret = SkillEffect()
     if self.Chain1 and self.Chain2 then
         self:GetSkillEffect_Inner(Point(2, 4), Point(2, 2), true, ret)
@@ -655,20 +649,17 @@ function Env_Weapon_2:GetSkillEffect_TipImage()
     return ret
 end
 
-------------------
--- Env_Weapon_3 --
-------------------
-Env_Weapon_3 = Skill:new{
-    Name = EnvWeapon_Texts.Env_Weapon_3_Name,
-    Description = EnvWeapon_Texts.Env_Weapon_3_Description,
+EnvWeapon3 = Skill:new{
+    Name = EnvWeapon_Texts.EnvWeapon3_Name,
+    Description = EnvWeapon_Texts.EnvWeapon3_Description,
     Class = "Science",
-    Icon = "weapons/env_weapon_3.png",
+    Icon = "weapons/EnvWeapon3.png",
     Range = 3,
     Damage = 0,
     PowerCost = 1,
     Upgrades = 2,
     UpgradeCost = {1, 3},
-    UpgradeList = {EnvWeapon_Texts.Env_Weapon_3_Upgrade1, EnvWeapon_Texts.Env_Weapon_3_Upgrade2},
+    UpgradeList = {EnvWeapon_Texts.EnvWeapon3_Upgrade1, EnvWeapon_Texts.EnvWeapon3_Upgrade2},
     LaunchSound = "/weapons/enhanced_tractor",
     ImpactSound = "/impact/generic/tractor_beam",
     TipImage = {
@@ -679,8 +670,8 @@ Env_Weapon_3 = Skill:new{
     }
 }
 
-Env_Weapon_3_A = Env_Weapon_3:new{
-    UpgradeDescription = EnvWeapon_Texts.Env_Weapon_3_A_UpgradeDescription,
+EnvWeapon3_A = EnvWeapon3:new{
+    UpgradeDescription = EnvWeapon_Texts.EnvWeapon3_A_UpgradeDescription,
     Range = 4,
     TipImage = {
         Unit = Point(2, 4),
@@ -690,8 +681,8 @@ Env_Weapon_3_A = Env_Weapon_3:new{
     }
 }
 
-Env_Weapon_3_B = Env_Weapon_3:new{
-    UpgradeDescription = EnvWeapon_Texts.Env_Weapon_3_B_UpgradeDescription,
+EnvWeapon3_B = EnvWeapon3:new{
+    UpgradeDescription = EnvWeapon_Texts.EnvWeapon3_B_UpgradeDescription,
     Range = 4,
     TipImage = {
         Unit = Point(2, 4),
@@ -701,7 +692,7 @@ Env_Weapon_3_B = Env_Weapon_3:new{
     }
 }
 
-Env_Weapon_3_AB = Env_Weapon_3:new{
+EnvWeapon3_AB = EnvWeapon3:new{
     Range = 5,
     TipImage = {
         Unit = Point(2, 4),
@@ -712,7 +703,7 @@ Env_Weapon_3_AB = Env_Weapon_3:new{
     }
 }
 
-function Env_Weapon_3:GetTargetArea(point)
+function EnvWeapon3:GetTargetArea(point)
     local ret = PointList()
     for dir = DIR_START, DIR_END do
         for i = 2, self.Range do
@@ -727,7 +718,7 @@ function Env_Weapon_3:GetTargetArea(point)
     return ret
 end
 
-function Env_Weapon_3:GetSkillEffect(p1, p2)
+function EnvWeapon3:GetSkillEffect(p1, p2)
     local ret = SkillEffect()
     local direction = GetDirection(p2 - p1)
     local dist = p1:Manhattan(p2)
@@ -749,7 +740,7 @@ function Env_Weapon_3:GetSkillEffect(p1, p2)
             dests[#objs] = p2
         end
 
-        ret:AddProjectile(SpaceDamage(objs[1], 0), "effects/env_shot", FULL_DELAY) -- 对应 U、R 两张图
+        ret:AddProjectile(SpaceDamage(objs[1], 0), "effects/envShot", FULL_DELAY) -- 对应 U、R 两张图
         for i, obj in ipairs(objs) do
             local needMove = obj ~= dests[i]
             local movable = tool:IsMovable(obj)
@@ -775,18 +766,15 @@ function Env_Weapon_3:GetSkillEffect(p1, p2)
     return ret
 end
 
-------------------
--- Env_Weapon_4 --
-------------------
-Env_Weapon_4 = PassiveSkill:new{
-    Name = EnvWeapon_Texts.Env_Weapon_4_Name,
-    Description = EnvWeapon_Texts.Env_Weapon_4_Description,
-    Passive = "Env_Weapon_4",
-    Icon = "weapons/env_weapon_4.png",
+EnvWeapon4 = PassiveSkill:new{
+    Name = EnvWeapon_Texts.EnvWeapon4_Name,
+    Description = EnvWeapon_Texts.EnvWeapon4_Description,
+    Passive = "EnvWeapon4",
+    Icon = "weapons/EnvWeapon4.png",
     PowerCost = 3,
     Upgrades = 2,
     UpgradeCost = {3, 3},
-    UpgradeList = {EnvWeapon_Texts.Env_Weapon_4_Upgrade1, EnvWeapon_Texts.Env_Weapon_4_Upgrade2},
+    UpgradeList = {EnvWeapon_Texts.EnvWeapon4_Upgrade1, EnvWeapon_Texts.EnvWeapon4_Upgrade2},
     EnvImmune = false,
     BaseArea = 4,
     BaseDamage = 4,
@@ -803,9 +791,9 @@ Env_Weapon_4 = PassiveSkill:new{
     }
 }
 
-Env_Weapon_4_A = Env_Weapon_4:new{
-    UpgradeDescription = EnvWeapon_Texts.Env_Weapon_4_A_UpgradeDescription,
-    Passive = "Env_Weapon_4_A",
+EnvWeapon4_A = EnvWeapon4:new{
+    UpgradeDescription = EnvWeapon_Texts.EnvWeapon4_A_UpgradeDescription,
+    Passive = "EnvWeapon4_A",
     EnvImmune = true,
     TipImage = {
         Unit = Point(2, 3),
@@ -818,23 +806,23 @@ Env_Weapon_4_A = Env_Weapon_4:new{
     }
 }
 
-Env_Weapon_4_B = Env_Weapon_4:new{
-    UpgradeDescription = EnvWeapon_Texts.Env_Weapon_4_B_UpgradeDescription,
-    Passive = "Env_Weapon_4_B",
+EnvWeapon4_B = EnvWeapon4:new{
+    UpgradeDescription = EnvWeapon_Texts.EnvWeapon4_B_UpgradeDescription,
+    Passive = "EnvWeapon4_B",
     Enhanced = true,
     Damage = 5
 }
 
-Env_Weapon_4_AB = Env_Weapon_4:new{
-    Passive = "Env_Weapon_4_AB",
+EnvWeapon4_AB = EnvWeapon4:new{
+    Passive = "EnvWeapon4_AB",
     EnvImmune = true,
     Enhanced = true,
-    TipImage = Env_Weapon_4_A.TipImage,
+    TipImage = EnvWeapon4_A.TipImage,
     Damage = 5
 }
 
 -- 使用提示效果，用假方格模拟环境锁定
-function Env_Weapon_4:GetSkillEffect(p1, p2)
+function EnvWeapon4:GetSkillEffect(p1, p2)
     -- 不要作判断，直接全清，否则在不同 TipImage 间切换会混
     Board:SetCustomTile(Point(1, 1), "ground_0.png")
     Board:SetCustomTile(Point(2, 4), "ground_0.png")
@@ -855,7 +843,7 @@ function Env_Weapon_4:GetSkillEffect(p1, p2)
         damage.sAnimation = "EnvExplo"
         damage.sSound = "/impact/generic/explosion"
         damage.bHide = true
-        ret:AddArtillery(point, damage, "effects/env_shot_U.png", delay)
+        ret:AddArtillery(point, damage, "effects/envShot_U.png", delay)
     end
 
     -- 必须要用不同的全局变量存储，否则在不同 TipImage 间切换会混
@@ -909,7 +897,7 @@ end
 
 local Weapons = {}
 function Weapons:Load()
-    Global_Texts.EnvArtificialDisabled_Title = EnvWeapon_Texts.Env_Weapon_4_Name
+    Global_Texts.EnvArtificialDisabled_Title = EnvWeapon_Texts.EnvWeapon4_Name
     Global_Texts.EnvArtificialDisabled_Text = EnvMod_Texts.envArtificial_disabled
 
     env_modApiExt:addSkillBuildHook(function(mission, pawn, weaponId, p1, p2, skillFx)
@@ -918,7 +906,7 @@ function Weapons:Load()
                 local fx = SkillEffect()
                 local effects = extract_table(skillFx.effect)
                 local damage = tool:OverloadDamage(2, p1)
-                local shifter = tool:ExtractWeapon(weaponId) == "Env_Weapon_1"
+                local shifter = tool:ExtractWeapon(weaponId) == "EnvWeapon1"
                 local repair = modApi:stringStartsWith(weaponId, "Skill_Repair")
 
                 local dmg = 2

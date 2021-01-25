@@ -78,7 +78,7 @@ function this:EnvArtificialGenerate(planned, overlay)
     local bounceAmount = 10
     for _, id in ipairs(pawns) do
         local pawn = Board:GetPawn(id)
-        if self:HasWeapon(pawn, "Env_Weapon_4") then
+        if self:HasWeapon(pawn, "EnvWeapon4") then
             local point = pawn:GetSpace()
             if point and not pawn:IsDead() and not pawn:IsFrozen() and
                 (pawn:IsFlying() or Board:GetTerrain(point) ~= TERRAIN_WATER) then
@@ -100,7 +100,7 @@ function this:EnvArtificialGenerate(planned, overlay)
                     local delay = i < #planned and NO_DELAY or FULL_DELAY
                     damage.sAnimation = "EnvExplo"
                     damage.sSound = "/impact/generic/explosion"
-                    fx:AddArtillery(point, damage, "effects/env_shot_U.png", delay)
+                    fx:AddArtillery(point, damage, "effects/envShot_U.png", delay)
                 end
                 fx:AddScript(string.format([[
                     local overlay = %s
@@ -284,7 +284,7 @@ end
 function this:GetEnvArtificialDamage(env)
     env = env or EnvArtificial
     local damage = env.BaseDamage
-    if IsPassiveSkill("Env_Weapon_4_B") or IsPassiveSkill("Env_Weapon_4_AB") then
+    if IsPassiveSkill("EnvWeapon4_B") or IsPassiveSkill("EnvWeapon4_AB") then
         damage = damage + self:GetEnvArtificialUpgradeDamageValue()
     end
     -- if pawn and _G[pawn:GetType()].Health > 4 then

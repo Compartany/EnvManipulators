@@ -13,7 +13,7 @@ function mod:init()
     -- 简化操作的全局变量，仅适用于临时传递
     -- 某些状态需要退出游戏后固化到本地，可以存在 Mission 上
     ENV_GLOBAL = {
-        weaponNames = {"Env_Weapon_1", "Env_Weapon_2", "Env_Weapon_3", "Env_Weapon_4"},
+        weaponNames = {"EnvWeapon1", "EnvWeapon2", "EnvWeapon3", "EnvWeapon4"},
         envImageMarks = {"airstrike", "crack", "fireball", "hightide", "lava", "lightning", "rock", "snowstorm",
         "tentacle"},
         themeColor = GL_Color(196, 182, 86, 0)
@@ -82,7 +82,7 @@ end
 
 function mod:initOptions()
     local disabled = {
-        Env_Weapon_4 = true
+        EnvWeapon4 = true
     }
     for _, weapon in ipairs(ENV_GLOBAL.weaponNames) do
         local name = EnvWeapon_Texts[weapon .. "_Name"]
@@ -99,7 +99,7 @@ end
 
 function mod:initResources()
     for _, weapon in ipairs(ENV_GLOBAL.weaponNames) do
-        local wpImg = string.lower(weapon) .. ".png"
+        local wpImg = weapon .. ".png"
         modApi:appendAsset("img/weapons/" .. wpImg, self.resourcePath .. "img/weapons/" .. wpImg)
     end
     modApi:appendAsset("img/combat/icons/env_lock.png", self.resourcePath .. "img/icons/env_lock.png")
@@ -114,8 +114,8 @@ function mod:initResources()
         self.resourcePath .. "img/icons/icon_env_rmdebuff2.png")
 
     -- 需提供 U、R 两张图才能被平射使用
-    modApi:appendAsset("img/effects/env_shot_U.png", self.resourcePath .. "img/effects/env_shot.png")
-    modApi:appendAsset("img/effects/env_shot_R.png", self.resourcePath .. "img/effects/env_shot.png")
+    modApi:appendAsset("img/effects/envShot_U.png", self.resourcePath .. "img/effects/envShot.png")
+    modApi:appendAsset("img/effects/envShot_R.png", self.resourcePath .. "img/effects/envShot.png")
     modApi:appendAsset("img/effects/envArtificial_effect0.png",
         self.resourcePath .. "img/effects/envArtificial_effect0.png")
     modApi:appendAsset("img/effects/envArtificial_effect1.png",
@@ -167,9 +167,9 @@ function mod:initResources()
 
     require(self.scriptPath .. "libs/FURL")(mod, {{
         Type = "mech",
-        Name = "mech_env_prime",
-        Filename = "mech_env_prime",
-        Path = "img/mech_prime",
+        Name = "EnvMechPrime",
+        Filename = "EnvMechPrime",
+        Path = "img/mechs/prime",
         Default = {
             PosX = -19,
             PosY = -13
@@ -194,9 +194,9 @@ function mod:initResources()
         Icon = {}
     }, {
         Type = "mech",
-        Name = "mech_env_ranged",
-        Filename = "mech_env_ranged",
-        Path = "img/mech_ranged",
+        Name = "EnvMechRanged",
+        Filename = "EnvMechRanged",
+        Path = "img/mechs/ranged",
         Default = {
             PosX = -19,
             PosY = -7
@@ -221,9 +221,9 @@ function mod:initResources()
         Icon = {}
     }, {
         Type = "mech",
-        Name = "mech_env_science",
-        Filename = "mech_env_science",
-        Path = "img/mech_science",
+        Name = "EnvMechScience",
+        Filename = "EnvMechScience",
+        Path = "img/mechs/science",
         Default = {
             PosX = -16,
             PosY = -9

@@ -9,8 +9,8 @@ EnvArtificial = Env_Attack:new{
     StratText = EnvMod_Texts.envArtificial_name, -- 警告名称
     CombatIcon = "combat/tile_icon/tile_artificial.png",
     CombatName = EnvMod_Texts.envArtificial_name, -- 关卡内显示的名称
-    BaseArea = Env_Weapon_4.BaseArea, -- 基础锁定数
-    BaseDamage = Env_Weapon_4.BaseDamage, -- 基础伤害
+    BaseArea = EnvWeapon4.BaseArea, -- 基础锁定数
+    BaseDamage = EnvWeapon4.BaseDamage, -- 基础伤害
     IsOverlay = false -- 是否为叠加环境
 }
 local this = EnvArtificial
@@ -18,7 +18,7 @@ local this = EnvArtificial
 -- 环境规划
 -- 多次执行，返回 true 表示需继续执行，返回 false 表示执行完毕
 function this:Plan()
-    if IsPassiveSkill("Env_Weapon_4") then
+    if IsPassiveSkill("EnvWeapon4") then
         self.Locations = {}
         self.Planned = self:SelectSpaces()
         if #self.Planned > 0 then
@@ -31,7 +31,7 @@ end
 -- 标记目标方格，仅改变 UI
 -- 回合内在需要更新方格状态时自动调用，手动调用无用
 function this:MarkSpace(space, active)
-    local envImmune = IsPassiveSkill("Env_Weapon_4_A")
+    local envImmune = IsPassiveSkill("EnvWeapon4_A")
     local tooltip = nil
     local deadly = true
     local colors = nil
@@ -80,7 +80,7 @@ function this:ApplyEffect()
         local psions = {} -- 原版游戏中不可能出现多只水母，但鬼知道其他 MOD 会不会改
         local others = {} -- 其他 pawn
         fx.iOwner = ENV_EFFECT
-        local envImmune = IsPassiveSkill("Env_Weapon_4_A")
+        local envImmune = IsPassiveSkill("EnvWeapon4_A")
         if self.Locations.NoPsion then
             others = self.Locations
         else
@@ -122,7 +122,7 @@ function this:ApplyEffect_Inner(locations, effect)
             local damage = SpaceDamage(location, envDamage)
             damage.sAnimation = "EnvArtificial_Animation" .. random_int(2)
             effect:AddDamage(damage)
-            if IsPassiveSkill("Env_Weapon_4") then
+            if IsPassiveSkill("EnvWeapon4") then
                 effect:AddScript([[ -- 取消行动
                     local location = ]] .. location:GetString() .. [[
                     local pawn = Board:GetPawn(location)
@@ -160,15 +160,15 @@ function this:SelectSpaces()
 end
 
 function this:Load()
-    TILE_TOOLTIPS.passive0 = {EnvWeapon_Texts.Env_Weapon_4_Name .. " - " .. EnvWeapon_Texts.Env_Weapon_4_Upgrade1,
-                              EnvWeapon_Texts.Env_Weapon_4_A_UpgradeDescription}
+    TILE_TOOLTIPS.passive0 = {EnvWeapon_Texts.EnvWeapon4_Name .. " - " .. EnvWeapon_Texts.EnvWeapon4_Upgrade1,
+                              EnvWeapon_Texts.EnvWeapon4_A_UpgradeDescription}
     for damage = 1, 6 do -- 为了方便日后修改，还是将伤害从 1 到 6 全弄出 tooltip 来
         TILE_TOOLTIPS["passive" .. damage] = {EnvMod_Texts.envArtificial_name,
                                               string.format(EnvMod_Texts.envArtificial_description, damage)}
     end
 
     modApi:addNextTurnHook(function(mission)
-        if IsPassiveSkill("Env_Weapon_4") or tool:WeaponExists("Env_Weapon_2") then
+        if IsPassiveSkill("EnvWeapon4") or tool:WeaponExists("EnvWeapon2") then
             if Game:GetTeamTurn() == TEAM_ENEMY then -- 敌人回合开始时清信息
                 mission.EnvArtificialGenerated = {}
             end

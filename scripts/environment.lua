@@ -262,7 +262,7 @@ end
 -- 优化空中支援环境免疫
 local _Env_Airstrike_MarkBoard = Env_Airstrike.MarkBoard
 function Env_Airstrike:MarkBoard(...)
-    if IsPassiveSkill("Env_Weapon_4_A") then
+    if IsPassiveSkill("EnvWeapon4_A") then
         local allies = {}
         local others = {}
         if not self:IsEffect() and not Board:IsBusy() then
@@ -310,7 +310,7 @@ end
 local _Env_Tides_ApplyEffect = Env_Tides.ApplyEffect -- 真原版
 -- 原版修改
 function Env_Tides:_ApplyEffect()
-    local envImmune = IsPassiveSkill("Env_Weapon_4_A")
+    local envImmune = IsPassiveSkill("EnvWeapon4_A")
     local effect = SkillEffect()
     local building = {}
     for y = 0, self.Index do
@@ -387,7 +387,7 @@ end
 local _Env_Cataclysm_ApplyEffect = Env_Cataclysm.ApplyEffect -- 真原版
 -- 原版修改
 function Env_Cataclysm:_ApplyEffect()
-    local envImmune = IsPassiveSkill("Env_Weapon_4_A")
+    local envImmune = IsPassiveSkill("EnvWeapon4_A")
     local effect = SkillEffect()
     local damage = SpaceDamage()
     damage.iTerrain = TERRAIN_HOLE
@@ -491,7 +491,7 @@ local envBiasMap = {
     Env_SnowStorm = -1
 }
 local function AdjustEnv(mission)
-    if IsPassiveSkill("Env_Weapon_4") or tool:WeaponExists("Env_Weapon_2") then
+    if IsPassiveSkill("EnvWeapon4") or tool:WeaponExists("EnvWeapon2") then
         local env = mission.LiveEnvironment
         if env then
             local envBias = envBiasMap[mission.Environment] or 0
@@ -509,7 +509,7 @@ local function AdjustEnv(mission)
             function env:MarkBoard(...)
                 local ret = _MarkBoard(self, ...)
                 local trueLocations = self:GetTrueLocations()
-                local envImmune = not mission.NoEnvImmune and IsPassiveSkill("Env_Weapon_4_A")
+                local envImmune = not mission.NoEnvImmune and IsPassiveSkill("EnvWeapon4_A")
                 self.OverlayEnv:MarkBoard()
                 if envImmune and not mission.EnvImmuneManualMark and not mission.SpecialEnv then
                     if trueLocations and #trueLocations > 0 then
@@ -535,7 +535,7 @@ local function AdjustEnv(mission)
                         self.OverlayEnv:Plan()
                     end
                     if mission.MasteredEnv or (self.Locations and #self.Locations > 0 and not mission.SpecialEnv) then
-                        if IsPassiveSkill("Env_Weapon_4_B") or IsPassiveSkill("Env_Weapon_4_AB") then
+                        if IsPassiveSkill("EnvWeapon4_B") or IsPassiveSkill("EnvWeapon4_AB") then
                             local additionalArea = tool:GetEnvArtificialUpgradeAreaValue()
                             local spaces = self:SelectAdditionalSpace()
                             local env_planned = {}
@@ -565,7 +565,7 @@ local function AdjustEnv(mission)
             local function GetTerminateEffect()
                 local fx = SkillEffect()
                 local turn = Game:GetTurnCount()
-                local envImmune = not mission.NoEnvImmune and IsPassiveSkill("Env_Weapon_4_A")
+                local envImmune = not mission.NoEnvImmune and IsPassiveSkill("EnvWeapon4_A")
                 local qpawns = env.EnvLockPawns and env.EnvLockPawns[turn] or {}
                 if #qpawns > 0 then
                     fx:AddDelay(0.8) -- 加点延时，否则可能在环境击杀敌人前就执行
@@ -591,7 +591,7 @@ local function AdjustEnv(mission)
             -- 多次执行，返回 true 表示需继续执行，返回 false 表示执行完毕
             local _ApplyEffect = env.ApplyEffect
             function env:ApplyEffect(...)
-                if IsPassiveSkill("Env_Weapon_4") then
+                if IsPassiveSkill("EnvWeapon4") then
                     local turn = Game:GetTurnCount()
                     if not env.EnvLockPawns then
                         env.EnvLockPawns = {}
@@ -609,7 +609,7 @@ local function AdjustEnv(mission)
                     end
 
                     if mission.MasteredEnv or (self.Locations and #self.Locations > 0 and not mission.SpecialEnv) then
-                        local envImmune = not mission.NoEnvImmune and IsPassiveSkill("Env_Weapon_4_A")
+                        local envImmune = not mission.NoEnvImmune and IsPassiveSkill("EnvWeapon4_A")
                         local psions = {} -- 原版游戏中不可能出现多只水母，但鬼知道其他 MOD 会不会改
                         for i, location in ipairs(self.Locations) do
                             local pawn = Board:GetPawn(location)
@@ -709,7 +709,7 @@ function this:Load()
     -- 没有对应真正意义上的“关卡开始”钩子，只能用 NextTurnHook 来顶替
     modApi:addNextTurnHook(function(mission)
         -- 添加人造环境，不需要添加到继续游戏的 Hook 中，设置了 Environment 后会自动加载
-        if IsPassiveSkill("Env_Weapon_4") or tool:WeaponExists("Env_Weapon_2") then
+        if IsPassiveSkill("EnvWeapon4") or tool:WeaponExists("EnvWeapon2") then
             if not mission.Env_Init then
                 EnvArtificialInit(mission)
                 if not mission.NoOverlayEnv then
@@ -725,7 +725,7 @@ function this:Load()
     end)
     modApi:addPostLoadGameHook(function() -- 继续游戏
         modApi:runLater(function(mission)
-            if IsPassiveSkill("Env_Weapon_4") or tool:WeaponExists("Env_Weapon_2") then
+            if IsPassiveSkill("EnvWeapon4") or tool:WeaponExists("EnvWeapon2") then
                 if mission.Env_Init and not mission.NoOverlayEnv then
                     AdjustEnv(mission)
                 end
