@@ -258,27 +258,11 @@ end
 
 -- 获取环境被动升级区域数值
 function this:GetEnvArtificialUpgradeAreaValue()
-    -- local sector = GetSector() or 0
-    -- if sector < 0 then
-    --     sector = 0
-    -- elseif sector > 4 then
-    --     sector = 4
-    -- end
-    -- local values = {0, 1, 1, 1}
-    -- return values[sector]
     return 2
 end
 
 -- 获取环境被动升级伤害数值
 function this:GetEnvArtificialUpgradeDamageValue()
-    -- local sector = GetSector() or 0
-    -- if sector < 0 then
-    --     sector = 0
-    -- elseif sector > 4 then
-    --     sector = 4
-    -- end
-    -- local values = {0, 0, 1, 1}
-    -- return values[sector]
     return 1
 end
 
@@ -289,9 +273,6 @@ function this:GetEnvArtificialDamage(env)
     if IsPassiveSkill("EnvWeapon4_B") or IsPassiveSkill("EnvWeapon4_AB") then
         damage = damage + self:GetEnvArtificialUpgradeDamageValue()
     end
-    -- if pawn and _G[pawn:GetType()].Health > 4 then
-    --     damage = damage + 1
-    -- end
     return damage
 end
 

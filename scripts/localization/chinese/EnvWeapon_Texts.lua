@@ -21,9 +21,9 @@ return {
     EnvWeapon3_B_UpgradeDescription = "射程加 1。",
     
     EnvWeapon4_Name = "环境加载器",
-    EnvWeapon4_Description = "加载人造环境并增强已有环境。尽可能优先激活锁定灵虫的环境，并尝试终止激活方格内单位的行动。大部分单位都能察觉到危险并避开，但灵虫等部分单位反而会被吸引住并试图靠近。",
+    EnvWeapon4_Description = "加载人造环境并增强已有环境。尽可能优先激活锁定灵虫的环境，并尝试终止激活方格内单位的行动。",
     EnvWeapon4_Upgrade1 = "限制器",
     EnvWeapon4_Upgrade2 = "放大器",
     EnvWeapon4_A_UpgradeDescription = "尝试阻止锁定友方单位及建筑的环境被激活。",
-    EnvWeapon4_B_UpgradeDescription = "人造环境额外造成 1 伤害，非人造环境额外锁定 2 方格。"
+    EnvWeapon4_B_UpgradeDescription = "人造环境额外造成 1 伤害，其他环境额外锁定 2 方格。"
 }

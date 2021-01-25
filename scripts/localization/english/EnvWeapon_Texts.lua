@@ -21,9 +21,9 @@ return {
     EnvWeapon3_B_UpgradeDescription = "Increase range by 1.",
 
     EnvWeapon4_Name = "EnvLoader",
-    EnvWeapon4_Description = "Load Artificial Environment and enhance existing Environment. Prioritize Environment activation on Psion tiles whenever possible, and try to terminate unit actions on activated tiles. Most units can detect danger and avoid it, but some units such as Psions will instead be attracted to it and try to approach.",
+    EnvWeapon4_Description = "Load Artificial Environment and enhance existing Environment. Prioritize Environment activation on Psion tiles whenever possible, and try to terminate unit actions on activated tiles.",
     EnvWeapon4_Upgrade1 = "Limiter",
     EnvWeapon4_Upgrade2 = "Amplifier",
     EnvWeapon4_A_UpgradeDescription = "Try to prevent Environment activation on friendly unit tiles and building tiles.",
-    EnvWeapon4_B_UpgradeDescription = "Artificial Environment deals 1 more damage, and Non-Artificial Environments lock on 2 more tiles."
+    EnvWeapon4_B_UpgradeDescription = "Artificial Environment deals 1 more damage, and other Environments lock on 2 more tiles."
 }

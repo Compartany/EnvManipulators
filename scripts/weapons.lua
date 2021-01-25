@@ -797,8 +797,8 @@ EnvWeapon4_AB = EnvWeapon4:new{
     Passive = "EnvWeapon4_AB",
     EnvImmune = true,
     Enhanced = true,
-    TipImage = EnvWeapon4_A.TipImage,
-    Damage = 5
+    Damage = 5,
+    TipImage = EnvWeapon4_A.TipImage
 }
 
 -- 使用提示效果，用假方格模拟环境锁定
@@ -809,6 +809,7 @@ function EnvWeapon4:GetSkillEffect(p1, p2)
     Board:SetCustomTile(Point(3, 2), "ground_0.png")
     Board:SetCustomTile(Point(4, 4), "ground_0.png")
 
+    local tipDamage = self.Damage
     local planned = {Point(1, 1), Point(2, 4), Point(3, 2), Point(4, 4)}
     local bounceAmount = 10
     local point = Point(2, 3)
@@ -861,14 +862,14 @@ function EnvWeapon4:GetSkillEffect(p1, p2)
     ret:AddSound("/impact/generic/explosion_large")
     for _, location in ipairs(planned) do
         if not self.EnvImmune or location ~= Point(3, 2) then -- TipImage 中 PawnTeam 不是 TEAM_PLAYER，只能写死判断
-            damage = SpaceDamage(location, self.Damage)
+            damage = SpaceDamage(location, tipDamage)
             damage.sAnimation = "EnvArtificial_Animation" .. random_int(2)
             damage.bHide = true
             ret:AddDamage(damage)
         end
         ret:AddScript([[Board:SetCustomTile(]] .. location:GetString() .. [[, "ground_0.png")]])
     end
-    if self.Damage < 5 then -- Alert 就不加了，TipImage 太小加了也看不见
+    if tipDamage < 5 then -- Alert 就不加了，TipImage 太小加了也看不见
         ret:AddScript([[Board:Ping(Point(1, 1), ENV_GLOBAL.themeColor)]])
     end
     ret:AddDelay(1.2)
