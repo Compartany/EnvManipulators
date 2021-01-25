@@ -1,13 +1,5 @@
 local mod = mod_loader.mods[modApi.currentMod]
 local tool = mod.tool
-local pawnMap = tool:GetMap("pawnMap")
-
--- 这种判断方式具有延时性，Hook 进入时无法判断是否获取到最新数据，故无法靠 TMS Hook 来解决
--- 当然可以在 UpdateSaveData Hook 中处理，但 UpdateSaveData 非常频繁，属实没有必要，每次都算一遍反而更优
-local function IsEnvWeapon1_B_TMS(pawn)
-    local wp1 = tool:GetWeapon("Env_Weapon_1")
-    return (wp1 == "B" or wp1 == "AB") and tool:HasWeapon(pawn, "Env_Weapon_1")
-end
 
 function BoardPawn:IsEnvHeavy()
     return _G[self:GetType()].EnvHeavy
@@ -18,12 +10,7 @@ function BoardPawn:GetBasicMoveSpeed()
 end
 
 function BoardPawn:IsEnvJumpMove()
-    -- jumper 也得处理
-    if IsTestMechScenario() then
-        return IsEnvWeapon1_B_TMS(self)
-    else
-        return pawnMap:Get(self:GetId(), "JumpMove")
-    end
+    return tool:HasWeapon(self, "Env_Weapon_1_B") or tool:HasWeapon(self, "Env_Weapon_1_AB")
 end
 
 function BoardPawn:IsEnvOverloadActive()

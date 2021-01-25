@@ -1,6 +1,5 @@
 local mod = mod_loader.mods[modApi.currentMod]
 local tool = mod.tool
-local pawnMap = tool:GetMap("pawnMap")
 
 ------------------
 -- Env_Weapon_1 --
@@ -403,74 +402,72 @@ function Move:GetTargetArea(point, ...)
 end
 local _Move_GetSkillEffect = Move.GetSkillEffect
 function Move:GetSkillEffect(p1, p2, ...)
-    if tool:HasWeapon(Pawn, "Env_Weapon_1") then
-        if Pawn:IsEnvJumpMove() and (Pawn:IsFlying() or Board:GetTerrain(p1) ~= TERRAIN_WATER) and
-            (Pawn:IsIgnoreSmoke() or not Board:IsSmoke(p1)) then
-            local needJump = true
-            local speed = nil
-            if Pawn:IsAbility("Shifty") and Pawn:GetMoveSpeed() == 1 then
-                speed = 1
-            elseif Pawn:IsEnvHeavy() then
-                speed = Pawn:GetBasicMoveSpeed()
-            else
-                speed = Pawn:GetMoveSpeed()
+    if Pawn:IsEnvJumpMove() and (Pawn:IsFlying() or Board:GetTerrain(p1) ~= TERRAIN_WATER) and
+        (Pawn:IsIgnoreSmoke() or not Board:IsSmoke(p1)) then
+        local needJump = true
+        local speed = nil
+        if Pawn:IsAbility("Shifty") and Pawn:GetMoveSpeed() == 1 then
+            speed = 1
+        elseif Pawn:IsEnvHeavy() then
+            speed = Pawn:GetBasicMoveSpeed()
+        else
+            speed = Pawn:GetMoveSpeed()
+        end
+        local groundReachable = Board:GetReachable(p1, speed, Pawn:GetPathProf())
+        for _, point in ipairs(extract_table(groundReachable)) do
+            if p2 == point then
+                needJump = false
+                break
             end
-            local groundReachable = Board:GetReachable(p1, speed, Pawn:GetPathProf())
-            for _, point in ipairs(extract_table(groundReachable)) do
-                if p2 == point then
-                    needJump = false
-                    break
-                end
-            end
-            local ret = SkillEffect()
-            if needJump then -- 会飞的时候也进不来
-                -- 默认的跳跃处理无特效
-                local move = PointList()
-                ret:AddSound("/weapons/leap")
-                move:push_back(p1)
-                move:push_back(p2)
-                ret:AddBurst(p1, "Emitter_Burst_$tile", DIR_NONE)
-                ret:AddLeap(move, FULL_DELAY)
-                ret:AddBurst(p2, "Emitter_Burst_$tile", DIR_NONE)
+        end
+        local ret = SkillEffect()
+        if needJump then -- 会飞的时候也进不来
+            -- 默认的跳跃处理无特效
+            local move = PointList()
+            ret:AddSound("/weapons/leap")
+            move:push_back(p1)
+            move:push_back(p2)
+            ret:AddBurst(p1, "Emitter_Burst_$tile", DIR_NONE)
+            ret:AddLeap(move, FULL_DELAY)
+            ret:AddBurst(p2, "Emitter_Burst_$tile", DIR_NONE)
 
-                for i = DIR_START, DIR_END do
-                    local damage = SpaceDamage(p2 + DIR_VECTORS[i], 0)
-                    damage.sAnimation = PUSH_ANIMS[i]
-                    ret:AddDamage(damage)
+            for i = DIR_START, DIR_END do
+                local damage = SpaceDamage(p2 + DIR_VECTORS[i], 0)
+                damage.sAnimation = PUSH_ANIMS[i]
+                ret:AddDamage(damage)
+            end
+            local forceAcid = false
+            if Board:IsAcid(p2) then
+                if not Pawn:IsFlying() or Board:GetTerrain(p2) ~= TERRAIN_WATER then
+                    forceAcid = true
                 end
-                local forceAcid = false
-                if Board:IsAcid(p2) then
-                    if not Pawn:IsFlying() or Board:GetTerrain(p2) ~= TERRAIN_WATER then
-                        forceAcid = true
-                    end
+            end
+            ret:AddDamage(tool:OverloadDamage(1, p2, p1, forceAcid))
+            ret:AddScript(string.format([[
+                local pawn = Board:GetPawn(%d)
+                local hp = pawn:GetHealth()
+                if hp > 1 then
+                    Game:TriggerSound("/ui/battle/critical_damage")
                 end
-                ret:AddDamage(tool:OverloadDamage(1, p2, p1, forceAcid))
+            ]], Pawn:GetId()))
+            ret:AddSound("/impact/generic/mech")
+            ret:AddBounce(p2, 3)
+        else
+            ret = _Move_GetSkillEffect(self, p1, p2, ...)
+        end
+        if Pawn:IsAbility("Shifty") or Pawn:IsAbility("Post_Move") then
+            if Pawn:IsActive() then
+                ret:AddDelay(0.2)
                 ret:AddScript(string.format([[
-                    local pawn = Board:GetPawn(%d)
-                    local hp = pawn:GetHealth()
-                    if hp > 1 then
-                        Game:TriggerSound("/ui/battle/critical_damage")
+                    local id = %d
+                    local pawn = Board:GetPawn(id)
+                    if pawn then
+                        pawn:SetActive(true)
                     end
                 ]], Pawn:GetId()))
-                ret:AddSound("/impact/generic/mech")
-                ret:AddBounce(p2, 3)
-            else
-                ret = _Move_GetSkillEffect(self, p1, p2, ...)
             end
-            if Pawn:IsAbility("Shifty") or Pawn:IsAbility("Post_Move") then
-                if Pawn:IsActive() then
-                    ret:AddDelay(0.2)
-                    ret:AddScript(string.format([[
-                        local id = %d
-                        local pawn = Board:GetPawn(id)
-                        if pawn then
-                            pawn:SetActive(true)
-                        end
-                    ]], Pawn:GetId()))
-                end
-            end
-            return ret
         end
+        return ret
     end
     return _Move_GetSkillEffect(self, p1, p2, ...)
 end
@@ -910,42 +907,10 @@ function Env_Weapon_4:GetSkillEffect(p1, p2)
     return ret
 end
 
-local function initMissionWeapon(mission)
-    pawnMap:Clear()
-    local wp1 = tool:GetWeapon("Env_Weapon_1")
-    if wp1 == "B" or wp1 == "AB" then
-        local pawns = extract_table(Board:GetPawns(TEAM_MECH))
-        for _, id in ipairs(pawns) do
-            local pawn = Board:GetPawn(id)
-            if tool:HasWeapon(pawn, "Env_Weapon_1") then
-                pawnMap:Set(id, "JumpMove", true)
-                break -- 自定义中有同名机甲时可能会出错，干脆禁止玩家从中获利，不要让多个机甲获得加成
-            end
-        end
-    end
-    mission.EnvWeapon_Init = true
-end
-
 local Weapons = {}
 function Weapons:Load()
     Global_Texts.EnvArtificialDisabled_Title = EnvWeapon_Texts.Env_Weapon_4_Name
     Global_Texts.EnvArtificialDisabled_Text = EnvMod_Texts.envArtificial_disabled
-
-    modApi:addNextTurnHook(function(mission)
-        if not mission.EnvWeapon_Init then
-            initMissionWeapon(mission)
-        end
-    end)
-    modApi:addPostLoadGameHook(function() -- 继续游戏
-        modApi:runLater(function(mission)
-            -- 有时候尽管关卡也会执行该 Hook，更糟糕的是此时获取到的 GameData 中数据不是最新的，不能用
-            -- 总之，等 NextTurn Hook 处理过一遍后再来
-            -- 以后，只要是继续游戏，GameData 就必然是最新的
-            if mission.EnvWeapon_Init then
-                initMissionWeapon(mission)
-            end
-        end)
-    end)
 
     env_modApiExt:addSkillBuildHook(function(mission, pawn, weaponId, p1, p2, skillFx)
         if weaponId ~= "Move" and pawn and pawn:IsEnvOverloadActive() then

@@ -168,7 +168,7 @@ function this:Load()
     end
 
     modApi:addNextTurnHook(function(mission)
-        if IsPassiveSkill("Env_Weapon_4") or tool:GetWeapon("Env_Weapon_2") then
+        if IsPassiveSkill("Env_Weapon_4") or tool:WeaponExists("Env_Weapon_2") then
             if Game:GetTeamTurn() == TEAM_ENEMY then -- 敌人回合开始时清信息
                 mission.EnvArtificialGenerated = {}
             end

@@ -1,37 +1,5 @@
 local this = {}
 
-local Map = {
-    T = {}
-}
-function Map:new()
-    local o = {}
-    setmetatable(o, self)
-    self.__index = self
-    return o
-end
-function Map:Clear()
-    self.T = {}
-end
-function Map:Set(id, key, val)
-    if not self.T[id] then
-        self.T[id] = {}
-    end
-    self.T[id][key] = val
-end
-function Map:Get(id, key)
-    return self.T[id] and self.T[id][key]
-end
-this.Map = Map
-this._maps = {}
-
--- 获取 Map
-function this:GetMap(key)
-    if not this._maps[key] then
-        this._maps[key] = this.Map:new()
-    end
-    return this._maps[key]
-end
-
 -- 判断是否为环境操纵者小队
 function this:IsSquad()
     local squad = GAME.squadTitles["TipTitle_" .. GameData.ach_info.squad]
@@ -60,65 +28,30 @@ function this:ExtractWeapon(weapon)
     return name, upgrade
 end
 
--- 判断机甲是否有装备
--- 自定义中有同名机甲时，判断会出错。
--- 且由于 GameData 数据具有延后性，更换装备到其他机甲上后，不能立即获得正确的最新位置，正常情况下还是可能出错。
-function this:HasWeapon(pawn, weapon)
+-- 判断单位是否指定装备装备（可判断升级情况）
+function this:HasWeapon(pawn, name)
     if pawn then
-        local pt = pawn:GetPawnTable()
-        if pt.id then
-            return pt and pt.primary == weapon or pt.secondary == weapon
-        elseif GameData and GameData.current and GameData.current.mechs then
-            -- 任何情况下都可使用，但有延时性
-            local wpNo = self:GetWeaponNo(weapon)
-            if wpNo then
-                local mechNo = math.ceil(wpNo / 2)
-                local mech = GameData.current.mechs[mechNo]
-                return mech == pawn:GetType() -- 自定义中有同名机甲时，判断会出错
+        local weapons = env_modApiExt.pawn:getWeapons(pawn:GetId())
+        for _, weapon in ipairs(weapons) do
+            if weapon == name then
+                return true
             end
         end
     end
     return false
 end
 
--- 获得机甲序号
-function this:GetMechNo(name)
-    if GameData and GameData.current and GameData.current.mechs then
-        for i, mech in ipairs(GameData.current.mechs) do
-            if mech == name then
-                return i
-            end
-        end
-    end
-    return nil
-end
-
--- 获得装备序号
-function this:GetWeaponNo(name)
-    if GameData and GameData.current and GameData.current.weapons then
-        for i, weapon in ipairs(GameData.current.weapons) do
-            if modApi:stringStartsWith(weapon, name) then
-                if #weapon - #name <= 3 then
-                    return i
-                end
-            end
-        end
-    end
-    return nil
-end
-
--- 判断指定装备是否生效，也可活动装备的升级状态
--- 被动可用 IsPassiveSkill() 检测，同样可判断装备升级状态
-function this:GetWeapon(name)
+-- 判断装备是否存在（不可判断升级情况）
+function this:WeaponExists(name)
     if GameData and GameData.current and GameData.current.weapons then
         for _, weapon in ipairs(GameData.current.weapons) do
             local wp, u = this:ExtractWeapon(weapon)
             if wp == name then
-                return u
+                return true
             end
         end
     end
-    return nil
+    return false
 end
 
 -- 判断方格是否在集合内
