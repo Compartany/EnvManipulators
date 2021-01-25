@@ -1,6 +1,6 @@
 
 ---------------------------------------------------------------------
--- Trait v1.1 - code library
+-- Trait v1.2 - code library
 ---------------------------------------------------------------------
 -- add a trait description and icon to the tooltip of a unit type.
 -- max one per unit type, and should only be used for unit types created
@@ -10,11 +10,12 @@
 -- traits from other mods.
 --
 -- v1.1: streamlined and removed functionality that was beyond scope (tutorial tips).
+-- v1.2: removed getModUtils lib dependency.
 
 local mod = mod_loader.mods[modApi.currentMod]
 local path = mod.resourcePath
 local module_id = mod.id .."_trait"
-local getModUtils = require(path .."scripts/libs/getModUtils")
+local modUtils = require(path .."scripts/modApiExt/modApiExt")
 local traits = {
 	--[[
 	[pawnType] = {
@@ -104,7 +105,6 @@ end
 
 -- updates a tile with the correct trait icon.
 local function updateTile(p)
-
 	local pawn = Board:GetPawn(p)
 	local pid = p2idx(p)
 	local current = icons[pid]
@@ -188,8 +188,6 @@ end
 sdlext.addGameExitedHook(untrackPawns)
 
 function this:load()
-	local modUtils = getModUtils()
-	
 	modApi:addTestMechEnteredHook(trackPawns)
 	modApi:addTestMechExitedHook(untrackPawns)
 	modApi:addMissionEndHook(untrackPawns)

@@ -28,12 +28,14 @@ function this:ExtractWeapon(weapon)
     return name, upgrade
 end
 
--- 判断单位是否指定装备装备（可判断升级情况）
-function this:HasWeapon(pawn, name)
+-- 判断单位是否有指定装备（可判断升级情况）
+function this:HasWeapon(pawn, name, upgradeCheck)
+    upgradeCheck = upgradeCheck or false
     if pawn then
         local weapons = env_modApiExt.pawn:getWeapons(pawn:GetId())
         for _, weapon in ipairs(weapons) do
-            if weapon == name then
+            local wp = upgradeCheck and weapon or self:ExtractWeapon(weapon)
+            if wp == name then
                 return true
             end
         end
@@ -120,7 +122,7 @@ function this:EnvArtificialGenerate(planned, overlay)
                 Board:AddEffect(fx)
                 break -- 多个环境被动会被游戏禁止，不用考虑这种问题
             else
-                Game:AddTip("EnvArtificialDisabled", point)
+                Board:AddAlert(point, EnvMod_Texts.envArtificial_disabled)
             end
         end
     end
@@ -179,7 +181,7 @@ local allySpaceColors = {GL_Color(50, 200, 50, 0.75), GL_Color(20, 200, 20, 0.75
 function this:MarkAllySpace(location, active, env)
     local icon = (env and (env:GetEnvImageMark() or env.CombatIcon)) or allySpaceIcon
     Board:MarkSpaceImage(location, icon, active and allySpaceColors[2] or allySpaceColors[1])
-    Board:MarkSpaceDesc(location, "passive0", false)
+    Board:MarkSpaceDesc(location, "artificial0", false)
 end
 
 -- 在每个象限非边缘处取方格组成 4 个集合，按一、二、三、四象限顺序返回
@@ -418,6 +420,15 @@ function this:IsGroundReflective(space)
         return true
     end
     return Game and Game:GetCorp() and Game:GetCorp().bark_name == "Corp_Snow_Bark"
+end
+
+-- 判断是否为地雷
+function this:IsMine(space)
+    if space then
+        local entry = env_modApiExt.board:getTileTable(space)
+        return entry and entry.item == "Item_Mine"
+    end
+    return false
 end
 
 -- 判断是否为冰雷

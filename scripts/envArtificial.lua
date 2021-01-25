@@ -4,11 +4,7 @@ local tool = mod.tool
 -- 默认环境
 EnvArtificial = Env_Attack:new{
     Image = "env_airstrike",
-    Name = EnvMod_Texts.envArtificial_name, -- ?
-    Text = EnvMod_Texts.envArtificial_basic_description,
-    StratText = EnvMod_Texts.envArtificial_name, -- 警告名称
     CombatIcon = "combat/tile_icon/tile_artificial.png",
-    CombatName = EnvMod_Texts.envArtificial_name, -- 关卡内显示的名称
     BaseArea = EnvWeapon4.BaseArea, -- 基础锁定数
     BaseDamage = EnvWeapon4.BaseDamage, -- 基础伤害
     IsOverlay = false -- 是否为叠加环境
@@ -41,14 +37,14 @@ function this:MarkSpace(space, active)
         colors = {GL_Color(255, 226, 88, 0.75), GL_Color(255, 150, 150, 0.75)}
     end
     if envImmune and tool:IsEnvImmuneProtected(space, true) then
-        tooltip = "passive0"
+        tooltip = "artificial0"
         deadly = false
         colors[1] = GL_Color(50, 200, 50, 0.75)
         colors[2] = GL_Color(20, 200, 20, 0.75)
     else
         local pawn = Board:GetPawn(space)
         local damage = tool:GetEnvArtificialDamage(self)
-        tooltip = "passive" .. damage
+        tooltip = "artificial" .. damage
         if pawn then
             if pawn:IsShield() or pawn:IsFrozen() then
                 deadly = false
@@ -160,13 +156,6 @@ function this:SelectSpaces()
 end
 
 function this:Load()
-    TILE_TOOLTIPS.passive0 = {EnvWeapon_Texts.EnvWeapon4_Name .. " - " .. EnvWeapon_Texts.EnvWeapon4_Upgrade1,
-                              EnvWeapon_Texts.EnvWeapon4_A_UpgradeDescription}
-    for damage = 1, 6 do -- 为了方便日后修改，还是将伤害从 1 到 6 全弄出 tooltip 来
-        TILE_TOOLTIPS["passive" .. damage] = {EnvMod_Texts.envArtificial_name,
-                                              string.format(EnvMod_Texts.envArtificial_description, damage)}
-    end
-
     modApi:addNextTurnHook(function(mission)
         if IsPassiveSkill("EnvWeapon4") or tool:WeaponExists("EnvWeapon2") then
             if Game:GetTeamTurn() == TEAM_ENEMY then -- 敌人回合开始时清信息

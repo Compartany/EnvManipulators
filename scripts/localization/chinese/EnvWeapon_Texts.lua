@@ -1,4 +1,4 @@
-EnvWeapon_Texts = {
+return {
     EnvWeapon1_Name = "移位装置",
     EnvWeapon1_Description = "移动物体至两侧方格，并将自身负面状态转移至物体上。存在多个物体时优先执行逆时针方向的推移。",
     EnvWeapon1_Upgrade1 = "牵引",

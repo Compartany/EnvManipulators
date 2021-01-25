@@ -1,4 +1,4 @@
-EnvWeapon_Texts = {
+return {
     EnvWeapon1_Name = "Shifter",
     EnvWeapon1_Description = "Shift object to a side tile and transfer own debuffs to object. Prioritize CCW push when multiple objects exist.",
     EnvWeapon1_Upgrade1 = "Pull",

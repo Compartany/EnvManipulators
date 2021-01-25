@@ -2,8 +2,6 @@ local mod = mod_loader.mods[modApi.currentMod]
 local tool = mod.tool
 
 EnvWeapon1 = Skill:new{
-    Name = EnvWeapon_Texts.EnvWeapon1_Name,
-    Description = EnvWeapon_Texts.EnvWeapon1_Description,
     Class = "Prime",
     Icon = "weapons/EnvWeapon1.png",
     Damage = 0,
@@ -13,7 +11,6 @@ EnvWeapon1 = Skill:new{
     PowerCost = 0,
     Upgrades = 2,
     UpgradeCost = {2, 3},
-    UpgradeList = {EnvWeapon_Texts.EnvWeapon1_Upgrade1, EnvWeapon_Texts.EnvWeapon1_Upgrade2},
     TipImage = {
         Unit = Point(2, 2),
         Enemy = Point(2, 1),
@@ -24,7 +21,6 @@ EnvWeapon1 = Skill:new{
 }
 
 EnvWeapon1_A = EnvWeapon1:new{
-    UpgradeDescription = EnvWeapon_Texts.EnvWeapon1_A_UpgradeDescription,
     Pull = true,
     TipImage = {
         Unit = Point(2, 2),
@@ -35,7 +31,6 @@ EnvWeapon1_A = EnvWeapon1:new{
 }
 
 EnvWeapon1_B = EnvWeapon1:new{
-    UpgradeDescription = EnvWeapon_Texts.EnvWeapon1_B_UpgradeDescription,
     Overload = true,
     TipImage = {
         Unit = Point(2, 4),
@@ -470,8 +465,6 @@ function Move:GetSkillEffect(p1, p2, ...)
 end
 
 EnvWeapon2 = LineArtillery:new{
-    Name = EnvWeapon_Texts.EnvWeapon2_Name,
-    Description = EnvWeapon_Texts.EnvWeapon2_Description,
     Class = "Ranged",
     Icon = "weapons/EnvWeapon2.png",
     Chain1 = false,
@@ -481,7 +474,6 @@ EnvWeapon2 = LineArtillery:new{
     Range = 7,
     Upgrades = 2,
     UpgradeCost = {2, 2},
-    UpgradeList = {EnvWeapon_Texts.EnvWeapon2_Upgrade1, EnvWeapon_Texts.EnvWeapon2_Upgrade2},
     LaunchSound = "/weapons/gravwell",
     ImpactSound = "/impact/generic/explosion",
     TipImage = {
@@ -493,7 +485,6 @@ EnvWeapon2 = LineArtillery:new{
 }
 
 EnvWeapon2_A = EnvWeapon2:new{
-    UpgradeDescription = EnvWeapon_Texts.EnvWeapon2_A_UpgradeDescription,
     Chain1 = true,
     TipImage = {
         Unit = Point(2, 4),
@@ -505,7 +496,6 @@ EnvWeapon2_A = EnvWeapon2:new{
 }
 
 EnvWeapon2_B = EnvWeapon2:new{
-    UpgradeDescription = EnvWeapon_Texts.EnvWeapon2_B_UpgradeDescription,
     Chain2 = true,
     TipImage = {
         Unit = Point(2, 4),
@@ -650,8 +640,6 @@ function EnvWeapon2:GetSkillEffect_TipImage()
 end
 
 EnvWeapon3 = Skill:new{
-    Name = EnvWeapon_Texts.EnvWeapon3_Name,
-    Description = EnvWeapon_Texts.EnvWeapon3_Description,
     Class = "Science",
     Icon = "weapons/EnvWeapon3.png",
     Range = 3,
@@ -659,7 +647,6 @@ EnvWeapon3 = Skill:new{
     PowerCost = 1,
     Upgrades = 2,
     UpgradeCost = {1, 3},
-    UpgradeList = {EnvWeapon_Texts.EnvWeapon3_Upgrade1, EnvWeapon_Texts.EnvWeapon3_Upgrade2},
     LaunchSound = "/weapons/enhanced_tractor",
     ImpactSound = "/impact/generic/tractor_beam",
     TipImage = {
@@ -671,7 +658,6 @@ EnvWeapon3 = Skill:new{
 }
 
 EnvWeapon3_A = EnvWeapon3:new{
-    UpgradeDescription = EnvWeapon_Texts.EnvWeapon3_A_UpgradeDescription,
     Range = 4,
     TipImage = {
         Unit = Point(2, 4),
@@ -682,7 +668,6 @@ EnvWeapon3_A = EnvWeapon3:new{
 }
 
 EnvWeapon3_B = EnvWeapon3:new{
-    UpgradeDescription = EnvWeapon_Texts.EnvWeapon3_B_UpgradeDescription,
     Range = 4,
     TipImage = {
         Unit = Point(2, 4),
@@ -767,14 +752,11 @@ function EnvWeapon3:GetSkillEffect(p1, p2)
 end
 
 EnvWeapon4 = PassiveSkill:new{
-    Name = EnvWeapon_Texts.EnvWeapon4_Name,
-    Description = EnvWeapon_Texts.EnvWeapon4_Description,
     Passive = "EnvWeapon4",
     Icon = "weapons/EnvWeapon4.png",
     PowerCost = 3,
     Upgrades = 2,
     UpgradeCost = {3, 3},
-    UpgradeList = {EnvWeapon_Texts.EnvWeapon4_Upgrade1, EnvWeapon_Texts.EnvWeapon4_Upgrade2},
     EnvImmune = false,
     BaseArea = 4,
     BaseDamage = 4,
@@ -792,7 +774,6 @@ EnvWeapon4 = PassiveSkill:new{
 }
 
 EnvWeapon4_A = EnvWeapon4:new{
-    UpgradeDescription = EnvWeapon_Texts.EnvWeapon4_A_UpgradeDescription,
     Passive = "EnvWeapon4_A",
     EnvImmune = true,
     TipImage = {
@@ -807,7 +788,6 @@ EnvWeapon4_A = EnvWeapon4:new{
 }
 
 EnvWeapon4_B = EnvWeapon4:new{
-    UpgradeDescription = EnvWeapon_Texts.EnvWeapon4_B_UpgradeDescription,
     Passive = "EnvWeapon4_B",
     Enhanced = true,
     Damage = 5
@@ -897,9 +877,6 @@ end
 
 local Weapons = {}
 function Weapons:Load()
-    Global_Texts.EnvArtificialDisabled_Title = EnvWeapon_Texts.EnvWeapon4_Name
-    Global_Texts.EnvArtificialDisabled_Text = EnvMod_Texts.envArtificial_disabled
-
     env_modApiExt:addSkillBuildHook(function(mission, pawn, weaponId, p1, p2, skillFx)
         if weaponId ~= "Move" and pawn and pawn:IsEnvOverloadActive() then
             if not skillFx.effect:empty() then

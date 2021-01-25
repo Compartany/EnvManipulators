@@ -20,7 +20,6 @@ function mod:init()
     }
 
     self:initLibs()
-    self:initTexts()
     self:initResources()
     self:initScripts()
     self:initOptions()
@@ -37,6 +36,7 @@ function mod:load(options, version)
 end
 
 function mod:loadScripts()
+    self.i18n:Load()
     self.tool:Load()
     self.animations:Load()
     self.pawns:Load()
@@ -59,6 +59,8 @@ end
 
 function mod:initScripts()
     -- 加载的顺序很重要，不要乱调
+    self.i18n = require(self.scriptPath .. "i18n")
+    self.i18n:Init()
     self.tool = require(self.scriptPath .. "tool")
     self.animations = require(self.scriptPath .. "animations")
     self.pawns = require(self.scriptPath .. "pawns")
@@ -67,17 +69,6 @@ function mod:initScripts()
     self.envArtificial = require(self.scriptPath .. "envArtificial")
     self.environment = require(self.scriptPath .. "environment")
     self.missions = require(self.scriptPath .. "missions")
-end
-
-function mod:initTexts()
-    local language = modApi:getLanguageIndex()
-    if language == Languages.Chinese_Simplified then
-        require(self.scriptPath .. "localization/chinese/EnvMod_Texts")
-        require(self.scriptPath .. "localization/chinese/EnvWeapon_Texts")
-    else
-        require(self.scriptPath .. "localization/english/EnvMod_Texts")
-        require(self.scriptPath .. "localization/english/EnvWeapon_Texts")
-    end
 end
 
 function mod:initOptions()

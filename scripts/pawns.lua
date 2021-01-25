@@ -10,7 +10,7 @@ function BoardPawn:GetBasicMoveSpeed()
 end
 
 function BoardPawn:IsEnvJumpMove()
-    return tool:HasWeapon(self, "EnvWeapon1_B") or tool:HasWeapon(self, "EnvWeapon1_AB")
+    return tool:HasWeapon(self, "EnvWeapon1_B", true) or tool:HasWeapon(self, "EnvWeapon1_AB", true)
 end
 
 function BoardPawn:IsEnvOverloadActive()

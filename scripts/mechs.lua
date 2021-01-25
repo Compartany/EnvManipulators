@@ -12,7 +12,6 @@ trait:Add{
 }
 
 EnvMechPrime = Pawn:new{
-    Name = EnvMod_Texts.mech_prime_name,
     Class = "Prime",
     Health = 4,
     MoveSpeed = 4,
@@ -27,7 +26,6 @@ EnvMechPrime = Pawn:new{
 }
 
 EnvMechRanged = Pawn:new{
-    Name = EnvMod_Texts.mech_ranged_name,
     Class = "Ranged",
     Health = 2,
     MoveSpeed = 4,
@@ -42,7 +40,6 @@ EnvMechRanged = Pawn:new{
 }
 
 EnvMechScience = Pawn:new{
-    Name = EnvMod_Texts.mech_science_name,
     Class = "Science",
     Health = 2,
     MoveSpeed = 4,
@@ -70,7 +67,7 @@ end
 local _Move_GetSkillEffect = Move.GetSkillEffect
 function Move:GetSkillEffect(p1, p2, ...)
     local ret = _Move_GetSkillEffect(self, p1, p2, ...)
-    if Pawn:IsEnvHeavy() then
+    if Pawn:IsEnvHeavy() and not ENV_GLOBAL.tool:IsMine(p2) then -- p2 有地雷不作任何处理
         local path = Board:GetPath(p1, p2, Pawn:GetPathProf())
         local pathLength = path:size() - 1 -- 路径长度为途经的点数减 1
         local speed = Pawn:GetBasicMoveSpeed()

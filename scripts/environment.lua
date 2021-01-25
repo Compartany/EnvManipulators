@@ -485,9 +485,8 @@ end
 
 -- 动态地修改环境
 local envBiasMap = {
-    Env_Tides = -2,
-    Env_Cataclysm = -2,
-    Env_Seismic = -1,
+    Env_Tides = -1,
+    Env_Cataclysm = -1,
     Env_SnowStorm = -1
 }
 local function AdjustEnv(mission)
