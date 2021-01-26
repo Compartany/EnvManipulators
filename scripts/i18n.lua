@@ -1,14 +1,21 @@
 local mod = mod_loader.mods[modApi.currentMod]
 local scriptPath = mod.scriptPath
 
-local this = {}
+local this = {
+    FirstLoad = true
+}
 
 local _modApi_loadLanguage = modApi.loadLanguage
 function modApi:loadLanguage(languageIndex, ...)
-    this:LoadText(languageIndex)
-    local ret = _modApi_loadLanguage(self, languageIndex, ...)
-    this:SetText()
-    return ret
+    if this.FirstLoad then
+        this.FirstLoad = false
+        return _modApi_loadLanguage(self, languageIndex, ...)
+    else
+        this:LoadText(languageIndex)
+        local ret = _modApi_loadLanguage(self, languageIndex, ...)
+        this:SetText()
+        return ret
+    end
 end
 
 function this:LoadText(language)
