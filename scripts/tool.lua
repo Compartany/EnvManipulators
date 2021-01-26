@@ -267,11 +267,16 @@ function this:GetEnvArtificialUpgradeDamageValue()
 end
 
 -- 获取环境被动伤害
-function this:GetEnvArtificialDamage(env)
+function this:GetEnvArtificialDamage(env, pawn)
     env = env or EnvArtificial
     local damage = env.BaseDamage
     if IsPassiveSkill("EnvWeapon4_B") or IsPassiveSkill("EnvWeapon4_AB") then
         damage = damage + self:GetEnvArtificialUpgradeDamageValue()
+    end
+    if pawn then
+        if pawn:IsFlying() or pawn:IsGuarding() then
+            damage = damage + 1
+        end
     end
     return damage
 end

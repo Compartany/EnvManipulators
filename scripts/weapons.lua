@@ -10,7 +10,7 @@ EnvWeapon1 = Skill:new{
     Overload = false,
     PowerCost = 0,
     Upgrades = 2,
-    UpgradeCost = {2, 3},
+    UpgradeCost = {1, 3},
     TipImage = {
         Unit = Point(2, 2),
         Enemy = Point(2, 1),
@@ -469,11 +469,11 @@ EnvWeapon2 = LineArtillery:new{
     Icon = "weapons/EnvWeapon2.png",
     Chain1 = false,
     Chain2 = false,
-    PowerCost = 0,
+    PowerCost = 1,
     Damage = 0,
     Range = 7,
     Upgrades = 2,
-    UpgradeCost = {2, 2},
+    UpgradeCost = {1, 1},
     LaunchSound = "/weapons/gravwell",
     ImpactSound = "/impact/generic/explosion",
     TipImage = {
@@ -759,8 +759,9 @@ EnvWeapon4 = PassiveSkill:new{
     UpgradeCost = {3, 3},
     EnvImmune = false,
     BaseArea = 4,
-    BaseDamage = 4,
+    BaseDamage = 3,
     Enhanced = false,
+    MinDamage = 3,
     Damage = 4,
     TipImage = {
         Unit = Point(2, 3),
@@ -790,6 +791,7 @@ EnvWeapon4_A = EnvWeapon4:new{
 EnvWeapon4_B = EnvWeapon4:new{
     Passive = "EnvWeapon4_B",
     Enhanced = true,
+    MinDamage = 4,
     Damage = 5
 }
 
@@ -797,6 +799,7 @@ EnvWeapon4_AB = EnvWeapon4:new{
     Passive = "EnvWeapon4_AB",
     EnvImmune = true,
     Enhanced = true,
+    MinDamage = 4,
     Damage = 5,
     TipImage = EnvWeapon4_A.TipImage
 }
@@ -809,7 +812,7 @@ function EnvWeapon4:GetSkillEffect(p1, p2)
     Board:SetCustomTile(Point(3, 2), "ground_0.png")
     Board:SetCustomTile(Point(4, 4), "ground_0.png")
 
-    local tipDamage = self.Damage
+    local tipDamage = self.MinDamage
     local planned = {Point(1, 1), Point(2, 4), Point(3, 2), Point(4, 4)}
     local bounceAmount = 10
     local point = Point(2, 3)
@@ -883,15 +886,16 @@ function Weapons:Load()
             if not skillFx.effect:empty() then
                 local fx = SkillEffect()
                 local effects = extract_table(skillFx.effect)
-                local damage = tool:OverloadDamage(2, p1)
+                local dmg = 2
+                local damage = tool:OverloadDamage(dmg, p1)
                 local shifter = tool:ExtractWeapon(weaponId) == "EnvWeapon1"
                 local repair = modApi:stringStartsWith(weaponId, "Skill_Repair")
 
-                local dmg = 2
+                local dmg = dmg
                 if pawn:IsShield() then
                     dmg = 0
                 elseif pawn:IsAcid() then
-                    dmg = 4
+                    dmg = dmg * 2
                 end
                 if repair then
                     dmg = dmg - 1

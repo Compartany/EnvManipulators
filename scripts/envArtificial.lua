@@ -43,7 +43,7 @@ function this:MarkSpace(space, active)
         colors[2] = GL_Color(20, 200, 20, 0.75)
     else
         local pawn = Board:GetPawn(space)
-        local damage = tool:GetEnvArtificialDamage(self)
+        local damage = tool:GetEnvArtificialDamage(self, pawn)
         tooltip = "artificial" .. damage
         if pawn then
             if pawn:IsShield() or pawn:IsFrozen() then
@@ -114,7 +114,7 @@ function this:ApplyEffect_Inner(locations, effect)
         effect:AddSound("/impact/generic/explosion_large")
         while #locations > 0 do
             local location = random_removal(locations)
-            local envDamage = tool:GetEnvArtificialDamage(self)
+            local envDamage = tool:GetEnvArtificialDamage(self, Board:GetPawn(location))
             local damage = SpaceDamage(location, envDamage)
             damage.sAnimation = "EnvArtificial_Animation" .. random_int(2)
             effect:AddDamage(damage)
