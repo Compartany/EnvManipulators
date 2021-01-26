@@ -7,15 +7,11 @@ local this = {
 
 local _modApi_loadLanguage = modApi.loadLanguage
 function modApi:loadLanguage(languageIndex, ...)
-    if this.FirstLoad then
-        this.FirstLoad = false
-        return _modApi_loadLanguage(self, languageIndex, ...)
-    else
-        this:LoadText(languageIndex)
-        local ret = _modApi_loadLanguage(self, languageIndex, ...)
-        this:SetText()
-        return ret
-    end
+    -- 尽管首次加载语言时会重复在 Init() 中执行的代码，但这里必须得重复执行，否则其他 MOD 也采用这种方式加载文本时会出错
+    this:LoadText(languageIndex)
+    local ret = _modApi_loadLanguage(self, languageIndex, ...)
+    this:SetText()
+    return ret
 end
 
 function this:LoadText(language)
@@ -49,7 +45,6 @@ end
 
 function this:Init()
     this:LoadText()
-    this:SetText()
 end
 
 function this:Load()
