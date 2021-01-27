@@ -879,8 +879,8 @@ function EnvWeapon4:GetSkillEffect(p1, p2)
     return ret
 end
 
-local Weapons = {}
-function Weapons:Load()
+local this = {}
+function this:Load()
     env_modApiExt:addSkillBuildHook(function(mission, pawn, weaponId, p1, p2, skillFx)
         if weaponId ~= "Move" and pawn and pawn:IsEnvOverloadActive() then
             if not skillFx.effect:empty() then
@@ -939,4 +939,4 @@ function Weapons:Load()
         mission.Overload = nil
     end)
 end
-return Weapons
+return this
