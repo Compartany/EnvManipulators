@@ -882,6 +882,10 @@ end
 local this = {}
 function this:Load()
     env_modApiExt:addSkillBuildHook(function(mission, pawn, weaponId, p1, p2, skillFx)
+        local weapon = _G[weaponId]
+        if weapon and weapon.IsRandomWeapon then
+            return
+        end
         if weaponId ~= "Move" and pawn and pawn:IsEnvOverloadActive() then
             if not skillFx.effect:empty() then
                 local fx = SkillEffect()
@@ -891,7 +895,6 @@ function this:Load()
                 local shifter = tool:ExtractWeapon(weaponId) == "EnvWeapon1"
                 local repair = modApi:stringStartsWith(weaponId, "Skill_Repair")
 
-                local dmg = dmg
                 if pawn:IsShield() then
                     dmg = 0
                 elseif pawn:IsAcid() then
