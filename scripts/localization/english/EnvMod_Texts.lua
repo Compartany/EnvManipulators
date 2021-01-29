@@ -12,5 +12,5 @@ return {
     heavy_description = "Heavy units cannot gain benefit from move bonus, and take 1 damage when running out of movement. But they can convert non-temporary move bonus to Shield.",
     heavy_alert = "Heavy: Move bonus converted to Shield",
     action_terminated = "Action Terminated",
-    add_to_shop = "Add %s to shop."
+    addToShop = "Add %s to shop."
 }

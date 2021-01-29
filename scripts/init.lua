@@ -1,7 +1,7 @@
 local mod = {
     id = "EnvManipulators",
     name = "EnvManipulators",
-    version = "2.2.4.20210128",
+    version = "2.2.5.20210129",
     requirements = {"kf_ModUtils"},
     modApiVersion = "2.5.4",
     icon = "img/icon.png",
@@ -80,7 +80,7 @@ function mod:initOptions()
         self.lib.shop:addWeapon({
             id = weapon,
             name = name,
-            desc = string.format(EnvMod_Texts.add_to_shop, name),
+            desc = string.format(EnvMod_Texts.addToShop, name),
             default = disabled[weapon] and {
                 enabled = false
             } or nil

@@ -12,5 +12,5 @@ return {
     heavy_description = "重型单位无法享受移动力加成，且在移动力耗尽时受到 1 点伤害。但是它们能将非临时移动力加成转化为护盾。",
     heavy_alert = "重型：移动力加成转化为护盾",
     action_terminated = "行动终止",
-    add_to_shop = "添加%s到商店"
+    addToShop = "添加%s到商店"
 }
