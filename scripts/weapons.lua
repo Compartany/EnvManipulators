@@ -448,16 +448,14 @@ function Move:GetSkillEffect(p1, p2, ...)
             ret = _Move_GetSkillEffect(self, p1, p2, ...)
         end
         if Pawn:IsAbility("Shifty") or Pawn:IsAbility("Post_Move") then
-            if Pawn:IsActive() then
-                ret:AddDelay(0.2)
-                ret:AddScript(string.format([[
-                    local id = %d
-                    local pawn = Board:GetPawn(id)
-                    if pawn then
-                        pawn:SetActive(true)
-                    end
-                ]], Pawn:GetId()))
-            end
+            ret:AddDelay(0.2)
+            ret:AddScript(string.format([[
+                local id = %d
+                local pawn = Board:GetPawn(id)
+                if pawn then
+                    pawn:SetActive(true)
+                end
+            ]], Pawn:GetId()))
         end
         return ret
     end

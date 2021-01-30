@@ -44,12 +44,19 @@ function this:HasWeapon(pawn, name, upgradeCheck)
 end
 
 -- 判断装备是否存在（不可判断升级情况）
-function this:WeaponExists(name)
-    if GameData and GameData.current and GameData.current.weapons then
-        for _, weapon in ipairs(GameData.current.weapons) do
-            local wp, u = this:ExtractWeapon(weapon)
-            if wp == name then
-                return true
+function this:WeaponExists(names)
+    if names then
+        if type(names) ~= "table" then
+            names = {names}
+        end
+        if GameData and GameData.current and GameData.current.weapons then
+            for _, weapon in ipairs(GameData.current.weapons) do
+                local wp, u = this:ExtractWeapon(weapon)
+                for _, name in ipairs(names) do
+                    if wp == name then
+                        return true
+                    end
+                end
             end
         end
     end
@@ -64,6 +71,11 @@ function this:IsRepeatedTile(space, repeated)
         end
     end
     return false
+end
+
+-- 判断是否需要初始化环境
+function this:NeedInitEnvironment()
+    return IsPassiveSkill("EnvWeapon4") or self:WeaponExists({"EnvWeapon2", "RndWeaponRanged"})
 end
 
 -- 找出装备环境被动的机甲，添加环境锁定特效

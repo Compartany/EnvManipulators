@@ -1,7 +1,7 @@
 local mod = {
     id = "EnvManipulators",
     name = "EnvManipulators",
-    version = "2.2.5.20210129",
+    version = "2.2.6.20210130",
     requirements = {"kf_ModUtils"},
     modApiVersion = "2.5.4",
     icon = "img/icon.png",

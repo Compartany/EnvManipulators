@@ -490,7 +490,7 @@ local envBiasMap = {
     Env_SnowStorm = -1
 }
 local function AdjustEnv(mission)
-    if IsPassiveSkill("EnvWeapon4") or tool:WeaponExists("EnvWeapon2") then
+    if tool:NeedInitEnvironment() then
         local env = mission.LiveEnvironment
         if env then
             local envBias = envBiasMap[mission.Environment] or 0
@@ -708,7 +708,7 @@ function this:Load()
     -- 没有对应真正意义上的“关卡开始”钩子，只能用 NextTurnHook 来顶替
     modApi:addNextTurnHook(function(mission)
         -- 添加人造环境，不需要添加到继续游戏的 Hook 中，设置了 Environment 后会自动加载
-        if IsPassiveSkill("EnvWeapon4") or tool:WeaponExists("EnvWeapon2") then
+        if tool:NeedInitEnvironment() then
             if not mission.Env_Init then
                 EnvArtificialInit(mission)
                 if not mission.NoOverlayEnv then
@@ -724,7 +724,7 @@ function this:Load()
     end)
     modApi:addPostLoadGameHook(function() -- 继续游戏
         modApi:runLater(function(mission)
-            if IsPassiveSkill("EnvWeapon4") or tool:WeaponExists("EnvWeapon2") then
+            if tool:NeedInitEnvironment() then
                 if mission.Env_Init and not mission.NoOverlayEnv then
                     AdjustEnv(mission)
                 end
