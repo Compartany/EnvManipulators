@@ -58,11 +58,10 @@ function this:LoadText(language)
 end
 
 function this:SetText()
-    for id, text in pairs(EnvWeapon_Texts) do
-        modApi:setText(id, text)
-    end
-    for id, text in pairs(Env_Texts) do
-        modApi:setText(id, text)
+    for _, group in ipairs({Env_Texts, EnvWeapon_Texts}) do
+        for id, text in pairs(group) do
+            modApi:setText(id, text)
+        end
     end
 
     -- for MOD Loader Weapon Deck
@@ -83,11 +82,7 @@ function this:Init()
 end
 
 function this:Load()
-    -- MOD Loader Weapon Deck 识别不出来
-    for _, weapon in ipairs(ENV_GLOBAL.weaponNames) do
-        _G[weapon].Name = EnvWeapon_Texts[weapon .. "_Name"]
-        _G[weapon].Description = EnvWeapon_Texts[weapon .. "_Description"]
-    end
+    -- nothing to do
 end
 
 return this
