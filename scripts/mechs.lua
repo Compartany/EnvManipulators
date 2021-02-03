@@ -76,7 +76,7 @@ function Move:GetSkillEffect(p1, p2, ...)
             damage.sImageMark = "combat/icons/icon_envheavy.png"
             ret:AddDamage(damage)
             local id = Pawn:GetId()
-            local dmg =  1
+            local dmg = 1
             if Pawn:IsArmor() then
                 local acid = Pawn:IsAcid()
                 if not acid then

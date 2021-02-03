@@ -32,7 +32,7 @@ function this:MarkSpace(space, active)
     local deadly = true
     local colors = nil
     if tool:IsGroundReflective(space) then
-        colors = {GL_Color(255, 180, 0 ,0.75), GL_Color(255, 180, 0 ,0.75)}
+        colors = {GL_Color(255, 180, 0, 0.75), GL_Color(255, 180, 0, 0.75)}
     else
         colors = {GL_Color(255, 226, 88, 0.75), GL_Color(255, 150, 150, 0.75)}
     end

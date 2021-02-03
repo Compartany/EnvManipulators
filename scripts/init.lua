@@ -1,7 +1,7 @@
 local mod = {
     id = "EnvManipulators",
     name = "EnvManipulators",
-    version = "2.2.7.20210201",
+    version = "2.2.8.20210203",
     requirements = {"kf_ModUtils"},
     modApiVersion = "2.5.4",
     icon = "img/icon.png",
@@ -14,8 +14,9 @@ function mod:init()
     -- 某些状态需要退出游戏后固化到本地，可以存在 Mission 上
     ENV_GLOBAL = {
         weaponNames = {"EnvWeapon1", "EnvWeapon2", "EnvWeapon3", "EnvWeapon4"},
-        envImageMarks = {"airstrike", "crack", "fireball", "hightide", "lava", "lightning", "rock", "snowstorm",
-        "tentacle"},
+        envImageMarks = {
+            "airstrike", "crack", "fireball", "hightide", "lava", "lightning", "rock", "snowstorm", "tentacle"
+        },
         themeColor = GL_Color(196, 182, 86, 0)
     }
 
@@ -156,11 +157,8 @@ function mod:initResources()
         BodyHighlight = {159, 170, 153} -- 副色     rgb(159, 170, 153)
     })
 
-    require(self.scriptPath .. "libs/FURL")(mod, {{
-        Type = "mech",
+    require(self.scriptPath .. "libs/sprites").addMechs({
         Name = "EnvMechPrime",
-        Filename = "EnvMechPrime",
-        Path = "img/mechs/prime",
         Default = {
             PosX = -19,
             PosY = -13
@@ -184,10 +182,7 @@ function mod:initResources()
         },
         Icon = {}
     }, {
-        Type = "mech",
         Name = "EnvMechRanged",
-        Filename = "EnvMechRanged",
-        Path = "img/mechs/ranged",
         Default = {
             PosX = -19,
             PosY = -7
@@ -211,10 +206,7 @@ function mod:initResources()
         },
         Icon = {}
     }, {
-        Type = "mech",
         Name = "EnvMechScience",
-        Filename = "EnvMechScience",
-        Path = "img/mechs/science",
         Default = {
             PosX = -16,
             PosY = -9
@@ -237,7 +229,7 @@ function mod:initResources()
             PosY = 9
         },
         Icon = {}
-    }})
+    })
 end
 
 return mod

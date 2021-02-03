@@ -12,14 +12,14 @@ return {
     EnvWeapon2_Upgrade2 = "连锁 2",
     EnvWeapon2_A_UpgradeDescription = "若推移目标物体成功，则推移物体最终位置两侧的方格。",
     EnvWeapon2_B_UpgradeDescription = "若推移目标物体失败，则推移目标前后方格。",
-    
+
     EnvWeapon3_Name = "传导脉冲",
     EnvWeapon3_Description = "发射能在物体间传导的推移脉冲。",
     EnvWeapon3_Upgrade1 = "+1 射程",
     EnvWeapon3_Upgrade2 = "+1 射程",
     EnvWeapon3_A_UpgradeDescription = "射程加 1。",
     EnvWeapon3_B_UpgradeDescription = "射程加 1。",
-    
+
     EnvWeapon4_Name = "环境加载器",
     EnvWeapon4_Description = "加载人造环境并增强已有环境。尽可能优先激活锁定灵虫的环境，并尝试终止激活方格内单位的行动。",
     EnvWeapon4_Upgrade1 = "限制器",

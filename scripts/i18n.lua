@@ -46,11 +46,14 @@ function this:LoadText(language)
     EnvWeapon_Texts = require(langPath .. "EnvWeapon_Texts")
     Env_Texts = require(scriptPath .. "localization/Env_Texts")
 
-    TILE_TOOLTIPS.artificial0 = {EnvWeapon_Texts.EnvWeapon4_Name .. " - " .. EnvWeapon_Texts.EnvWeapon4_Upgrade1,
-                                 EnvWeapon_Texts.EnvWeapon4_A_UpgradeDescription}
+    TILE_TOOLTIPS.artificial0 = {
+        EnvWeapon_Texts.EnvWeapon4_Name .. " - " .. EnvWeapon_Texts.EnvWeapon4_Upgrade1,
+        EnvWeapon_Texts.EnvWeapon4_A_UpgradeDescription
+    }
     for damage = 1, 6 do -- 为了方便修改，还是将伤害从 1 到 6 全弄出 tooltip 来
-        TILE_TOOLTIPS["artificial" .. damage] = {EnvMod_Texts.envArtificial_name,
-                                                 string.format(EnvMod_Texts.envArtificial_template_description, damage)}
+        TILE_TOOLTIPS["artificial" .. damage] = {
+            EnvMod_Texts.envArtificial_name, string.format(EnvMod_Texts.envArtificial_template_description, damage)
+        }
     end
 end
 
