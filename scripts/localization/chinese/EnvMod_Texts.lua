@@ -9,7 +9,7 @@ return {
     envArtificial_template_description = "造成 3 点基础伤害。飞行单位和稳如泰山单位额外受到 1 点伤害。（当前：%d）",
     envArtificial_disabled = "环境加载器无法工作",
     heavy_title = "重型",
-    heavy_description = "重型单位无法享受移动力加成，且在移动力耗尽时受到 1 点伤害。但是它们能将非临时移动力加成转化为护盾。",
+    heavy_description = "重型单位无法享受移动力加成，且在移动力耗尽时受到 2 点伤害。但是它们能将非临时移动力加成转化为护盾。",
     heavy_alert = "重型：移动力加成转化为护盾",
     action_terminated = "行动终止",
     addToShop = "添加%s到商店"

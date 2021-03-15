@@ -6,7 +6,7 @@ local colorOffset = palettes.getOffset("envManipulators_palette")
 
 -- 在单位状态上显示“重型”
 trait:Add{
-    PawnTypes = {"EnvMechPrime", "EnvMechRanged"},
+    PawnTypes = {"EnvMechPrime", "EnvMechRanged", "EnvMechScience"},
     Icon = {"img/combat/icons/icon_envheavy.png", Point(0, 0)},
     Description = {EnvMod_Texts.heavy_title, EnvMod_Texts.heavy_description}
 }
@@ -27,7 +27,7 @@ EnvMechPrime = Pawn:new{
 
 EnvMechRanged = Pawn:new{
     Class = "Ranged",
-    Health = 2,
+    Health = 3,
     MoveSpeed = 4,
     Image = "EnvMechRanged",
     ImageOffset = colorOffset,
@@ -50,6 +50,7 @@ EnvMechScience = Pawn:new{
     DefaultTeam = TEAM_PLAYER,
     ImpactMaterial = IMPACT_METAL,
     Massive = true,
+    EnvHeavy = true,
     Flying = true
 }
 
@@ -76,21 +77,20 @@ function Move:GetSkillEffect(p1, p2, ...)
             damage.sImageMark = "combat/icons/icon_envheavy.png"
             ret:AddDamage(damage)
             local id = Pawn:GetId()
-            local dmg = 1
-            if Pawn:IsArmor() then
-                local acid = Pawn:IsAcid()
-                if not acid then
-                    if Board:IsAcid(p2) then
-                        if not Pawn:IsFlying() or Board:GetTerrain(p2) ~= TERRAIN_WATER then
-                            acid = true
-                        end
+            local dmg = 2
+            local acid = Pawn:IsAcid()
+            if not acid then
+                if Board:IsAcid(p2) then
+                    if not Pawn:IsFlying() or Board:GetTerrain(p2) ~= TERRAIN_WATER then
+                        acid = true
                     end
                 end
-                if not acid then
-                    dmg = 2
-                end
             end
-            local trueDmg = (Pawn:IsAcid() or Board:IsAcid(p2)) and 2 or 1
+            if acid then
+                dmg = 1
+            elseif Pawn:IsArmor() then
+                dmg = 3
+            end
             ret:AddScript(string.format([[
                 local pawn = Board:GetPawn(%d)
                 if pawn then
@@ -129,7 +129,7 @@ function Move:GetSkillEffect(p1, p2, ...)
                 end
             ]], id, dmg, p2:GetString()))
             -- 由于伤害在 script 中完成，下一个 script 中获取到 pawn 的生命值来不及更新，只能手动算血线
-            if Pawn:GetHealth() - trueDmg > 1 then
+            if Pawn:GetHealth() > 3 then
                 ret:AddScript([[Game:TriggerSound("/ui/battle/critical_damage")]])
             end
         end
