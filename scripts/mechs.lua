@@ -13,7 +13,7 @@ trait:Add{
 
 EnvMechPrime = Pawn:new{
     Class = "Prime",
-    Health = 5,
+    Health = 4,
     MoveSpeed = 4,
     Image = "EnvMechPrime",
     ImageOffset = colorOffset,
