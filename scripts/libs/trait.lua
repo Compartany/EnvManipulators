@@ -1,219 +1,289 @@
 
+local VERSION = "2.1.0"
 ---------------------------------------------------------------------
--- Trait v1.2 - code library
+-- Trait v2.1.0-cptny-0 - code library
+--
+-- by Lemonymous
+-- modified by Compartany (for removing dependency on LApi)
 ---------------------------------------------------------------------
--- add a trait description and icon to the tooltip of a unit type.
--- max one per unit type, and should only be used for unit types created
--- in your own mod.
+-- Provides functionality to add traits to pawns.
+-- Traits are purely visual - displaying an icon and a description.
+-- Only one trait can be visible on a unit at the same time.
 --
--- trying to give traits to unit types outside of your mod can overwrite
--- traits from other mods.
+--    Requires libraries:
+-- modApiExt
 --
--- v1.1: streamlined and removed functionality that was beyond scope (tutorial tips).
--- v1.2: removed getModUtils lib dependency.
+--    Fetch library:
+-- local trait = require(self.scriptPath..'trait')
+--
+--    Methods:
+-- :add(trait) - adds a trait that will update when pawns change positions.
+--    trait.pilotSkill - trait applies to pawns with this pilotSkill
+--    trait.pawnType - trait applies to pawns with this pawnType
+--    trait.func - trait applies to pawns which this function returns true for
+--    trait.icon - path to icon used in the pilot tooltip; either relative to mod, or path to asset in resource.dat
+--    trait.icon_glow - path to icon used on the Board; either relative to mod, or path to asset in resource.dat
+--    trait.icon_offset
+--    trait.desc_title
+--    trait.desc_text
+-- :update(loc) - manually updates the trait on a location.
+--                Useful for traits that can change without
+--                pawns changing location
+--
+--    Priority order when multiple traits appliest to a pawn:
+-- func > pilotSkill > pawnType
+-- first created > last created
+-- 
 
-local mod = mod_loader.mods[modApi.currentMod]
-local path = mod.resourcePath
-local module_id = mod.id .."_trait"
-local modUtils = require(path .."scripts/modApiExt/modApiExt")
-local traits = {
-	--[[
-	[pawnType] = {
-		id,
-		desc
-	}
-	]]
-}
+local modApiExt = require(mod_loader.mods[modApi.currentMod].scriptPath .. "modApiExt/modApiExt")
 
-local icons = {
-	--[pid] = trait
-}
+local function isManagedTrait(id)
+	local prefix = id:sub(1,5)
+	local number = id:sub(6,-1)
 
-local pawns = {
-	--[pawnId] = {loc}
-}
+	number = tonumber(number)
 
-local this = {}
-local traitCount = 0
-
-local function file_exists(name)
-	local f = io.open(name, "r")
-	if f then io.close(f) return true else return false end
+	return true
+		and prefix == "trait"
+		and number ~= nil
+		and number <= #Traits
 end
 
--- return the description of the trait.
-local oldGetStatusTooltip = GetStatusTooltip
-function GetStatusTooltip(id)
-	for _, trait in pairs(traits) do
-		if id == trait.id then
-			return trait.desc
-		end
-	end
-	
-	return oldGetStatusTooltip(id)
-end
-
-function this:Add(input)
-	local id = module_id .. traitCount
-	local pawnTypes = input.PawnTypes
-	local icon = input.Icon
-	local desc = input.Description
-	
-	assert(type(pawnTypes) == 'table' or type(pawnTypes) == 'string', "must be string or table of strings")
-	assert(type(icon) == 'table' or type(icon) == 'string', "must be string or table of length 2 with string and Point")
-	assert(type(desc) == 'table', "must be table of length 2 with title and text")
-	
-	if type(pawnTypes) ~= 'table' then
-		pawnTypes = {pawnTypes}
-	end
-	
-	if type(icon) ~= 'table' then
-		icon = {icon, Point(0,0)}
-	end
-	
-	for _, pawnType in ipairs(pawnTypes) do
-		traits[pawnType] = {
-			id = id,
-			desc = desc
-		}
-	end
-	
-	local path = "combat/icons/icon_".. id .. ".png"
-	local pathGlow = "combat/icons/icon_".. id .. "_glow.png"
-	local file_icon = icon[1]
-	local file_icon_glow = icon[1]:sub(1, -5) .."_glow.png"
-	local icon_offset = icon[2]
-	local is_vanilla_asset = file_icon:find("^img/")
-	
-	if is_vanilla_asset then
-		modApi:copyAsset(file_icon, "img/".. path)
-		modApi:copyAsset(file_icon_glow, "img/".. pathGlow)
-		Location[pathGlow] = icon_offset
-		
-	else
-		if file_exists(file_icon) then
-			modApi:appendAsset("img/".. path, file_icon)
-			
-		elseif file_exists(file_icon_glow) then
-			modApi:appendAsset("img/".. pathGlow, file_icon_glow)
-			Location[pathGlow] = icon_offset
-		end
-	end
-	
-	traitCount = traitCount + 1
-end
-
--- updates a tile with the correct trait icon.
-local function updateTile(p)
-	local pawn = Board:GetPawn(p)
-	local pid = p2idx(p)
-	local current = icons[pid]
-	
-	if pawn and not pawn:IsDead() then
-		local pawnType = pawn:GetType()
-		local trait = traits[pawnType]
-		
-		if trait then
-			if trait.id ~= current then
-				-- found a trait and it is different than current icon.
-				Board:SetTerrainIcon(p, trait.id)
-				icons[pid] = trait.id
-			end
-			
-			return
-		end
-	end
-	
-	-- icon on tile shouldn't possibly be there.
-	Board:SetTerrainIcon(p, "")
-	icons[pid] = nil
-end
-
--- update any trait icon for a pawn
-local function updatePawn(pawnId)
-	local pawn = Board:GetPawn(pawnId)
-	local tracked = pawns[pawnId]
-	
-	if not tracked then
+local function onModsInitialized()
+	if VERSION < Traits.version then
 		return
 	end
-	
-	updateTile(tracked.loc)
-	
-	if not pawn or pawn:IsDead() then
-		pawns[pawnId] = nil
+
+	if Traits.initialized then
 		return
 	end
-	
-	tracked.loc = pawn:GetSpace()
-	updateTile(tracked.loc)
+
+	Traits:finalizeInit()
+	Traits.initialized = true
 end
 
--- starts tracking a single pawn.
-local function trackPawn(_, pawn)
-	local pawnId = pawn:GetId()
+local function getTraitIcon(loc)
+	local pawn = Board:GetPawn(loc)
+
+	if pawn == nil then
+		return ""
+	end
+
+	for _, customTrait in ipairs(Traits.funcs) do
+		if customTrait:func(pawn) then
+			return customTrait.id
+		end
+	end
+
+	local pilotSkill = pawn:GetPilotSkill()
+	if pilotSkill ~= "" then
+		local pilotTrait = Traits.pilotSkills[pilotSkill]
+		if pilotTrait then
+			return pilotTrait.id
+		end
+	end
+
 	local pawnType = pawn:GetType()
-	
-	if not traits[pawnType] then
-		return
+	local pawnTrait = Traits.pawnTypes[pawnType]
+	if pawnTrait then
+		return pawnTrait.id
 	end
-	
-	pawns[pawnId] = {loc = pawn:GetSpace()}
-	
-	updatePawn(pawnId)
+
+	return ""
 end
 
--- refreshes the whole list of tracked icons.
-local function trackPawns()
-	-- clear tracked icons.
-	for pid, trait in pairs(icons) do
-		local p = idx2p(pid)
-		
-		Board:SetTerrainIcon(p, "")
-	end
-	
-	pawns = {}
-	icons = {}
-	
-	for _, pawnId in ipairs(extract_table(Board:GetPawns(TEAM_ANY))) do
-		trackPawn(_, Board:GetPawn(pawnId))
+local terrainIcons = {}
+local function getTerrainIcon(loc)
+	if Board.GetTerrainIcon then
+		return Board:GetTerrainIcon(loc)
+	else
+		return terrainIcons[p2idx(loc)] or ""
 	end
 end
 
-local function untrackPawns()
-	pawns = {}
-	icons = {}
+local function updateLoc(loc)
+	local traitIcon_new = getTraitIcon(loc)
+	local traitIcon_old = getTerrainIcon(loc)
+
+	local updateIcon = true
+		and traitIcon_old ~= traitIcon_new
+		and isManagedTrait(traitIcon_old)
+		or isManagedTrait(traitIcon_new)
+
+	if updateIcon then
+		terrainIcons[p2idx(loc)] = traitIcon_new
+		Board:SetTerrainIcon(loc, traitIcon_new)
+	end
 end
 
-sdlext.addGameExitedHook(untrackPawns)
+local function updateAll()
+	if not Board then return end
+	local pawns = Board:GetPawns(TEAM_ANY)
+	for i = 1, pawns:size() do
+		local pawnId = pawns:index(i)
+		local pawn = Board:GetPawn(pawnId)
+		local loc = pawn:GetSpace()
+		updateLoc(loc)
+	end
+end
 
-function this:load()
-	modApi:addTestMechEnteredHook(trackPawns)
-	modApi:addTestMechExitedHook(untrackPawns)
-	modApi:addMissionEndHook(untrackPawns)
-	modUtils:addResetTurnHook(function()
-		-- board state is of before reset,
-		-- so wait until it updates.
-		modApi:runLater(trackPawns)
-	end)
-	modUtils:addGameLoadedHook(function(mission)
-		if mission then
-			-- board is not created yet,
-			-- so wait until it updates.
-			modApi:runLater(trackPawns)
+local function updatePawn(mission, pawn)
+	local loc = pawn:GetSpace()
+	updateLoc(loc)
+end
+
+local function pawnMoved(mission, pawn, loc_old)
+	local loc = pawn:GetSpace()
+	updateLoc(loc_old)
+	updateLoc(loc)
+end
+
+local function onModsLoaded()
+	modApiExt:addPawnTrackedHook(updatePawn)
+	modApiExt:addPawnUntrackedHook(updatePawn)
+	modApiExt:addPawnPositionChangedHook(pawnMoved)
+end
+
+local function overrideGetStatusTooltip()
+	local oldGetStatusTooltip = GetStatusTooltip
+	function GetStatusTooltip(id)
+		for _, trait in ipairs(Traits) do
+			if id == trait.id then
+				return {
+					trait.desc_title,
+					trait.desc_text
+				}
+			end
 		end
-	end)
-	modUtils:addPawnTrackedHook(trackPawn)
-	
-	modApi:addMissionUpdateHook(function()
-		-- make a copy so we can remove elements from
-		-- the original list without disturbing the iteration.
-		local pawns = shallow_copy(pawns)
-		
-		for pawnId, tracked in pairs(pawns) do
-			updatePawn(pawnId)
-		end
-	end)
+
+		return oldGetStatusTooltip(id)
+	end
 end
 
-return this
+local function add(self, trait)
+	Assert.ResourceDatIsOpen()
+	Assert.Equals('table', type(trait), "Argument #1")
+	Assert.Equals({'nil', 'string'}, type(trait.icon), "Field 'icon'")
+	Assert.Equals({'nil', 'string'}, type(trait.icon_glow), "Field 'icon_glow'")
+	Assert.Equals({'nil', 'userdata'}, type(trait.icon_offset), "Field 'icon_offset'")
+
+	trait.icon_offset = trait.icon_offset or Point(0,0)
+
+	if type(trait.desc) == 'table' then
+		trait.desc_title = trait.desc.title or trait.desc[1]
+		trait.desc_text = trait.desc.text or trait.desc[2]
+	end
+
+	Assert.TypePoint(trait.icon_offset, "Field 'icon_offset'")
+	Assert.Equals('string', type(trait.desc_title), "Field 'desc_title'")
+	Assert.Equals('string', type(trait.desc_text), "Field 'desc_text'")
+
+	local func = trait.func
+	local pilotSkill = trait.pilotSkill
+	local pawnType = trait.pawnType
+	local icon = trait.icon
+	local icon_glow = trait.icon_glow
+	local icon_offset = trait.icon_offset
+	local desc_title = trait.desc_title
+	local desc_text = trait.desc_text
+
+	if func then
+		Assert.Equals('function', type(func))
+		self.funcs[#self.funcs+1] = trait
+
+	elseif pilotSkill then
+		Assert.Equals('string', type(pilotSkill))
+		Assert.Equals('nil', type(self.pilotSkills[pilotSkill]), "Duplicate trait for pilotSkill")
+		self.pilotSkills[pilotSkill] = trait
+
+	elseif pawnType then
+		Assert.Equals('string', type(pawnType))
+		Assert.Equals('nil', type(self.pawnTypes[pawnType]), "Duplicate trait for pawnType")
+		self.pawnTypes[pawnType] = trait
+	else
+		error("ERROR: Attempted to add an unlinked trait!")
+	end
+
+	self[#self+1] = trait
+
+	local id = "trait"..#self
+	local path = "combat/icons/icon_"..id..".png"
+	local pathGlow = "combat/icons/icon_"..id.."_glow.png"
+
+	trait.id = id
+
+	if icon then
+		icon = icon:match(".-.png$") or icon..".png"
+
+		local is_vanilla_asset = icon:find("^img/")
+		if is_vanilla_asset then
+			if modApi:assetExists(icon) then
+				modApi:copyAsset(icon, "img/"..path)
+			end
+		else
+			if modApi:fileExists(icon) then
+				modApi:appendAsset("img/"..path, icon)
+			end
+		end
+	else
+		modApi:copyAsset("img/empty.png", "img/"..path)
+	end
+
+	if icon_glow then
+		icon_glow = icon_glow:match(".-.png$") or icon_glow..".png"
+
+		local is_vanilla_asset = icon_glow:find("^img/")
+		if is_vanilla_asset then
+			if modApi:assetExists(icon_glow) then
+				modApi:copyAsset(icon_glow, "img/"..pathGlow)
+			end
+		else
+			if modApi:fileExists(icon_glow) then
+				modApi:appendAsset("img/"..pathGlow, icon_glow)
+			end
+		end
+
+		Location[pathGlow] = icon_offset
+	else
+		modApi:copyAsset("img/empty.png", "img/"..pathGlow)
+	end
+end
+
+modApi.events.onModsInitialized:subscribe(onModsInitialized)
+
+
+local isNewestVersion = false
+	or Traits == nil
+	or modApi:isVersion(VERSION, Traits.version) == false
+
+if isNewestVersion then
+	Traits = Traits or {}
+	Traits.version = VERSION
+	Traits.queued = Traits.queued or {}
+
+	function Traits:add(trait)
+		table.insert(self.queued, trait)
+	end
+
+	function Traits:finalizeInit()
+		self.add = add
+		self.update = function(self, loc) updateLoc(loc) end
+
+		self.pawnTypes = {}
+		self.pilotSkills = {}
+		self.funcs = {}
+
+		for _, trait in ipairs(self.queued) do
+			self:add(trait)
+		end
+
+		self.queued = nil
+
+		overrideGetStatusTooltip()
+
+		modApi.events.onModsLoaded:subscribe(onModsLoaded)
+		modApi.events.onSaveDataUpdated:subscribe(updateAll)
+	end
+end
+
+return Traits

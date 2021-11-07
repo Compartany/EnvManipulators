@@ -33,7 +33,6 @@ function list_indexof(list, element)
 	return -1
 end
 
-
 if not GetUiScale then
 	GetUiScale = function() return 1 end
 end
@@ -156,7 +155,7 @@ function screenPointToTile(sourcePointScreenSpace, findTileEdge)
 				end
 
 				if findTileEdge then
-					local closestTileEdge = computeClosestTileEdge(tile, th)
+					local closestTileEdge = computeClosestTileEdge(tile, th, sourcePointBoardSpace)
 				
 					return Point(tileX, tileY), closestTileEdge
 				else

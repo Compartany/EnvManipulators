@@ -65,7 +65,7 @@ end
 
 -- 获取真正意义上的 Locations
 function Environment:GetTrueLocations()
-    return self.Locations and self.Locations or {}
+    return self.Locations or {}
 end
 function Env_Tides:GetTrueLocations()
     local locations = {}

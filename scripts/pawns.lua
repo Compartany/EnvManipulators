@@ -25,7 +25,7 @@ function BoardPawn:IsEnvOverloadActive()
     return false
 end
 
--- BoardPawn 会覆盖 PawnType 上的方法，无法靠重载来实现
+-- BoardPawn 会覆盖 PawnType 上的方法，无法靠重写来实现
 Jelly_Health1._psion = true -- 其他灵虫均继承自 Jelly_Health1
 Jelly_Boss._psion = true
 function BoardPawn:IsPsion()

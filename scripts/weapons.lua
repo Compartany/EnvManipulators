@@ -84,12 +84,14 @@ function EnvWeapon1:GetTargetArea(point)
                         elseif Pawn:IsGrappled() then
                             -- 被缠绕
                             valid = false
-                        elseif not Pawn:IsIgnoreSmoke() and Board:IsSmoke(target) then
-                            -- 无烟雾免疫且移动到烟雾中
-                            valid = false
-                        elseif Board:IsDangerousItem(target) then
-                            -- 地雷等危险物体
-                            valid = false
+                        elseif j == 1 then
+                            if not Pawn:IsIgnoreSmoke() and Board:IsSmoke(target) then
+                                -- 无烟雾免疫且移动到烟雾中
+                                valid = false
+                            elseif Board:IsDangerousItem(target) then
+                                -- 地雷等危险物体
+                                valid = false
+                            end
                         end
                         if not valid then
                             break
@@ -465,13 +467,12 @@ end
 EnvWeapon2 = LineArtillery:new{
     Class = "Ranged",
     Icon = "weapons/EnvWeapon2.png",
-    Chain1 = false,
-    Chain2 = false,
+    Chain = false,
     PowerCost = 1,
     Damage = 0,
     Range = 7,
-    Upgrades = 2,
-    UpgradeCost = {1, 1},
+    Upgrades = 1,
+    UpgradeCost = {1},
     LaunchSound = "/weapons/gravwell",
     ImpactSound = "/impact/generic/explosion",
     TipImage = {
@@ -483,36 +484,11 @@ EnvWeapon2 = LineArtillery:new{
 }
 
 EnvWeapon2_A = EnvWeapon2:new{
-    Chain1 = true,
-    TipImage = {
-        Unit = Point(2, 4),
-        Enemy = Point(2, 2),
-        Enemy2 = Point(1, 1),
-        Friendly = Point(3, 2),
-        Target = Point(2, 2)
-    }
-}
-
-EnvWeapon2_B = EnvWeapon2:new{
-    Chain2 = true,
+    Chain = true,
     TipImage = {
         Unit = Point(2, 4),
         Enemy = Point(2, 2),
         Enemy2 = Point(2, 3),
-        Friendly = Point(2, 1),
-        Friendly2 = Point(3, 2),
-        Target = Point(2, 2)
-    }
-}
-
-EnvWeapon2_AB = EnvWeapon2:new{
-    Chain1 = true,
-    Chain2 = true,
-    TipImage = {
-        Unit = Point(2, 4),
-        Enemy = Point(2, 2),
-        Enemy2 = Point(2, 3),
-        Enemy3 = Point(1, 1),
         Friendly = Point(2, 1),
         Friendly2 = Point(3, 2),
         Target = Point(2, 2)
@@ -542,12 +518,10 @@ function EnvWeapon2:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect, para
     tipImageCall = tipImageCall or false
     local ret = skillEffect or SkillEffect()
     local direction = GetDirection(p2 - p1)
-    local tiC1 = param and param.tiC1 or false
 
     local mission = GetCurrentMission()
     local env = mission and mission.LiveEnvironment
     local envName = mission and mission.Environment or "Env_Null"
-    envName = envName and envName or "Env_Null"
 
     ret:AddBounce(p1, 10)
     local damage = SpaceDamage(p2, self.Damage, direction)
@@ -591,20 +565,9 @@ function EnvWeapon2:GetSkillEffect_Inner(p1, p2, tipImageCall, skillEffect, para
         damage.sAnimation = PUSH_ANIMS[dir]
         ret:AddDamage(damage)
     end
-    local p3 = p2 + DIR_VECTORS[direction]
-    if self.Chain1 then
-        if tiC1 or (tool:IsMovable(p2) and tool:IsEmptyTile(p3)) then
-            ret:AddDelay(0.35)
-            for _, dir in ipairs({dirLeft, dirRight}) do
-                damage = SpaceDamage(p3 + DIR_VECTORS[dir], 0, dir)
-                damage.sAnimation = PUSH_ANIMS[dir]
-                damage.bHide = tiC1
-                ret:AddDamage(damage)
-            end
-        end
-    end
-    if self.Chain2 then
-        if not tiC1 and not tool:IsEmptyTile(p2) and (not tool:IsMovable(p2) or not tool:IsEmptyTile(p3)) then
+    if self.Chain then
+        local p3 = p2 + DIR_VECTORS[direction]
+        if not tool:IsEmptyTile(p2) and (not tool:IsMovable(p2) or not tool:IsEmptyTile(p3)) then
             local dirBack = (direction + 2) % 4
             ret:AddDelay(0.25)
             for _, dir in ipairs({direction, dirBack}) do
@@ -619,21 +582,10 @@ end
 
 function EnvWeapon2:GetSkillEffect_TipImage()
     local ret = SkillEffect()
-    if self.Chain1 and self.Chain2 then
-        self:GetSkillEffect_Inner(Point(2, 4), Point(2, 2), true, ret)
-        ret:AddScript([[Board:SetCustomTile(Point(2, 2), "tile_lock.png")]])
-        ret:AddDelay(1.2)
-        self:GetSkillEffect_Inner(Point(2, 4), Point(2, 2), true, ret, {
-            tiC1 = true
-        })
-        ret:AddDelay(1.5)
-        ret:AddScript([[Board:SetCustomTile(Point(2, 2), "ground_0.png")]])
-    else
-        self:GetSkillEffect_Inner(Point(2, 4), Point(2, 2), true, ret)
-        ret:AddScript([[Board:SetCustomTile(Point(2, 2), "tile_lock.png")]])
-        ret:AddDelay(1.5)
-        ret:AddScript([[Board:SetCustomTile(Point(2, 2), "ground_0.png")]])
-    end
+    self:GetSkillEffect_Inner(Point(2, 4), Point(2, 2), true, ret)
+    ret:AddScript([[Board:SetCustomTile(Point(2, 2), "tile_lock.png")]])
+    ret:AddDelay(1.5)
+    ret:AddScript([[Board:SetCustomTile(Point(2, 2), "ground_0.png")]])
     return ret
 end
 
@@ -641,16 +593,16 @@ EnvWeapon3 = Skill:new{
     Class = "Science",
     Icon = "weapons/EnvWeapon3.png",
     Range = 3,
-    Damage = 0,
+    ConductionDamage = 1,
     PowerCost = 1,
-    Upgrades = 2,
-    UpgradeCost = {2, 2},
+    Upgrades = 1,
+    UpgradeCost = {3},
     LaunchSound = "/weapons/enhanced_tractor",
     ImpactSound = "/impact/generic/tractor_beam",
     TipImage = {
         Unit = Point(2, 3),
         Enemy = Point(2, 1),
-        Building = Point(2, 2),
+        Enemy2 = Point(2, 2),
         Target = Point(2, 0)
     }
 }
@@ -660,28 +612,7 @@ EnvWeapon3_A = EnvWeapon3:new{
     TipImage = {
         Unit = Point(2, 4),
         Enemy = Point(2, 1),
-        Mountain = Point(2, 2),
-        Target = Point(2, 0)
-    }
-}
-
-EnvWeapon3_B = EnvWeapon3:new{
-    Range = 4,
-    TipImage = {
-        Unit = Point(2, 4),
-        Enemy = Point(2, 1),
-        Enemy2 = Point(2, 3),
-        Target = Point(2, 0)
-    }
-}
-
-EnvWeapon3_AB = EnvWeapon3:new{
-    Range = 5,
-    TipImage = {
-        Unit = Point(2, 4),
-        Enemy = Point(2, 1),
-        Enemy2 = Point(2, 3),
-        Mountain = Point(2, 2),
+        Enemy2 = Point(2, 2),
         Target = Point(2, 0)
     }
 }
@@ -732,14 +663,15 @@ function EnvWeapon3:GetSkillEffect(p1, p2)
             end
             local dest = tool:IsMovable(obj) and dests[i] or obj
             if dest ~= p2 then
-                local damage = SpaceDamage(dest, self.Damage)
+                local dmgVal = Board:IsPawnSpace(obj) and self.ConductionDamage or 0
+                local damage = SpaceDamage(dest, dmgVal)
                 damage.sAnimation = "EnvExplo"
                 damage.sSound = "/impact/generic/explosion"
                 ret:AddDamage(damage)
                 ret:AddBounce(dest, -2)
                 ret:AddDelay(0.05)
             else
-                ret:AddDamage(SpaceDamage(dest, self.Damage)) -- 一定要加，否则 XP 会被平分
+                ret:AddDamage(SpaceDamage(dest, 0)) -- 一定要加，否则 XP 会被平分
             end
             if needMove and not movable then -- 需将 obj 移动却移动不了，说明已经断链
                 break
@@ -754,7 +686,7 @@ EnvWeapon4 = PassiveSkill:new{
     Icon = "weapons/EnvWeapon4.png",
     PowerCost = 3,
     Upgrades = 2,
-    UpgradeCost = {3, 3},
+    UpgradeCost = {2, 4},
     EnvImmune = false,
     BaseArea = 4,
     BaseDamage = 3,

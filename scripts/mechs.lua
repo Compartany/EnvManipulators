@@ -5,10 +5,13 @@ local palettes = mod.lib.palettes
 local colorOffset = palettes.getOffset("envManipulators_palette")
 
 -- 在单位状态上显示“重型”
-trait:Add{
-    PawnTypes = {"EnvMechPrime", "EnvMechRanged", "EnvMechScience"},
-    Icon = {"img/combat/icons/icon_envheavy.png", Point(0, 0)},
-    Description = {EnvMod_Texts.heavy_title, EnvMod_Texts.heavy_description}
+trait:add{
+    pawnType = "EnvMechPrime",
+    func = function(trait, pawn) return pawn:IsEnvHeavy() end,
+    icon = "img/combat/icons/icon_envheavy.png",
+    icon_offset = Point(0, 0),
+    desc_title = EnvMod_Texts.heavy_title,
+    desc_text = EnvMod_Texts.heavy_description
 }
 
 EnvMechPrime = Pawn:new{
@@ -27,7 +30,7 @@ EnvMechPrime = Pawn:new{
 
 EnvMechRanged = Pawn:new{
     Class = "Ranged",
-    Health = 3,
+    Health = 2,
     MoveSpeed = 4,
     Image = "EnvMechRanged",
     ImageOffset = colorOffset,

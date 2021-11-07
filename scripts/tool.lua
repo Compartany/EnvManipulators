@@ -171,7 +171,7 @@ function this:IsValidEnvTarget(space, repeated)
 
     local tile = Board:GetTerrain(space)
     local pawn = Board:GetPawn(space)
-    local pawnTeam = (pawn and pawn:GetTeam()) or "NOT PAWN"
+    local pawnTeam = pawn and pawn:GetTeam() or "NOT PAWN"
     local mission = GetCurrentMission()
     if mission then
         if not mission.Env_MountainValid and tile == TERRAIN_MOUNTAIN then
@@ -191,7 +191,7 @@ end
 local allySpaceIcon = "combat/tile_icon/tile_artificial.png"
 local allySpaceColors = {GL_Color(50, 200, 50, 0.75), GL_Color(20, 200, 20, 0.75)}
 function this:MarkAllySpace(location, active, env)
-    local icon = (env and (env:GetEnvImageMark() or env.CombatIcon)) or allySpaceIcon
+    local icon = env and (env:GetEnvImageMark() or env.CombatIcon) or allySpaceIcon
     Board:MarkSpaceImage(location, icon, active and allySpaceColors[2] or allySpaceColors[1])
     Board:MarkSpaceDesc(location, "artificial0", false)
 end
@@ -243,29 +243,6 @@ function this:GetUniformDistributionPoints(n, quarters, ret)
         end
     end
     return ret
-end
-
--- 将点均匀地插入四个象限中
-function this:InsertUniformDistributionPoints(points, quarters)
-    quarters = quarters or {}
-    local qa = {}
-    local qb = {}
-    local qc = nil
-    while #points > 0 do
-        if #qa == 0 then
-            qa = {{1, 3}, {2, 4}}
-        end
-        if #qb == 0 then
-            qb = random_removal(qa)
-        end
-        qc = table.remove(qb, #qb)
-        if not quarters[qc] then
-            quarters[qc] = {}
-        end
-        local quarter = quarters[qc]
-        quarter[#quarter + 1] = random_removal(points)
-    end
-    return quarters
 end
 
 -- 获取环境被动升级区域数值
@@ -340,16 +317,6 @@ function this:GetDistanceToEnvArtificialGenerated(point)
         end
     end
     return dist
-end
-
--- 判断是否为被摧毁的山岭
-function this:IsDamagedMountain(point)
-    if point then
-        if Board:GetTerrain(point) == TERRAIN_MOUNTAIN then
-            return env_modApiExt.board:getTileHealth(point) == 1
-        end
-    end
-    return false
 end
 
 -- 自定义距离

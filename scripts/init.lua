@@ -1,9 +1,9 @@
 local mod = {
     id = "EnvManipulators",
     name = "EnvManipulators",
-    version = "2.4.0.20210318",
+    version = "2.5.0.20211107",
     requirements = {"kf_ModUtils"},
-    modApiVersion = "2.5.4",
+    modApiVersion = "2.6.3",
     icon = "img/icon.png",
     author = "Compartany"
 }
@@ -30,7 +30,6 @@ end
 function mod:load(options, version)
     self.lib.modApiExt:load(self, options, version)
     self.lib.shop:load(options)
-    self.lib.trait:load()
     self:loadScripts()
     modApi:addSquad({EnvMod_Texts.squad_name, "EnvMechPrime", "EnvMechRanged", "EnvMechScience"},
         EnvMod_Texts.squad_name, EnvMod_Texts.squad_description, self.resourcePath .. "img/icon.png")

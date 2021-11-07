@@ -148,10 +148,6 @@ function this:SelectSpaces()
         repeated = liveLocations
     end
     local quarters = tool:GetEnvQuarters(repeated)
-    if mission and mission.GetEnvForceZone then
-        local zone = mission:GetEnvForceZone()
-        quarters = tool:InsertUniformDistributionPoints(zone, quarters)
-    end
     return tool:GetUniformDistributionPoints(self.BaseArea, quarters)
 end
 

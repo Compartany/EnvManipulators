@@ -8,17 +8,13 @@ return {
 
     EnvWeapon2_Name = "EnvLauncher",
     EnvWeapon2_Description = "Push target and side tiles, and then load Environment on target tile.",
-    EnvWeapon2_Upgrade1 = "Chain 1",
-    EnvWeapon2_Upgrade2 = "Chain 2",
-    EnvWeapon2_A_UpgradeDescription = "If target object was pushed successfully, push side tiles of its final position.",
-    EnvWeapon2_B_UpgradeDescription = "If target object was pushed unsuccessfully, push its front and back tiles.",
+    EnvWeapon2_Upgrade1 = "Chain",
+    EnvWeapon2_A_UpgradeDescription = "If target object was pushed unsuccessfully, push its front and back tiles.",
 
     EnvWeapon3_Name = "Conducted Pulse",
-    EnvWeapon3_Description = "Emit a pushing pulse that can be conducted between objects.",
+    EnvWeapon3_Description = "Emit a pushing pulse that can be conducted between objects, and deal 1 damage to units on conduction.",
     EnvWeapon3_Upgrade1 = "+1 Range",
-    EnvWeapon3_Upgrade2 = "+1 Range",
     EnvWeapon3_A_UpgradeDescription = "Increase range by 1.",
-    EnvWeapon3_B_UpgradeDescription = "Increase range by 1.",
 
     EnvWeapon4_Name = "EnvLoader",
     EnvWeapon4_Description = "Load Artificial Environment and enhance existing Environment. Prioritize Environment activation on Psion tiles whenever possible, and try to terminate unit actions on activated tiles.",
