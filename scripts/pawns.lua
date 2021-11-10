@@ -92,23 +92,6 @@ function Jelly_Boss:ScorePositioning(point, pawn, ...)
     end
     return EnvScorePositioning(point, pawn, score, 1, true) -- 普通灵虫都已经被吸引了，灵虫 Boss 当然更容易被吸引
 end
-local _BlobBoss_ScorePositioning = BlobBoss.ScorePositioning
--- 分裂体继承自 BlobBoss
-function BlobBoss:ScorePositioning(point, pawn, ...)
-    local score = _BlobBoss_ScorePositioning and _BlobBoss_ScorePositioning(point, pawn, ...)
-    if not score or type(score) ~= "number" then
-        score = _ScorePositioning(point, pawn, ...)
-    end
-    return EnvScorePositioning(point, pawn, score, 1, true)
-end
-local _SpiderBoss_ScorePositioning = SpiderBoss.ScorePositioning
-function SpiderBoss:ScorePositioning(point, pawn, ...)
-    local score = _SpiderBoss_ScorePositioning and _SpiderBoss_ScorePositioning(point, pawn, ...)
-    if not score or type(score) ~= "number" then
-        score = _ScorePositioning(point, pawn, ...)
-    end
-    return EnvScorePositioning(point, pawn, score, 1, true)
-end
 
 local this = {}
 function this:Load()

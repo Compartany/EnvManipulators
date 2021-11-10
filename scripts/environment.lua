@@ -451,9 +451,7 @@ function Mission:ApplyEnvironmentEffect(...)
 end
 
 -- 初始化关卡环境被动
-local missionBiasMap = {
-    Mission_Force = 1
-}
+local missionBiasMap = {}
 local function EnvArtificialInit(mission)
     local envName = mission.Environment
     if envName == "Env_Null" or not envName or not mission.LiveEnvironment then

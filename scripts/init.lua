@@ -1,11 +1,12 @@
 local mod = {
     id = "EnvManipulators",
     name = "EnvManipulators",
-    version = "2.5.0.20211107",
+    version = "2.5.1.20211110",
     requirements = {"kf_ModUtils"},
     modApiVersion = "2.6.3",
     icon = "img/icon.png",
-    author = "Compartany"
+    author = "Compartany",
+    description = "These Mechs have the ability to manipulate Environments, and use them to fight the enemy."
 }
 print(mod.version) -- for package and release
 
