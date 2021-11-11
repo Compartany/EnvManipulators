@@ -12,8 +12,8 @@ MOD：环境操纵者
 演示视频（v1.1.1.20201231）：
     [装备] https://www.bilibili.com/video/BV1cK41137DF?p=1
     [初始装备终岛完美] https://www.bilibili.com/video/BV1cK41137DF?p=2
-其他 MOD：
-    [真随机战队] https://www.bilibili.com/read/cv9495097
+本人制作的 MOD：
+    https://github.com/Compartany/ITB-MODs/blob/main/mod-list.md
 
 这些机甲拥有操纵环境的能力，它们利用环境与敌人战斗。
 

@@ -12,8 +12,8 @@ Download:
 Demo Videos (v1.1.1.20201231):
     [weapons] https://www.bilibili.com/video/BV1cK41137DF?p=1
     [perfect final island with default weapons] https://www.bilibili.com/video/BV1cK41137DF?p=2
-Other MODs:
-    [True Random Squad] https://subsetgames.com/forum/viewtopic.php?f=25&t=36616
+My MODs:
+    https://github.com/Compartany/ITB-MODs/blob/main/mod-list.md
 
 These Mechs have the ability to manipulate Environments, and use them to fight the enemy.
 
